@@ -1,0 +1,219 @@
+{
+  "common": {
+    "internalError": "Internal error, please check the logs",
+    "insufficientPermissions": "Insufficient permissions",
+    "invalidRequest": "Invalid request",
+    "noDataFound": "No data found for this query"
+  },
+  "auth": {
+    "common": {
+      "userNotFound": "User not found",
+      "userDeleted": "User deleted",
+      "userExists": "User already exists",
+      "userNotActive": "User not active",
+      "userNotVerified": "User not verified",
+      "userNameAlreadyExists": "Username already exists",
+      "invalidPassword": "Invalid password",
+      "validationCodeAlreadyRequested": "Validation code already requested",
+      "invalidVerificationCode": "Invalid verification code",
+      "passwordSameAsOld": "Password same as old",
+      "internalError": "Internal error, please check the logs"
+    },
+    "sendVerificationCode": "Verification code has been sent to your email",
+    "sendResetCode": "Reset code has been sent to your email",
+    "createUserAccount": "User account created successfully",
+    "resetUserPassword": "User password reset successfully",
+    "resetLoggedInUserPassword": "User password reset successfully",
+    "accountLogin": {
+      "accountLoginSuccess": "Account login successfully",
+      "socialAccountNotAllowed": "Social account not allowed to login by password",
+      "invalidCredentials": "Invalid credentials, please check your email and password"
+    },
+    "generateAccessToken": {
+      "generateAccessTokenSuccess": "Access token generated successfully",
+      "refreshTokenNotFound": "Refresh token not found",
+      "accessTokenNotFound": "Access token not found"
+    },
+    "checkAuthToken": "Auth token checked successfully",
+    "githubCallback": {
+      "githubTokenNotFound": "GitHub token not found",
+      "githubEmailNotFound": "GitHub email not found"
+    },
+    "googleCallback": {
+      "googleTokenNotFound": "Google token not found",
+      "googleEmailNotFound": "Google email not found"
+    },
+    "accountLogout": "Account logout successfully"
+  },
+  "user": {
+    "getMyProfile": "My profile get successfully",
+    "updateMyBio": "My bio updated successfully",
+    "changeMyAvatar": "My avatar changed successfully",
+    "getOtherUserProfile": "Other user profile get successfully",
+    "getUserLists": "User lists get successfully",
+    "enableDisableUser": {
+      "enableUserSuccess": "User enabled successfully",
+      "disableUserSuccess": "User disabled successfully"
+    },
+    "deleteUser": "User deleted successfully"
+  },
+  "blog": {
+    "common": {
+      "blogNotFound": "Blog not found"
+    },
+    "getBlogLists": "Blog lists get successfully",
+    "createBlog": "Blog created successfully",
+    "updateBlog": "Blog updated successfully",
+    "getBlogDetailsSeo": "Blog details SEO get successfully",
+    "getBlogDetails": "Blog details get successfully",
+    "getBlogListsByTagSlug": "Get blog lists by tag slug successfully",
+    "getBlogTTS": {
+      "getBlogTTSSuccess": "Blog TTS get successfully",
+      "blogTtsNotFound": "Blog TTS not found"
+    },
+    "getBlogSummary": {
+      "getBlogSummarySuccess": "Blog summary get successfully",
+      "blogSummaryNotFound": "Blog summary not found"
+    },
+    "getBlogCommentLists": {
+      "getBlogCommentListsSuccess": "Blog comment lists get successfully",
+      "commentNotFound": "Blog comment not found"
+    },
+    "createBlogComment": "Blog comment created successfully",
+    "updateBlogComment": "Blog comment updated successfully",
+    "deleteBlogComment": "Blog comment deleted successfully",
+    "saveBlogButton": {
+      "saveBlogButtonSuccess": "save blog successfully",
+      "unsaveBlogButtonSuccess": "unsave blog successfully"
+    },
+    "likeBlogButton": {
+      "likedBlogButtonSuccess": "Blog liked successfully",
+      "unlikeBlogButtonSuccess": "Blog unliked successfully"
+    },
+    "updateBlogStatus": {
+      "blogPublishedSuccess": "Blog published successfully",
+      "blogUnpublishedSuccess": "Blog unpublished successfully",
+      "blogArchivedSuccess": "Blog archived successfully",
+      "blogUnarchivedSuccess": "Blog unarchived successfully",
+      "blogFeaturedSuccess": "Blog featured successfully",
+      "blogUnfeaturedSuccess": "Blog unfeatured successfully",
+      "invalidStatusUpdate": "Invalid status update"
+    },
+    "getBlogStats": {
+      "getBlogStatsSuccess": "Blog stats get successfully",
+      "blogStatsNotFound": "Blog stats not found"
+    },
+    "getBlogNavigation": "Blog navigation get successfully",
+    "getSavedBlogLists": "Saved blog lists get successfully",
+    "getRecentPopularBlog": "Recent popular blog get successfully",
+    "deleteBlog": {
+      "deleteBlogSuccess": "Blog deleted successfully"
+    },
+    "getArchivedBlogLists": "Archived blog lists get successfully"
+  },
+  "section": {
+    "common": {
+      "sectionNotFound": "Section not found"
+    },
+    "getSectionLists": "Section lists get successfully",
+    "getSectionSeoBySlug": "Section seo get successfully",
+    "getSectionDetailsBySlug": "Section details get successfully",
+    "updateSection": "Section updated successfully"
+  },
+  "board": {
+    "common": {
+      "boardNotFound": "Board not found"
+    },
+    "getBoardDetails": "Board details get successfully",
+    "updateBoard": "Board updated successfully",
+    "createBoardComment": {
+      "createBoardCommentSuccess": "Board comment created successfully",
+      "boardCommentNotFound": "Board comment not found",
+      "commentNotFound": "Comment not found"
+    },
+    "getBoardCommentLists": "Board comment lists get successfully",
+    "updateBoardComment": "Board comment updated successfully",
+    "deleteBoardComment": "Board comment deleted successfully"
+  },
+  "friend": {
+    "common": {
+      "friendNotFound": "Friend not found"
+    },
+    "getFriendDetails": "Friend details get successfully",
+    "updateFriend": "Friend updated successfully",
+    "getFriendList": "Friend list get successfully",
+    "createSingleFriend": "Single friend created successfully",
+    "deleteSingleFriend": "Single friend deleted successfully"
+  },
+  "media": {
+    "common": {
+      "mediaNotFound": "Media not found"
+    },
+    "getMediaLists": "Media lists get successfully",
+    "uploadMedia": "File list cannot be empty"
+  },
+  "seo": {
+    "common": {
+      "seoNotFound": "SEO not found"
+    },
+    "getSeoLists": "SEO lists get successfully",
+    "createSeo": {
+      "createSeoSuccess": "SEO created successfully",
+      "seoAlreadyExists": "SEO already exists"
+    },
+    "updateSeo": {
+      "updateSeoSuccess": "SEO updated successfully",
+      "seoAlreadyExists": "SEO already exists"
+    },
+    "deleteSeo": "SEO deleted successfully"
+  },
+  "tag": {
+    "common": {
+      "tagNotFound": "Tag not found"
+    },
+    "getTagLists": "Tag lists get successfully",
+    "createTag": {
+      "createTagSuccess": "Tag created successfully",
+      "tagAlreadyExists": "Tag already exists"
+    },
+    "updateTag": "Tag updated successfully",
+    "deleteTag": "Tag deleted successfully"
+  },
+  "project": {
+    "common": {
+      "projectNotFound": "Project not found",
+      "projectAlreadyExists": "Project already exists",
+      "projectHasMonetization": "Project has monetization, cannot be deleted"
+    },
+    "getProjectLists": "Project lists get successfully",
+    "createProject": "Project created successfully",
+    "updateProject": "Project updated successfully",
+    "publishOrUnpublishProject": {
+      "publishProjectSuccess": "Project published successfully",
+      "unpublishProjectSuccess": "Project unpublished successfully"
+    },
+    "getProjectDetails": "Project details get successfully",
+    "getProjectDetailsSeo": "Project details SEO get successfully",
+    "deleteProject": "Project deleted successfully"
+  },
+  "payment": {
+    "common": {
+      "paymentFailed": "Payment failed",
+      "paymentFree": "Project price is 0, cannot create payment intent"
+    },
+    "createPaymentIntent": "Payment intent created successfully",
+    "getPaymentRecord": "Payment records retrieved successfully",
+    "stripeWebhook": "Webhook processed successfully",
+    "paymentSuccess": {
+      "getSuccessDetailsSuccess": "Payment success details retrieved successfully",
+      "invalidMetadata": "Invalid payment metadata",
+      "stripeError": "Stripe API error",
+      "internalError": "Internal error occurred while retrieving payment details"
+    }
+  },
+  "subscriber": {
+    "getSubscriberLists": "Subscriber lists retrieved successfully",
+    "createSubscriber": "Subscriber created successfully",
+    "unsubscribeSubscriber": "Subscriber unsubscribed successfully"
+  }
+}

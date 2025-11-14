@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="x-apple-disable-message-reformatting">
+  <meta name="format-detection" content="telephone=no, date=no, address=no, email=no">
+  <meta name="color-scheme" content="light dark">
+  <meta name="supported-color-schemes" content="light dark">
+  <title>Hey, welcome 👋</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      line-height: 1.6;
+      color: #333;
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: #f4f4f4;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 600px;
+      margin: 0 auto;
+      background-color: #ffffff;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      box-sizing: border-box;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .logo {
+      font-size: 28px;
+      font-weight: 800;
+      color: #111827;
+      margin-bottom: 4px;
+    }
+
+    .title {
+      font-size: 20px;
+      font-weight: 600;
+      color: #374151;
+      margin-bottom: 12px;
+    }
+
+    .welcome-message {
+      background-color: #d4edda;
+      border: 1px solid #c3e6cb;
+      color: #155724;
+      padding: 20px;
+      border-radius: 5px;
+      margin: 20px 0;
+      text-align: center;
+    }
+
+    .features {
+      background-color: #f8f9fa;
+      padding: 20px;
+      border-radius: 5px;
+      margin: 20px 0;
+    }
+
+    .feature-item {
+      display: flex;
+      align-items: center;
+      margin: 10px 0;
+    }
+
+    .feature-icon {
+      width: 20px;
+      height: 20px;
+      background-color: #27ae60;
+      border-radius: 50%;
+      margin-right: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 12px;
+    }
+
+    .cta-button {
+      display: inline-block;
+      background-color: #27ae60;
+      color: white;
+      padding: 12px 30px;
+      text-decoration: none;
+      border-radius: 5px;
+      margin: 20px 0;
+      text-align: center;
+      font-weight: bold;
+    }
+
+    .footer {
+      text-align: center;
+      margin-top: 30px;
+      padding-top: 20px;
+      border-top: 1px solid #eee;
+      color: #666;
+      font-size: 14px;
+    }
+
+    .social-links {
+      margin: 20px 0;
+      text-align: center;
+    }
+
+    .social-link {
+      display: inline-block;
+      margin: 0 10px;
+      color: #27ae60;
+      text-decoration: none;
+    }
+
+    img {
+      border: 0;
+      outline: none;
+      text-decoration: none;
+      -ms-interpolation-mode: bicubic;
+      max-width: 100%;
+      height: auto;
+    }
+
+    .ExternalClass {
+      width: 100%;
+    }
+
+    .ExternalClass,
+    .ExternalClass p,
+    .ExternalClass span,
+    .ExternalClass font,
+    .ExternalClass td,
+    .ExternalClass div {
+      line-height: 100%;
+    }
+
+    a[x-apple-data-detectors] {
+      color: inherit !important;
+      text-decoration: none !important;
+    }
+
+    @media (max-width: 600px) {
+      body {
+        padding: 12px;
+      }
+
+      .container {
+        padding: 20px;
+      }
+
+      .logo {
+        font-size: 24px;
+      }
+
+      .title {
+        font-size: 18px;
+      }
+
+      .cta-button {
+        padding: 12px 24px;
+      }
+
+      .footer {
+        font-size: 12px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      body {
+        padding: 10px;
+      }
+
+      .container {
+        padding: 16px;
+        border-radius: 8px;
+      }
+
+      .logo {
+        font-size: 22px;
+      }
+
+      .title {
+        font-size: 16px;
+      }
+
+      .welcome-message,
+      .features {
+        padding: 16px;
+        margin: 16px 0;
+      }
+
+      .cta-button {
+        padding: 10px 20px;
+      }
+
+      ul,
+      ol {
+        padding-left: 18px;
+      }
+    }
+
+    @media (max-width: 414px) {
+      .container {
+        padding: 15px;
+      }
+
+      .logo {
+        font-size: 21px;
+      }
+
+      .title {
+        font-size: 16px;
+      }
+    }
+
+    @media (max-width: 390px) {
+      .container {
+        padding: 14px;
+      }
+
+      .logo {
+        font-size: 20px;
+      }
+
+      .title {
+        font-size: 15px;
+      }
+    }
+
+    @media (max-width: 375px) {
+      body {
+        padding: 8px;
+      }
+
+      .container {
+        padding: 14px;
+        border-radius: 6px;
+      }
+
+      .logo {
+        font-size: 20px;
+      }
+
+      .title {
+        font-size: 15px;
+      }
+
+      .cta-button {
+        padding: 10px 18px;
+      }
+
+      .footer {
+        font-size: 11px;
+      }
+    }
+
+    @media (max-width: 320px) {
+      body {
+        padding: 6px;
+      }
+
+      .container {
+        padding: 12px;
+        border-radius: 6px;
+      }
+
+      .logo {
+        font-size: 18px;
+      }
+
+      .title {
+        font-size: 14px;
+      }
+
+      .cta-button {
+        padding: 8px 16px;
+      }
+
+      .footer {
+        font-size: 10px;
+      }
+    }
+
+    @media (prefers-color-scheme: dark) {
+      body {
+        color: #e5e7eb;
+        background-color: #0f172a;
+      }
+
+      .container {
+        background-color: #111827;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+      }
+
+      .title {
+        color: #e5e7eb;
+      }
+
+      .welcome-message {
+        background-color: #0b1220;
+        color: #e5e7eb;
+        border-color: #1f2937;
+      }
+
+      .features {
+        background-color: #0b1220;
+        color: #e5e7eb;
+      }
+
+      .cta-button {
+        background-color: #27ae60;
+        color: #ffffff;
+      }
+
+      .social-link {
+        color: #34d399;
+      }
+
+      .footer {
+        color: #9ca3af;
+        border-top-color: #374151;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <!--[if mso | IE]><table role="presentation" width="600" align="center" cellpadding="0" cellspacing="0" border="0"><tr><td><![endif]-->
+  <div class="container" style="width:100%; max-width:600px; margin:0 auto; box-sizing:border-box;">
+    <div class="header">
+      <div class="logo">{{ app_name }}</div>
+      <div class="title">Hey, welcome 👋</div>
+      <p>Hi {{ recipient }},</p>
+    </div>
+
+    <div class="welcome-message">
+      <h2>Welcome to {{ app_name }}!</h2>
+      <p>Thanks for dropping by my little corner of the internet. This is a personal blog — no corporate buzzwords,
+        just things I'm learning, building, and thinking about. Make yourself at home ☕️</p>
+    </div>
+
+    <div class="features">
+      <h3>What's here:</h3>
+      <div class="feature-item">
+        <div class="feature-icon">✓</div>
+        <span>Fresh posts and notes on what I'm exploring</span>
+      </div>
+      <div class="feature-item">
+        <div class="feature-icon">✓</div>
+        <span>Project updates and behind‑the‑scenes tinkering</span>
+      </div>
+      <div class="feature-item">
+        <div class="feature-icon">✓</div>
+        <span>Occasional long‑form thoughts (when coffee hits)</span>
+      </div>
+      <div class="feature-item">
+        <div class="feature-icon">✓</div>
+        <span>Comments and conversations — I read every reply</span>
+      </div>
+    </div>
+
+    <div style="text-align: center;">
+      <a href="#" class="cta-button">Read the latest post</a>
+    </div>
+
+    <div class="social-links">
+      <p>Say hi or follow along:</p>
+      <a href="#" class="social-link">Email</a>
+      <a href="#" class="social-link">WeChat</a>
+      <a href="#" class="social-link">Twitter</a>
+    </div>
+
+    <p><strong>P.S.</strong> If you're building something cool too, reply and tell me about it — I'd love to check it
+      out.</p>
+
+    <div class="footer">
+      <p>Thank you for choosing {{ app_name }}</p>
+      <p>Sent at: {{ current_date }} {{ current_time }}</p>
+      <p>&copy; {{ year }} {{ app_name }}. All rights reserved.</p>
+    </div>
+  </div>
+  <!--[if mso | IE]></td></tr></table><![endif]-->
+</body>
+
+</html>

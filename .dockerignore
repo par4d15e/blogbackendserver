@@ -1,0 +1,95 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# Logs
+logs/
+*.log
+
+# Environment files (这些应该在运行时通过 volume 挂载)
+secret/.env.*
+!secret/.env.example
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# Documentation
+docs/
+README.md
+
+# Node modules (如果有前端构建产物)
+node_modules/
+package-lock.json
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Alembic (通过 volume 挂载，不复制到镜像中)
+alembic/
+alembic.ini
+
+# Celery
+celerybeat-schedule
+celerybeat-schedule-*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+
+# Docker
+Dockerfile*
+docker-compose*.yml
+.dockerignore
+
+# Other
+*.bak
+*.tmp
+.cache/
+
+# test
+tests/

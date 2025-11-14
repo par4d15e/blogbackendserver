@@ -1,0 +1,219 @@
+{
+  "common": {
+    "internalError": "内部错误,请检查日志",
+    "insufficientPermissions": "权限不足",
+    "invalidRequest": "无效的请求",
+    "noDataFound": "无法找到任何数据"
+  },
+  "auth": {
+    "common": {
+      "userNotFound": "用户未找到",
+      "userDeleted": "用户已删除",
+      "userExists": "用户已存在",
+      "userNotActive": "用户未激活",
+      "userNotVerified": "用户未验证",
+      "userNameAlreadyExists": "用户名已存在",
+      "invalidPassword": "密码无效",
+      "validationCodeAlreadyRequested": "验证码已请求, 请检查您的邮箱",
+      "invalidVerificationCode": "无效的验证码, 请确保验证码正确",
+      "passwordSameAsOld": "密码与旧密码相同",
+      "internalError": "内部错误,请检查日志"
+    },
+    "sendVerificationCode": "验证码已发送至您的邮箱",
+    "sendResetCode": "重置码已发送至您的邮箱",
+    "createUserAccount": "用户账户创建成功",
+    "resetUserPassword": "用户密码重置成功",
+    "resetLoggedInUserPassword": "用户密码重置成功",
+    "accountLogin": {
+      "accountLoginSuccess": "账户登录成功",
+      "socialAccountNotAllowed": "社交账户不允许通过密码登录",
+      "invalidCredentials": "凭据无效，请检查您的邮箱和密码"
+    },
+    "generateAccessToken": {
+      "generateAccessTokenSuccess": "访问令牌生成成功",
+      "refreshTokenNotFound": "刷新令牌未找到",
+      "accessTokenNotFound": "访问令牌未找到"
+    },
+    "checkAuthToken": "认证令牌检查成功",
+    "githubCallback": {
+      "githubTokenNotFound": "GitHub令牌未找到",
+      "githubEmailNotFound": "GitHub邮箱未找到"
+    },
+    "googleCallback": {
+      "googleTokenNotFound": "Google令牌未找到",
+      "googleEmailNotFound": "Google邮箱未找到"
+    },
+    "accountLogout": "账户登出成功"
+  },
+  "user": {
+    "getMyProfile": "我的个人资料获取成功",
+    "updateMyBio": "我的个人简介更新成功",
+    "changeMyAvatar": "我的头像更换成功",
+    "getOtherUserProfile": "其他用户个人资料获取成功",
+    "getUserLists": "用户列表获取成功",
+    "enableDisableUser": {
+      "enableUserSuccess": "用户启用成功",
+      "disableUserSuccess": "用户禁用成功"
+    },
+    "deleteUser": "用户删除成功"
+  },
+  "blog": {
+    "common": {
+      "blogNotFound": "博客未找到"
+    },
+    "getBlogLists": "博客列表获取成功",
+    "createBlog": "博客创建成功",
+    "updateBlog": "博客更新成功",
+    "getBlogDetailsSeo": "博客详情SEO获取成功",
+    "getBlogDetails": "博客详情获取成功",
+    "getBlogListsByTagSlug": "根据标签获取博客列表成功",
+    "getBlogTTS": {
+      "getBlogTTSSuccess": "博客TTS获取成功",
+      "blogTtsNotFound": "博客TTS未找到"
+    },
+    "getBlogSummary": {
+      "getBlogSummarySuccess": "博客摘要获取成功",
+      "blogSummaryNotFound": "博客摘要未找到"
+    },
+    "getBlogCommentLists": {
+      "getBlogCommentListsSuccess": "博客评论列表获取成功",
+      "commentNotFound": "博客评论未找到"
+    },
+    "createBlogComment": "博客评论创建成功",
+    "updateBlogComment": "博客评论更新成功",
+    "deleteBlogComment": "博客评论删除成功",
+    "saveBlogButton": {
+      "saveBlogButtonSuccess": "博客保存成功",
+      "unsaveBlogButtonSuccess": "博客取消保存成功"
+    },
+    "likeBlogButton": {
+      "likedBlogButtonSuccess": "博客点赞成功",
+      "unlikeBlogButtonSuccess": "博客取消点赞成功"
+    },
+    "updateBlogStatus": {
+      "blogPublishedSuccess": "博客发布成功",
+      "blogUnpublishedSuccess": "博客取消发布成功",
+      "blogArchivedSuccess": "博客归档成功",
+      "blogUnarchivedSuccess": "博客取消归档成功",
+      "blogFeaturedSuccess": "博客推荐成功",
+      "blogUnfeaturedSuccess": "博客取消推荐成功",
+      "invalidStatusUpdate": "无效的状态更新"
+    },
+    "getBlogStats": {
+      "getBlogStatsSuccess": "博客统计获取成功",
+      "blogStatsNotFound": "博客统计未找到"
+    },
+    "getBlogNavigation": "博客导航获取成功",
+    "getSavedBlogLists": "博客收藏列表获取成功",
+    "getRecentPopularBlog": "最近热门博客获取成功",
+    "deleteBlog": {
+      "deleteBlogSuccess": "博客删除成功"
+    },
+    "getArchivedBlogLists": "归档博客列表获取成功"
+  },
+  "section": {
+    "common": {
+      "sectionNotFound": "板块未找到"
+    },
+    "getSectionLists": "板块列表获取成功",
+    "getSectionSeoBySlug": "板块SEO获取成功",
+    "getSectionDetailsBySlug": "板块详情获取成功",
+    "updateSection": "板块更新成功"
+  },
+  "board": {
+    "common": {
+      "boardNotFound": "看板未找到"
+    },
+    "getBoardDetails": "看板详情获取成功",
+    "updateBoard": "看板更新成功",
+    "createBoardComment": {
+      "createBoardCommentSuccess": "看板评论创建成功",
+      "boardCommentNotFound": "看板评论未找到",
+      "commentNotFound": "评论未找到"
+    },
+    "getBoardCommentLists": "看板评论列表获取成功",
+    "updateBoardComment": "看板评论更新成功",
+    "deleteBoardComment": "看板评论删除成功"
+  },
+  "friend": {
+    "common": {
+      "friendNotFound": "朋友未找到"
+    },
+    "getFriendDetails": "朋友详情获取成功",
+    "updateFriend": "朋友更新成功",
+    "getFriendList": "朋友列表获取成功",
+    "createSingleFriend": "单个朋友创建成功",
+    "deleteSingleFriend": "单个朋友删除成功"
+  },
+  "media": {
+    "common": {
+      "mediaNotFound": "媒体未找到"
+    },
+    "getMediaLists": "媒体列表获取成功",
+    "uploadMedia": "文件列表不能为空"
+  },
+  "seo": {
+    "common": {
+      "seoNotFound": "SEO未找到"
+    },
+    "getSeoLists": "SEO列表获取成功",
+    "createSeo": {
+      "createSeoSuccess": "SEO创建成功",
+      "seoAlreadyExists": "SEO已存在"
+    },
+    "updateSeo": {
+      "updateSeoSuccess": "SEO更新成功",
+      "seoAlreadyExists": "SEO已存在"
+    },
+    "deleteSeo": "SEO删除成功"
+  },
+  "tag": {
+    "common": {
+      "tagNotFound": "标签未找到"
+    },
+    "getTagLists": "标签列表获取成功",
+    "createTag": {
+      "createTagSuccess": "标签创建成功",
+      "tagAlreadyExists": "标签已存在"
+    },
+    "updateTag": "标签更新成功",
+    "deleteTag": "标签删除成功"
+  },
+  "project": {
+    "common": {
+      "projectNotFound": "项目未找到",
+      "projectAlreadyExists": "项目已存在",
+      "projectHasMonetization": "项目有变现,不能删除"
+    },
+    "getProjectLists": "项目列表获取成功",
+    "createProject": "项目创建成功",
+    "updateProject": "项目更新成功",
+    "publishOrUnpublishProject": {
+      "publishProjectSuccess": "项目发布成功",
+      "unpublishProjectSuccess": "项目取消发布成功"
+    },
+    "getProjectDetails": "项目详情获取成功",
+    "getProjectDetailsSeo": "项目详情SEO获取成功",
+    "deleteProject": "项目删除成功"
+  },
+  "payment": {
+    "common": {
+      "paymentFailed": "支付失败",
+      "paymentFree": "项目价格为0，无法创建支付意图"
+    },
+    "createPaymentIntent": "支付意图创建成功",
+    "getPaymentRecord": "支付记录获取成功",
+    "stripeWebhook": "Webhook处理成功",
+    "paymentSuccess": {
+      "getSuccessDetailsSuccess": "支付成功详情获取成功",
+      "invalidMetadata": "支付元数据无效",
+      "stripeError": "Stripe API错误",
+      "internalError": "获取支付详情时发生内部错误"
+    }
+  },
+  "subscriber": {
+    "getSubscriberLists": "订阅者列表获取成功",
+    "createSubscriber": "订阅者创建成功",
+    "unsubscribeSubscriber": "订阅者取消订阅成功"
+  }
+}

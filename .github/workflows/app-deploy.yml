@@ -1,0 +1,654 @@
+name: Deploy App Server
+
+on:
+  workflow_run:
+    workflows: ["Deploy DB Server"]
+    types:
+      - completed
+    branches:
+      - main
+
+env:
+  DOCKER_IMAGE: ${{ secrets.DOCKER_USERNAME }}/server
+  DEPLOY_DIR: /opt/server
+  HEALTH_CHECK_URL: https://api.heyxiaoli.com/docs
+  MAX_HEALTH_CHECK_ATTEMPTS: 6
+  HEALTH_CHECK_INTERVAL: 5
+
+jobs:
+  deploy-app:
+    runs-on: ubuntu-latest
+    if: github.event.workflow_run.conclusion == 'success'
+
+    steps:
+      # ========================================
+      # 1. 代码准备阶段
+      # ========================================
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+
+      # 验证必要文件存在
+      - name: Verify required files
+        run: |
+          echo "🔍 Verifying deployment files..."
+
+          REQUIRED_FILES=(
+            "docker-compose.yml"
+            "nginx.conf"
+            "alembic.ini"
+            "alembic/env.py"
+            "script/initial_data.py"
+          )
+
+          MISSING_FILES=()
+          for file in "${REQUIRED_FILES[@]}"; do
+            if [ ! -f "$file" ] && [ ! -d "${file%/*}" ]; then
+              MISSING_FILES+=("$file")
+            fi
+          done
+
+          if [ ${#MISSING_FILES[@]} -ne 0 ]; then
+            echo "❌ Missing required files:"
+            printf '   - %s\n' "${MISSING_FILES[@]}"
+            exit 1
+          fi
+
+          # 检查迁移文件
+          if [ -d "alembic/versions" ]; then
+            MIGRATION_COUNT=$(find alembic/versions -name "*.py" -not -name "__init__.py" | wc -l)
+            echo "✅ Found $MIGRATION_COUNT migration file(s)"
+            
+            if [ "$MIGRATION_COUNT" -eq 0 ]; then
+              echo "⚠️  Warning: No migration files found"
+              echo "   First deployment will auto-generate migrations"
+            fi
+          else
+            echo "⚠️  alembic/versions directory not found"
+          fi
+
+          echo "✅ All required files verified"
+
+      # ========================================
+      # 2. 构建和推送 Docker 镜像
+      # ========================================
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+          registry: docker.io
+
+      - name: Extract metadata
+        id: meta
+        run: |
+          SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)
+          echo "short_sha=$SHORT_SHA" >> $GITHUB_OUTPUT
+          echo "timestamp=$(date +%Y%m%d-%H%M%S)" >> $GITHUB_OUTPUT
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: Dockerfile
+          push: true
+          tags: |
+            ${{ env.DOCKER_IMAGE }}:latest
+            ${{ env.DOCKER_IMAGE }}:${{ steps.meta.outputs.short_sha }}
+            ${{ env.DOCKER_IMAGE }}:${{ steps.meta.outputs.timestamp }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          labels: |
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
+
+      # ========================================
+      # 3. 准备部署文件
+      # ========================================
+      - name: Generate .env.production file
+        run: |
+          mkdir -p secret
+          echo "${{ secrets.ENV_PRODUCTION_FILE }}" > secret/.env.production
+
+          if [ ! -f secret/.env.production ]; then
+            echo "❌ Failed to generate .env.production"
+            exit 1
+          fi
+
+          # 验证文件不为空
+          if [ ! -s secret/.env.production ]; then
+            echo "❌ .env.production is empty"
+            exit 1
+          fi
+
+          echo "✅ .env.production generated successfully"
+
+      - name: Upload files to server
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.APP_SERVER_IP }}
+          username: ubuntu
+          key: ${{ secrets.APP_SSH_KEY }}
+          source: "docker-compose.yml,nginx.conf,secret/.env.production,script/setup-docker.sh,script/initial_data.py,alembic,alembic.ini"
+          target: "/tmp/deploy-${{ github.run_id }}/"
+          strip_components: 0
+          timeout: 300s
+
+      # ========================================
+      # 4. 服务器初始化和文件部署
+      # ========================================
+      - name: Deploy files and setup server
+        uses: appleboy/ssh-action@v0.1.8
+        with:
+          host: ${{ secrets.APP_SERVER_IP }}
+          username: ubuntu
+          key: ${{ secrets.APP_SSH_KEY }}
+          command_timeout: 10m
+          script: |
+            set -e
+            DEPLOY_TMP="/tmp/deploy-${{ github.run_id }}"
+            DEPLOY_DIR="${{ env.DEPLOY_DIR }}"
+
+            echo "🚀 Starting deployment..."
+
+            # Setup Docker if needed
+            if [ -f "$DEPLOY_TMP/script/setup-docker.sh" ]; then
+              echo "📦 Setting up Docker..."
+              chmod +x "$DEPLOY_TMP/script/setup-docker.sh"
+              bash "$DEPLOY_TMP/script/setup-docker.sh"
+            elif ! command -v docker &> /dev/null; then
+              echo "❌ Docker not installed and setup script not found"
+              exit 1
+            fi
+
+            # Verify uploaded files
+            echo "🔍 Verifying uploaded files..."
+            REQUIRED_FILES=(
+              "$DEPLOY_TMP/docker-compose.yml"
+              "$DEPLOY_TMP/nginx.conf"
+              "$DEPLOY_TMP/alembic.ini"
+            )
+
+            for file in "${REQUIRED_FILES[@]}"; do
+              if [ ! -f "$file" ]; then
+                echo "❌ Required file not found: $file"
+                exit 1
+              fi
+            done
+
+            # Find .env.production
+            ENV_FILE=""
+            if [ -f "$DEPLOY_TMP/.env.production" ]; then
+              ENV_FILE="$DEPLOY_TMP/.env.production"
+            elif [ -f "$DEPLOY_TMP/secret/.env.production" ]; then
+              ENV_FILE="$DEPLOY_TMP/secret/.env.production"
+            else
+              echo "❌ .env.production not found"
+              exit 1
+            fi
+
+            # Backup existing configuration (if exists)
+            if [ -d "$DEPLOY_DIR" ]; then
+              BACKUP_DIR="/opt/backups/server-$(date +%Y%m%d-%H%M%S)"
+              echo "💾 Backing up current deployment to $BACKUP_DIR"
+              sudo mkdir -p "$(dirname "$BACKUP_DIR")"
+              sudo cp -r "$DEPLOY_DIR"/* "$BACKUP_DIR/" 2>/dev/null || true
+              sudo chown -R ubuntu:ubuntu "$BACKUP_DIR" 2>/dev/null || true
+              
+              # Keep only last 5 backups
+              sudo ls -dt /opt/backups/server-* 2>/dev/null | tail -n +6 | xargs -r sudo rm -rf 2>/dev/null || true
+            fi
+
+            # Create deployment directories
+            echo "📁 Creating deployment directories..."
+            sudo mkdir -p "$DEPLOY_DIR"/{secret,alembic/versions,logs}
+
+            # Deploy configuration files
+            echo "📄 Deploying configuration files..."
+            sudo cp "$DEPLOY_TMP/docker-compose.yml" "$DEPLOY_DIR/docker-compose.yml"
+            sudo cp "$DEPLOY_TMP/nginx.conf" "$DEPLOY_DIR/nginx.conf"
+            sudo cp "$ENV_FILE" "$DEPLOY_DIR/secret/.env.production"
+
+            # Deploy initial_data.py
+            if [ -f "$DEPLOY_TMP/script/initial_data.py" ]; then
+              sudo cp "$DEPLOY_TMP/script/initial_data.py" "$DEPLOY_DIR/initial_data.py"
+              sudo chmod 644 "$DEPLOY_DIR/initial_data.py"
+            fi
+
+            # Deploy alembic files
+            echo "🗄️  Deploying alembic files..."
+            if [ -d "$DEPLOY_TMP/alembic" ]; then
+              sudo cp "$DEPLOY_TMP/alembic/env.py" "$DEPLOY_DIR/alembic/" 2>/dev/null || true
+              sudo cp "$DEPLOY_TMP/alembic/script.py.mako" "$DEPLOY_DIR/alembic/" 2>/dev/null || true
+              sudo cp "$DEPLOY_TMP/alembic/README" "$DEPLOY_DIR/alembic/" 2>/dev/null || true
+              
+              # Deploy migration files
+              if [ -d "$DEPLOY_TMP/alembic/versions" ]; then
+                sudo cp "$DEPLOY_TMP/alembic/versions"/*.py "$DEPLOY_DIR/alembic/versions/" 2>/dev/null || true
+                MIGRATION_COUNT=$(ls -1 "$DEPLOY_DIR/alembic/versions"/*.py 2>/dev/null | grep -v __init__ | wc -l || echo "0")
+                echo "   Deployed $MIGRATION_COUNT migration file(s)"
+              fi
+            fi
+
+            sudo cp "$DEPLOY_TMP/alembic.ini" "$DEPLOY_DIR/alembic.ini"
+
+            # Set proper permissions
+            echo "🔐 Setting permissions..."
+            sudo chmod 644 "$DEPLOY_DIR"/{docker-compose.yml,nginx.conf,alembic.ini} 2>/dev/null || true
+            sudo chmod 600 "$DEPLOY_DIR/secret/.env.production"
+            sudo chown -R ubuntu:ubuntu "$DEPLOY_DIR"
+
+            # Cleanup temporary files
+            sudo rm -rf "$DEPLOY_TMP"
+
+            echo "✅ Deployment files ready"
+
+      # ========================================
+      # 5. 拉取和启动容器
+      # ========================================
+      - name: Pull Docker image
+        uses: appleboy/ssh-action@v0.1.8
+        with:
+          host: ${{ secrets.APP_SERVER_IP }}
+          username: ubuntu
+          key: ${{ secrets.APP_SSH_KEY }}
+          script: |
+            set -e
+            DEPLOY_DIR="${{ env.DEPLOY_DIR }}"
+
+            echo "📥 Pulling Docker image..."
+            echo "${{ secrets.DOCKER_PASSWORD }}" | sudo docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+
+            if ! sudo docker compose -f "$DEPLOY_DIR/docker-compose.yml" pull; then
+              if ! sudo docker-compose -f "$DEPLOY_DIR/docker-compose.yml" pull; then
+                echo "❌ Failed to pull Docker image"
+                exit 1
+              fi
+            fi
+
+            echo "✅ Docker image pulled successfully"
+
+      - name: Start containers
+        uses: appleboy/ssh-action@v0.1.8
+        with:
+          host: ${{ secrets.APP_SERVER_IP }}
+          username: ubuntu
+          key: ${{ secrets.APP_SSH_KEY }}
+          command_timeout: 5m
+          script: |
+            set -e
+            DEPLOY_DIR="${{ env.DEPLOY_DIR }}"
+            COMPOSE_FILE="$DEPLOY_DIR/docker-compose.yml"
+
+            echo "🔄 Restarting containers..."
+
+            # Validate docker-compose.yml
+            if ! sudo docker compose -f "$COMPOSE_FILE" config > /dev/null 2>&1; then
+              if ! sudo docker-compose -f "$COMPOSE_FILE" config > /dev/null 2>&1; then
+                echo "❌ Invalid docker-compose.yml"
+                exit 1
+              fi
+            fi
+
+            # Stop existing containers gracefully
+            echo "🛑 Stopping existing containers..."
+            sudo docker compose -f "$COMPOSE_FILE" down --timeout 30 || \
+              sudo docker-compose -f "$COMPOSE_FILE" down --timeout 30 || true
+
+            # Start containers
+            echo "🚀 Starting containers..."
+            if ! sudo docker compose -f "$COMPOSE_FILE" up -d; then
+              if ! sudo docker-compose -f "$COMPOSE_FILE" up -d; then
+                echo "❌ Failed to start containers"
+                sudo docker compose -f "$COMPOSE_FILE" logs --tail=100 || true
+                exit 1
+              fi
+            fi
+
+            # Wait for container to be healthy
+            echo "⏳ Waiting for container to start..."
+            for i in {1..30}; do
+              CONTAINER_STATUS=$(sudo docker inspect --format='{{.State.Status}}' server 2>/dev/null || echo "not_found")
+              
+              if [ "$CONTAINER_STATUS" = "running" ]; then
+                echo "✅ Container is running"
+                
+                # Additional health check - wait for app to be ready
+                echo "⏳ Waiting for application to be ready..."
+                sleep 5
+                
+                if sudo docker exec server test -f /server/.venv/bin/python 2>/dev/null; then
+                  echo "✅ Application is ready"
+                  break
+                fi
+              fi
+              
+              if [ "$i" -eq 30 ]; then
+                echo "❌ Container failed to start properly"
+                echo "Container status: $CONTAINER_STATUS"
+                sudo docker logs --tail=100 server 2>/dev/null || true
+                exit 1
+              fi
+              
+              sleep 2
+            done
+
+      # ========================================
+      # 6. 数据库迁移
+      # ========================================
+      - name: Run database migration
+        uses: appleboy/ssh-action@v0.1.8
+        with:
+          host: ${{ secrets.APP_SERVER_IP }}
+          username: ubuntu
+          key: ${{ secrets.APP_SSH_KEY }}
+          command_timeout: 10m
+          script: |
+            set -e
+            DEPLOY_DIR="${{ env.DEPLOY_DIR }}"
+
+            echo "🗄️  Starting database migration..."
+
+            # Verify alembic configuration
+            if [ ! -f "$DEPLOY_DIR/alembic.ini" ]; then
+              echo "❌ alembic.ini not found"
+              exit 1
+            fi
+
+            # Wait for database to be ready (using alembic which handles connection properly)
+            echo "⏳ Waiting for database connection..."
+            for i in {1..30}; do
+              # Use alembic to check database connection (it handles async/sync drivers correctly)
+              # This works even if database is not initialized yet (will show appropriate error)
+              if sudo docker exec server /server/.venv/bin/alembic current 2>&1 | grep -qE "(Current revision|alembic_version|\(head\)|INFO)" || \
+                 sudo docker exec server /server/.venv/bin/alembic current 2>&1 | grep -q "Can't locate revision"; then
+                echo "✅ Database connection established"
+                break
+              fi
+              
+              if [ "$i" -eq 30 ]; then
+                echo "❌ Database connection timeout after 60 seconds"
+                echo "   Last alembic output:"
+                sudo docker exec server /server/.venv/bin/alembic current 2>&1 || true
+                echo "   Check database container status and network connectivity"
+                exit 1
+              fi
+              
+              sleep 2
+            done
+
+            # Check migration status
+            echo "📋 Checking migration status..."
+            MIGRATION_FILES=$(sudo ls -1 "$DEPLOY_DIR/alembic/versions"/*.py 2>/dev/null | grep -v __init__ | wc -l || echo "0")
+            echo "   Migration files on server: $MIGRATION_FILES"
+
+            # Get current database version
+            CURRENT_VERSION_OUTPUT=$(sudo docker exec server /server/.venv/bin/alembic current 2>&1 || echo "")
+            DB_INITIALIZED=$(echo "$CURRENT_VERSION_OUTPUT" | grep -qE "(alembic_version|Current revision|\(head\))" && echo "yes" || echo "no")
+            DB_CURRENT_VERSION=$(echo "$CURRENT_VERSION_OUTPUT" | grep -oE "[a-f0-9]{12}" | head -1 || echo "")
+
+            echo "   Database initialized: $DB_INITIALIZED"
+            [ -n "$DB_CURRENT_VERSION" ] && echo "   Current version: $DB_CURRENT_VERSION"
+
+            # Handle migration scenarios
+            if [ "$MIGRATION_FILES" -eq "0" ]; then
+              if [ "$DB_INITIALIZED" = "no" ]; then
+                echo "📝 First deployment detected - generating initial migration..."
+                echo "⚠️  Note: Auto-generated migrations should be reviewed in development first"
+                
+                if ! sudo docker exec server /server/.venv/bin/alembic revision --autogenerate -m "Initial migration"; then
+                  echo "❌ Failed to generate initial migration"
+                  exit 1
+                fi
+                
+                # Copy generated migration back to host
+                sudo chown -R ubuntu:ubuntu "$DEPLOY_DIR/alembic/versions/" 2>/dev/null || true
+                echo "✅ Initial migration generated"
+              else
+                echo "❌ Critical error: Database is initialized but migration files are missing"
+                echo "   Database version: ${DB_CURRENT_VERSION:-unknown}"
+                echo ""
+                echo "   This indicates a deployment issue. Possible causes:"
+                echo "   - Migration files were not committed to git"
+                echo "   - Files were not uploaded properly"
+                echo "   - Previous deployment used different migration files"
+                echo ""
+                echo "   Please check: $DEPLOY_DIR/alembic/versions/"
+                exit 1
+              fi
+            fi
+
+            # Get target version
+            TARGET_VERSION_OUTPUT=$(sudo docker exec server /server/.venv/bin/alembic heads 2>&1 || echo "")
+            TARGET_VERSION=$(echo "$TARGET_VERSION_OUTPUT" | grep -oE "[a-f0-9]{12}" | head -1 || echo "")
+
+            if [ "$DB_INITIALIZED" = "yes" ]; then
+              echo "📊 Migration plan:"
+              echo "   Current: ${DB_CURRENT_VERSION:-unknown}"
+              echo "   Target:  ${TARGET_VERSION:-unknown}"
+              
+              if [ "$DB_CURRENT_VERSION" = "$TARGET_VERSION" ]; then
+                echo "   Status:  ✅ Already up to date"
+              else
+                echo "   Status:  ⬆️  Upgrade required"
+              fi
+            fi
+
+            # Backup database before migration (optional, for production)
+            # Uncomment for production environments
+            # echo "💾 Creating database backup..."
+            # sudo docker exec db pg_dump -U user dbname > "$DEPLOY_DIR/logs/backup-$(date +%Y%m%d-%H%M%S).sql"
+
+            # Run migration with retry
+            echo "🔄 Running migration..."
+            MIGRATION_SUCCESS=false
+
+            for attempt in 1 2 3; do
+              echo "   Attempt $attempt/3..."
+              
+              MIGRATION_OUTPUT=$(sudo docker exec server /server/.venv/bin/alembic upgrade head 2>&1)
+              MIGRATION_EXIT=$?
+              
+              if [ $MIGRATION_EXIT -eq 0 ]; then
+                if echo "$MIGRATION_OUTPUT" | grep -q "Running upgrade"; then
+                  echo "$MIGRATION_OUTPUT"
+                  echo "✅ Migration completed successfully"
+                else
+                  echo "✅ Database is already up to date"
+                fi
+                MIGRATION_SUCCESS=true
+                break
+              fi
+              
+              # Check for version mismatch errors
+              if echo "$MIGRATION_OUTPUT" | grep -qE "(Can't locate revision|Multiple heads|target database is not up to date)"; then
+                echo "❌ Version mismatch detected:"
+                echo "$MIGRATION_OUTPUT"
+                echo ""
+                echo "   Database version: ${DB_CURRENT_VERSION:-unknown}"
+                echo "   Target version:   ${TARGET_VERSION:-unknown}"
+                echo ""
+                echo "   This error indicates:"
+                echo "   - Database has a version not in current migration files"
+                echo "   - Migration history is inconsistent"
+                echo "   - Database was migrated with different migration files"
+                echo ""
+                echo "   Manual intervention required. Check migration history:"
+                sudo docker exec server /server/.venv/bin/alembic history
+                exit 1
+              fi
+              
+              # Retry on other errors
+              if [ "$attempt" -lt 3 ]; then
+                echo "   Migration failed, retrying in 5 seconds..."
+                echo "$MIGRATION_OUTPUT"
+                sleep 5
+              else
+                echo "❌ Migration failed after 3 attempts"
+                echo "$MIGRATION_OUTPUT"
+                echo ""
+                echo "Current database state:"
+                sudo docker exec server /server/.venv/bin/alembic current
+                echo ""
+                echo "Recent logs:"
+                sudo docker logs --tail=100 server
+                exit 1
+              fi
+            done
+
+            # Verify migration success
+            if [ "$MIGRATION_SUCCESS" = true ]; then
+              NEW_VERSION=$(sudo docker exec server /server/.venv/bin/alembic current 2>&1 | grep -oE "[a-f0-9]{12}" | head -1 || echo "")
+              echo "📌 Final database version: ${NEW_VERSION:-unknown}"
+            fi
+
+      # ========================================
+      # 7. 初始化数据
+      # ========================================
+      - name: Insert initial data
+        uses: appleboy/ssh-action@v0.1.8
+        with:
+          host: ${{ secrets.APP_SERVER_IP }}
+          username: ubuntu
+          key: ${{ secrets.APP_SSH_KEY }}
+          script: |
+            set -e
+            DEPLOY_DIR="${{ env.DEPLOY_DIR }}"
+
+            echo "📊 Inserting initial data..."
+
+            # Verify script exists
+            if [ ! -f "$DEPLOY_DIR/initial_data.py" ]; then
+              echo "⚠️  initial_data.py not found, skipping"
+              exit 0
+            fi
+
+            # Verify script is accessible in container
+            if ! sudo docker exec server test -f /server/script/initial_data.py; then
+              echo "❌ Script not accessible in container"
+              exit 1
+            fi
+
+            # Run initial data script with retry
+            for attempt in 1 2 3; do
+              echo "   Attempt $attempt/3..."
+              
+              # Set PYTHONPATH to /server so Python can find the 'app' module
+              if sudo docker exec -e PYTHONPATH=/server -w /server server /server/.venv/bin/python /server/script/initial_data.py; then
+                echo "✅ Initial data inserted successfully"
+                exit 0
+              fi
+              
+              if [ "$attempt" -lt 3 ]; then
+                echo "   Failed, retrying in 3 seconds..."
+                sleep 3
+              else
+                echo "❌ Failed to insert initial data after 3 attempts"
+                echo ""
+                echo "Recent logs:"
+                sudo docker logs --tail=100 server
+                exit 1
+              fi
+            done
+
+      # ========================================
+      # 8. 健康检查
+      # ========================================
+      - name: Health check
+        uses: appleboy/ssh-action@v0.1.8
+        with:
+          host: ${{ secrets.APP_SERVER_IP }}
+          username: ubuntu
+          key: ${{ secrets.APP_SSH_KEY }}
+          script: |
+            set -e
+
+            echo "🏥 Starting health check..."
+            echo "   URL: ${{ env.HEALTH_CHECK_URL }}"
+            echo "   Max attempts: ${{ env.MAX_HEALTH_CHECK_ATTEMPTS }}"
+
+            # Initial wait for service to initialize
+            sleep 10
+
+            for i in $(seq 1 ${{ env.MAX_HEALTH_CHECK_ATTEMPTS }}); do
+              HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "${{ env.HEALTH_CHECK_URL }}" 2>/dev/null || echo "000")
+              
+              if [ "$HTTP_CODE" = "200" ]; then
+                echo "✅ Service is healthy (HTTP $HTTP_CODE)"
+                
+                # Additional checks
+                echo ""
+                echo "📊 Deployment summary:"
+                echo "   Docker image: ${{ env.DOCKER_IMAGE }}:latest"
+                echo "   Commit: ${{ github.sha }}"
+                echo "   Deployed at: $(date)"
+                
+                # Show running containers
+                echo ""
+                echo "📦 Running containers:"
+                sudo docker ps --filter "name=server\|nginx" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
+                
+                exit 0
+              fi
+              
+              echo "⏳ Waiting... ($i/${{ env.MAX_HEALTH_CHECK_ATTEMPTS }}) - HTTP $HTTP_CODE"
+              
+              if [ "$i" -lt "${{ env.MAX_HEALTH_CHECK_ATTEMPTS }}" ]; then
+                sleep ${{ env.HEALTH_CHECK_INTERVAL }}
+              fi
+            done
+
+            echo ""
+            echo "❌ Health check failed after ${{ env.MAX_HEALTH_CHECK_ATTEMPTS }} attempts"
+            echo ""
+            echo "📋 Diagnostics:"
+
+            # Container status
+            echo ""
+            echo "Container status:"
+            sudo docker ps -a --filter "name=server\|nginx" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
+
+            # Server logs
+            echo ""
+            echo "Server logs (last 100 lines):"
+            sudo docker logs --tail=100 server 2>/dev/null || echo "Failed to get server logs"
+
+            # Nginx logs
+            echo ""
+            echo "Nginx logs (last 50 lines):"
+            sudo docker logs --tail=50 nginx 2>/dev/null || echo "Failed to get nginx logs"
+
+            # Network check
+            echo ""
+            echo "Network connectivity:"
+            curl -v "${{ env.HEALTH_CHECK_URL }}" 2>&1 | head -20 || true
+
+            exit 1
+
+      # ========================================
+      # 9. 清理
+      # ========================================
+      - name: Cleanup
+        if: always()
+        run: |
+          echo "🧹 Cleaning up temporary files..."
+          rm -rf secret/
+          echo "✅ Cleanup completed"
+
+      # ========================================
+      # 10. 通知
+      # ========================================
+      - name: Deployment notification
+        if: always()
+        run: |
+          if [ "${{ job.status }}" = "success" ]; then
+            echo "✅ Deployment completed successfully"
+            echo "🚀 Application is now running at ${{ env.HEALTH_CHECK_URL }}"
+          else
+            echo "❌ Deployment failed"
+            echo "📋 Check the logs above for details"
+          fi

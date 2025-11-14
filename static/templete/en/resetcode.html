@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="x-apple-disable-message-reformatting">
+  <meta name="format-detection" content="telephone=no, date=no, address=no, email=no">
+  <meta name="color-scheme" content="light dark">
+  <meta name="supported-color-schemes" content="light dark">
+  <title>Password Reset Code</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      line-height: 1.6;
+      color: #333;
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: #f4f4f4;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 600px;
+      margin: 0 auto;
+      background-color: #ffffff;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      box-sizing: border-box;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .logo {
+      font-size: 24px;
+      font-weight: 700;
+      color: #111827;
+      margin-bottom: 4px;
+    }
+
+    .title {
+      font-size: 18px;
+      font-weight: 600;
+      color: #374151;
+      margin-bottom: 10px;
+    }
+
+    .verification-code {
+      background-color: #2563eb;
+      color: white;
+      padding: 15px;
+      border-radius: 5px;
+      text-align: center;
+      font-size: 24px;
+      font-weight: bold;
+      margin: 20px 0;
+      letter-spacing: 3px;
+    }
+
+    .expiration {
+      background-color: #f8f9fa;
+      padding: 15px;
+      border-radius: 5px;
+      margin: 20px 0;
+      border-left: 4px solid #2563eb;
+    }
+
+    .footer {
+      text-align: center;
+      margin-top: 30px;
+      padding-top: 20px;
+      border-top: 1px solid #eee;
+      color: #666;
+      font-size: 14px;
+    }
+
+    .warning {
+      background-color: #fdf2f2;
+      border: 1px solid #fecaca;
+      color: #991b1b;
+      padding: 10px;
+      border-radius: 5px;
+      margin: 15px 0;
+    }
+
+    .steps {
+      background-color: #f0f9ff;
+      border: 1px solid #bae6fd;
+      padding: 15px;
+      border-radius: 5px;
+      margin: 20px 0;
+    }
+
+    img {
+      border: 0;
+      outline: none;
+      text-decoration: none;
+      -ms-interpolation-mode: bicubic;
+      max-width: 100%;
+      height: auto;
+    }
+
+    .ExternalClass {
+      width: 100%;
+    }
+
+    .ExternalClass,
+    .ExternalClass p,
+    .ExternalClass span,
+    .ExternalClass font,
+    .ExternalClass td,
+    .ExternalClass div {
+      line-height: 100%;
+    }
+
+    a[x-apple-data-detectors] {
+      color: inherit !important;
+      text-decoration: none !important;
+    }
+
+    @media (max-width: 600px) {
+      body {
+        padding: 12px;
+      }
+
+      .container {
+        padding: 20px;
+      }
+
+      .logo {
+        font-size: 20px;
+      }
+
+      .title {
+        font-size: 16px;
+      }
+
+      .verification-code {
+        font-size: 22px;
+        letter-spacing: 2px;
+      }
+
+      .footer {
+        font-size: 12px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      body {
+        padding: 10px;
+      }
+
+      .container {
+        padding: 16px;
+        border-radius: 8px;
+      }
+
+      .logo {
+        font-size: 18px;
+      }
+
+      .title {
+        font-size: 15px;
+      }
+
+      .verification-code {
+        font-size: 20px;
+        letter-spacing: 2px;
+        padding: 12px;
+      }
+
+      .steps,
+      .expiration,
+      .warning {
+        padding: 12px;
+        margin: 16px 0;
+      }
+
+      .footer {
+        font-size: 12px;
+      }
+
+      ul,
+      ol {
+        padding-left: 18px;
+      }
+    }
+
+    @media (max-width: 414px) {
+      .container {
+        padding: 15px;
+      }
+
+      .logo {
+        font-size: 18px;
+      }
+
+      .title {
+        font-size: 15px;
+      }
+
+      .verification-code {
+        font-size: 19px;
+      }
+    }
+
+    @media (max-width: 390px) {
+      .container {
+        padding: 14px;
+      }
+
+      .logo {
+        font-size: 17px;
+      }
+
+      .title {
+        font-size: 14px;
+      }
+
+      .verification-code {
+        font-size: 18px;
+        letter-spacing: 1.5px;
+      }
+    }
+
+    @media (max-width: 375px) {
+      body {
+        padding: 8px;
+      }
+
+      .container {
+        padding: 14px;
+        border-radius: 6px;
+      }
+
+      .logo {
+        font-size: 17px;
+      }
+
+      .title {
+        font-size: 14px;
+      }
+
+      .verification-code {
+        font-size: 18px;
+        letter-spacing: 1.5px;
+        padding: 10px;
+      }
+
+      .footer {
+        font-size: 11px;
+      }
+
+      ul,
+      ol {
+        padding-left: 16px;
+      }
+    }
+
+    @media (max-width: 320px) {
+      body {
+        padding: 6px;
+      }
+
+      .container {
+        padding: 12px;
+        border-radius: 6px;
+      }
+
+      .logo {
+        font-size: 16px;
+      }
+
+      .title {
+        font-size: 13px;
+      }
+
+      .verification-code {
+        font-size: 17px;
+        letter-spacing: 1px;
+        padding: 10px;
+      }
+
+      .footer {
+        font-size: 10px;
+      }
+
+      ul,
+      ol {
+        padding-left: 14px;
+      }
+    }
+
+    @media (prefers-color-scheme: dark) {
+      body {
+        color: #e5e7eb;
+        background-color: #0f172a;
+      }
+
+      .container {
+        background-color: #111827;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+      }
+
+      .title {
+        color: #e5e7eb;
+      }
+
+      .verification-code {
+        background-color: #3b82f6;
+        color: #ffffff;
+      }
+
+      .expiration {
+        background-color: #0b1220;
+        border-left-color: #3b82f6;
+      }
+
+      .warning {
+        background-color: #2a1515;
+        border-color: #fecaca;
+        color: #fca5a5;
+      }
+
+      .footer {
+        color: #9ca3af;
+        border-top-color: #374151;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <!--[if mso | IE]><table role="presentation" width="600" align="center" cellpadding="0" cellspacing="0" border="0"><tr><td><![endif]-->
+  <div class="container" style="width:100%; max-width:600px; margin:0 auto; box-sizing:border-box;">
+    <div class="header">
+      <div class="logo">{{ app_name }}</div>
+      <div class="title">Password Reset Code</div>
+      <p>Dear {{ recipient }},</p>
+    </div>
+
+    <p>We received a request to reset your password. To keep your account secure, please enter the following code to
+      complete the reset:</p>
+
+    <div class="verification-code">
+      {{ code }}
+    </div>
+
+    <div class="expiration">
+      <strong>Important:</strong><br>
+      This code will expire in <strong>{{ expiration_minutes }} minutes</strong>. Please use it promptly.
+    </div>
+
+    <div class="steps">
+      <strong>Reset steps:</strong>
+      <ol>
+        <li>Copy or enter the code above</li>
+        <li>Enter the code on the password reset page</li>
+        <li>Set a new secure password</li>
+        <li>Complete the reset</li>
+      </ol>
+    </div>
+
+    <div class="warning">
+      <strong>Security tips:</strong>
+      <ul>
+        <li>Do not share the code with anyone</li>
+        <li>Our staff will never ask for the code</li>
+        <li>If this was not you, please change your password immediately</li>
+        <li>Use a strong password (letters, numbers, special characters)</li>
+      </ul>
+    </div>
+
+    <p>If you did not request a password reset, please log in and change your password to secure your account.</p>
+
+    <div class="footer">
+      <p>This email was sent automatically. Please do not reply.</p>
+      <p>Sent at: {{ current_date }} {{ current_time }}</p>
+      <p>&copy; {{ year }} {{app_name}} All rights reserved.</p>
+    </div>
+  </div>
+  <!--[if mso | IE]></td></tr></table><![endif]-->
+</body>
+
+</html>

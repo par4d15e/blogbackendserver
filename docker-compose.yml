@@ -1,0 +1,56 @@
+services:
+  app:
+    image: ningli3739/server:latest
+    container_name: server
+    working_dir: /server
+    restart: unless-stopped
+    command: ["bash", "/server/script/setup-server.sh"]
+    volumes:
+      - /opt/server/secret:/server/secret:ro
+      - static_files:/server/static
+      - /opt/server/alembic:/server/alembic
+      - /opt/server/alembic.ini:/server/alembic.ini
+      - /opt/server/initial_data.py:/server/script/initial_data.py:ro
+    ports:
+      - "8000:8000" # 添加这行端口映射
+    # 内存配置：适合 2GB 内存服务器（通过环境变量控制 workers 数量）
+    # 注意：deploy.resources 仅在 Docker Swarm 模式下有效
+    # 对于普通 docker-compose，通过 UVICORN_WORKERS 环境变量控制资源使用
+    environment:
+      - UVICORN_WORKERS=4 # 2GB 内存服务器建议使用 3-4 workers
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://0.0.0.0:8000 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - server_network
+
+  nginx:
+    image: nginx:latest
+    container_name: nginx
+    restart: unless-stopped
+    network_mode: host
+    volumes:
+      - /opt/server/nginx.conf:/etc/nginx/nginx.conf:ro
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+      - static_files:/server/static:ro
+    # Nginx 通常占用较少内存（约 20-50MB），无需特殊限制
+    # 注意：当使用 network_mode: host 时，depends_on 的 service_healthy 条件可能无法正常工作
+    # 因此改为仅等待服务启动，不检查健康状态
+    depends_on:
+      app:
+        condition: service_started
+    healthcheck:
+      test: ["CMD-SHELL", "nginx -t"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  static_files:
+
+networks:
+  server_network:
+    driver: bridge
