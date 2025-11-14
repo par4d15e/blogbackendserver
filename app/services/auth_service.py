@@ -177,7 +177,8 @@ class AuthService:
             value=token_data["access_token"],
             httponly=True,
             secure=True,
-            samesite="strict",
+            samesite="lax",
+            path="/",
             max_age=settings.jwt.JWT_ACCESS_TOKEN_EXPIRATION,
         )
 
@@ -187,7 +188,8 @@ class AuthService:
             value=token_data["refresh_token"],
             httponly=True,
             secure=True,
-            samesite="strict",
+            samesite="lax",
+            path="/",
             max_age=settings.jwt.JWT_REFRESH_TOKEN_EXPIRATION,
         )
 
@@ -267,7 +269,8 @@ class AuthService:
             value=access_token,
             httponly=True,
             secure=True,
-            samesite="strict",
+            samesite="lax",
+            path="/",
             max_age=settings.jwt.JWT_ACCESS_TOKEN_EXPIRATION,
         )
 
@@ -397,7 +400,8 @@ class AuthService:
             value=access_token,
             httponly=True,
             secure=True,
-            samesite="strict",
+            samesite="lax",
+            path="/",
             max_age=settings.jwt.JWT_ACCESS_TOKEN_EXPIRATION,
         )
 
@@ -407,7 +411,8 @@ class AuthService:
             value=refresh_token,
             httponly=True,
             secure=True,
-            samesite="strict",
+            samesite="lax",
+            path="/",
             max_age=settings.jwt.JWT_REFRESH_TOKEN_EXPIRATION,
         )
 
@@ -476,7 +481,8 @@ class AuthService:
             value=access_token,
             httponly=True,
             secure=True,
-            samesite="strict",
+            samesite="lax",
+            path="/",
             max_age=settings.jwt.JWT_ACCESS_TOKEN_EXPIRATION,
         )
 
@@ -486,7 +492,8 @@ class AuthService:
             value=refresh_token,
             httponly=True,
             secure=True,
-            samesite="strict",
+            samesite="lax",
+            path="/",
             max_age=settings.jwt.JWT_REFRESH_TOKEN_EXPIRATION,
         )
 
