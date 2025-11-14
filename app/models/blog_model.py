@@ -1,6 +1,7 @@
 from datetime import datetime, timezone
 from typing import TYPE_CHECKING, Optional, List, Dict, Any
-from sqlalchemy import DateTime, JSON, ForeignKey
+from sqlalchemy import text, JSON, ForeignKey
+from sqlalchemy.dialects.mysql import TIMESTAMP
 from sqlmodel import (
     Index,
     Column,
@@ -67,14 +68,15 @@ class Blog(SQLModel, table=True):
         max_length=64, default=None
     )  # 博客内容hash值，用于判断博客内容是否发生变化
     created_at: datetime = Field(
-        sa_column=Column(
-            DateTime(timezone=True), default=datetime.now(timezone.utc), nullable=False
-        )
+        nullable=False,
+        sa_type=TIMESTAMP,
+        sa_column_kwargs={"server_default": text("CURRENT_TIMESTAMP")},
     )
     updated_at: datetime = Field(
-        sa_column=Column(
-            DateTime(timezone=True), default=None, onupdate=datetime.now(timezone.utc)
-        )
+        nullable=True,
+        sa_type=TIMESTAMP,
+        sa_column_kwargs={"server_default": text(
+            "CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP")},
     )
 
     # 关系字段定义
@@ -205,14 +207,15 @@ class Blog_Status(SQLModel, table=True):
     is_archived: bool = Field(nullable=False)
     is_featured: bool = Field(nullable=False)
     created_at: datetime = Field(
-        sa_column=Column(
-            DateTime(timezone=True), default=datetime.now(timezone.utc), nullable=False
-        )
+        nullable=False,
+        sa_type=TIMESTAMP,
+        sa_column_kwargs={"server_default": text("CURRENT_TIMESTAMP")},
     )
     updated_at: datetime = Field(
-        sa_column=Column(
-            DateTime(timezone=True), default=None, onupdate=datetime.now(timezone.utc)
-        )
+        nullable=True,
+        sa_type=TIMESTAMP,
+        sa_column_kwargs={"server_default": text(
+            "CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP")},
     )
 
     # 关系字段 - 多对一：一个Blog_Status属于一个Blog和User
@@ -302,14 +305,15 @@ class Blog_Comment(SQLModel, table=True):
     parent_id: Optional[int] = Field(
         default=None, foreign_key="blog_comment.id")
     created_at: datetime = Field(
-        sa_column=Column(
-            DateTime(timezone=True), default=datetime.now(timezone.utc), nullable=False
-        )
+        nullable=False,
+        sa_type=TIMESTAMP,
+        sa_column_kwargs={"server_default": text("CURRENT_TIMESTAMP")},
     )
     updated_at: datetime = Field(
-        sa_column=Column(
-            DateTime(timezone=True), default=None, onupdate=datetime.now(timezone.utc)
-        )
+        nullable=True,
+        sa_type=TIMESTAMP,
+        sa_column_kwargs={"server_default": text(
+            "CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP")},
     )
 
     # 关系字段 - 多对一：一个Blog_Comment属于一个Blog和User
@@ -378,14 +382,15 @@ class Saved_Blog(SQLModel, table=True):
             "blogs.id", ondelete="CASCADE"), nullable=False)
     )
     created_at: datetime = Field(
-        sa_column=Column(
-            DateTime(timezone=True), default=datetime.now(timezone.utc), nullable=False
-        )
+        nullable=False,
+        sa_type=TIMESTAMP,
+        sa_column_kwargs={"server_default": text("CURRENT_TIMESTAMP")},
     )
     updated_at: datetime = Field(
-        sa_column=Column(
-            DateTime(timezone=True), default=None, onupdate=datetime.now(timezone.utc)
-        )
+        nullable=True,
+        sa_type=TIMESTAMP,
+        sa_column_kwargs={"server_default": text(
+            "CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP")},
     )
 
     # 关系字段 - 多对一：一个Saved_Blog属于一个Blog和User
@@ -436,14 +441,15 @@ class Blog_Tag(SQLModel, table=True):
             "tags.id", ondelete="CASCADE"), nullable=False)
     )
     created_at: datetime = Field(
-        sa_column=Column(
-            DateTime(timezone=True), default=datetime.now(timezone.utc), nullable=False
-        )
+        nullable=False,
+        sa_type=TIMESTAMP,
+        sa_column_kwargs={"server_default": text("CURRENT_TIMESTAMP")},
     )
     updated_at: datetime = Field(
-        sa_column=Column(
-            DateTime(timezone=True), default=None, onupdate=datetime.now(timezone.utc)
-        )
+        nullable=True,
+        sa_type=TIMESTAMP,
+        sa_column_kwargs={"server_default": text(
+            "CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP")},
     )
 
     # 关系字段 - 多对一：一个Blog_Tag属于一个Blog和Tag
@@ -492,14 +498,15 @@ class Blog_Summary(SQLModel, table=True):
     english_summary: Dict[str, Any] = Field(
         sa_column=Column(JSON, nullable=False))
     created_at: datetime = Field(
-        sa_column=Column(
-            DateTime(timezone=True), default=datetime.now(timezone.utc), nullable=False
-        )
+        nullable=False,
+        sa_type=TIMESTAMP,
+        sa_column_kwargs={"server_default": text("CURRENT_TIMESTAMP")},
     )
     updated_at: datetime = Field(
-        sa_column=Column(
-            DateTime(timezone=True), default=None, onupdate=datetime.now(timezone.utc)
-        )
+        nullable=True,
+        sa_type=TIMESTAMP,
+        sa_column_kwargs={"server_default": text(
+            "CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP")},
     )
 
     # 关系字段 - 一对一：一个Blog_Summary对应一个Blog
@@ -558,14 +565,15 @@ class Blog_TTS(SQLModel, table=True):
             "media.id", ondelete="CASCADE"), nullable=True)
     )
     created_at: datetime = Field(
-        sa_column=Column(
-            DateTime(timezone=True), default=datetime.now(timezone.utc), nullable=False
-        )
+        nullable=False,
+        sa_type=TIMESTAMP,
+        sa_column_kwargs={"server_default": text("CURRENT_TIMESTAMP")},
     )
     updated_at: datetime = Field(
-        sa_column=Column(
-            DateTime(timezone=True), default=None, onupdate=datetime.now(timezone.utc)
-        )
+        nullable=True,
+        sa_type=TIMESTAMP,
+        sa_column_kwargs={"server_default": text(
+            "CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP")},
     )
 
     # 关系字段 - 多对一：一个Blog_TTS属于一个Blog

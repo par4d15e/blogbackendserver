@@ -237,7 +237,8 @@ class BoardCrud:
         if not parent_comments:
             raise HTTPException(
                 status_code=404,
-                detail=get_message("board.createBoardComment.commentNotFound", language),
+                detail=get_message(
+                    "board.createBoardComment.commentNotFound", language),
             )
 
         # 获取所有父评论的子评论和孙评论，确保评论树完整（支持三级嵌套）

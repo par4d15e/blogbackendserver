@@ -176,7 +176,9 @@ app.openapi = custom_openapi
 
 
 # 启动FastAPI应用
-if os.getenv("ENV") == "development":
+# if os.getenv("ENV") == "development":
+if __name__ == "__main__":
+
     uvicorn.run(
         app="app.main:app",
         host="127.0.0.1",

@@ -1,6 +1,7 @@
 from datetime import datetime, timezone
 from fastapi import Depends, HTTPException
 from sqlmodel import select, update
+from sqlalchemy import func
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import Optional, List, Dict, Any, Tuple
 from app.models.subscriber_model import Subscriber
@@ -44,12 +45,13 @@ class SubscriberCrud:
                 )
             else:
                 # 如果存在但未激活，重新激活订阅
+                # subscribed_at 由数据库自动设置（CURRENT_TIMESTAMP）
                 stmt = (
                     update(Subscriber)
                     .where(Subscriber.email == email)
                     .values(
                         is_active=True,
-                        subscribed_at=datetime.now(timezone.utc),
+                        subscribed_at=func.now(),
                         unsubscribed_at=None
                     )
                 )
@@ -78,12 +80,13 @@ class SubscriberCrud:
                 return existing_subscriber
             else:
                 # 存在但未激活，重新激活
+                # subscribed_at 由数据库自动设置（CURRENT_TIMESTAMP）
                 stmt = (
                     update(Subscriber)
                     .where(Subscriber.email == email)
                     .values(
                         is_active=True,
-                        subscribed_at=datetime.now(timezone.utc),
+                        subscribed_at=func.now(),
                         unsubscribed_at=None
                     )
                 )
@@ -115,12 +118,13 @@ class SubscriberCrud:
                 detail="Subscriber is already unsubscribed."
             )
 
+        # 使用数据库的 CURRENT_TIMESTAMP 函数
         stmt = (
             update(Subscriber)
             .where(Subscriber.email == email)
             .values(
                 is_active=False,
-                unsubscribed_at=datetime.now(timezone.utc)
+                unsubscribed_at=func.now()
             )
         )
         await self.db.execute(stmt)

@@ -1,7 +1,8 @@
 from enum import IntEnum
 from datetime import datetime, timezone
 from typing import TYPE_CHECKING, Optional, List
-from sqlalchemy import DateTime, ForeignKey
+from sqlalchemy import text, ForeignKey
+from sqlalchemy.dialects.mysql import TIMESTAMP
 from sqlmodel import (
     Column,
     Field,
@@ -67,9 +68,9 @@ class Media(SQLModel, table=True):
     )  # 优化长度
     file_size: int = Field(nullable=False, default=0)
     created_at: datetime = Field(
-        sa_column=Column(
-            DateTime(timezone=True), default=datetime.now(timezone.utc), nullable=False
-        )
+        nullable=False,
+        sa_type=TIMESTAMP,
+        sa_column_kwargs={"server_default": text("CURRENT_TIMESTAMP")},
     )
 
     # 关系字段定义

@@ -1,7 +1,8 @@
 from enum import IntEnum
 from datetime import datetime, timezone
 from typing import Optional
-from sqlalchemy import DateTime, ForeignKey
+from sqlalchemy import text, ForeignKey
+from sqlalchemy.dialects.mysql import TIMESTAMP
 from sqlmodel import (
     Column,
     Field,
@@ -78,19 +79,21 @@ class Token(SQLModel, table=True):
 
     id: Optional[int] = Field(default=None, primary_key=True)
     user_id: int = Field(
-        sa_column=Column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+        sa_column=Column(ForeignKey(
+            "users.id", ondelete="CASCADE"), nullable=False)
     )
     jit: str = Field(nullable=False, max_length=64, unique=True)  # 优化长度
     type: TokenType = Field(nullable=False)
     token: str = Field(nullable=False, max_length=1024)  # 移除unique约束
     is_active: bool = Field(default=True, nullable=True)
     created_at: datetime = Field(
-        sa_column=Column(
-            DateTime(timezone=True), default=datetime.now(timezone.utc), nullable=False
-        )
+        nullable=False,
+        sa_type=TIMESTAMP,
+        sa_column_kwargs={"server_default": text("CURRENT_TIMESTAMP")},
     )
     expired_at: datetime = Field(
-        sa_column=Column(DateTime(timezone=True), nullable=False)
+        nullable=False,
+        sa_type=TIMESTAMP,
     )
 
     def __repr__(self):
@@ -126,18 +129,20 @@ class Code(SQLModel, table=True):
 
     id: Optional[int] = Field(default=None, primary_key=True)
     user_id: int = Field(
-        sa_column=Column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+        sa_column=Column(ForeignKey(
+            "users.id", ondelete="CASCADE"), nullable=False)
     )
     type: CodeType = Field(nullable=False)
     code: str = Field(nullable=False, max_length=10, unique=True)  # 优化长度
     is_used: bool = Field(default=False, nullable=False)
     created_at: datetime = Field(
-        sa_column=Column(
-            DateTime(timezone=True), default=datetime.now(timezone.utc), nullable=False
-        )
+        nullable=False,
+        sa_type=TIMESTAMP,
+        sa_column_kwargs={"server_default": text("CURRENT_TIMESTAMP")},
     )
     expires_at: datetime = Field(
-        sa_column=Column(DateTime(timezone=True), nullable=False)
+        nullable=False,
+        sa_type=TIMESTAMP,
     )
 
     def __repr__(self):
@@ -165,16 +170,17 @@ class Social_Account(SQLModel, table=True):
 
     id: Optional[int] = Field(default=None, primary_key=True)
     user_id: int = Field(
-        sa_column=Column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+        sa_column=Column(ForeignKey(
+            "users.id", ondelete="CASCADE"), nullable=False)
     )
     provider: SocialProvider = Field(nullable=False)
     provider_user_id: str = Field(
         nullable=False, max_length=100, unique=True
     )  # 优化长度
     created_at: datetime = Field(
-        sa_column=Column(
-            DateTime(timezone=True), default=datetime.now(timezone.utc), nullable=False
-        )
+        nullable=False,
+        sa_type=TIMESTAMP,
+        sa_column_kwargs={"server_default": text("CURRENT_TIMESTAMP")},
     )
 
     def __repr__(self):

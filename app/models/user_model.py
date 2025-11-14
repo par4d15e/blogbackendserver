@@ -1,7 +1,8 @@
 from enum import IntEnum
 from datetime import datetime, timezone
 from typing import TYPE_CHECKING, List, Optional
-from sqlalchemy import DateTime
+from sqlalchemy import text
+from sqlalchemy.dialects.mysql import TIMESTAMP
 from sqlmodel import (
     Column,
     Field,
@@ -74,14 +75,15 @@ class User(SQLModel, table=True):
     is_verified: bool = Field(default=False, nullable=False)
     is_deleted: bool = Field(default=False, nullable=False)
     created_at: datetime = Field(
-        sa_column=Column(
-            DateTime(timezone=True), default=datetime.now(timezone.utc), nullable=False
-        )
+        nullable=False,
+        sa_type=TIMESTAMP,
+        sa_column_kwargs={"server_default": text("CURRENT_TIMESTAMP")},
     )
     updated_at: datetime = Field(
-        sa_column=Column(
-            DateTime(timezone=True), default=None, onupdate=datetime.now(timezone.utc)
-        )
+        nullable=True,
+        sa_type=TIMESTAMP,
+        sa_column_kwargs={"server_default": text(
+            "CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP")},
     )
 
     # 关系字段定义

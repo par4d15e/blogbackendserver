@@ -1,7 +1,8 @@
 from sqlmodel import SQLModel, Field, Column
 from typing import Optional
 from datetime import datetime, timezone
-from sqlalchemy import DateTime
+from sqlalchemy import text
+from sqlalchemy.dialects.mysql import TIMESTAMP
 
 
 class Subscriber(SQLModel, table=True):
@@ -9,13 +10,14 @@ class Subscriber(SQLModel, table=True):
     email: str = Field(index=True, unique=True)
     is_active: bool = True  # 是否订阅
     subscribed_at: datetime = Field(
-        sa_column=Column(
-            DateTime(timezone=True), default=datetime.now(timezone.utc), nullable=False
-        )
+        nullable=False,
+        sa_type=TIMESTAMP,
+        sa_column_kwargs={"server_default": text("CURRENT_TIMESTAMP")},
     )
     unsubscribed_at: Optional[datetime] = Field(
         default=None,
-        sa_column=Column(DateTime(timezone=True), nullable=True)
+        nullable=True,
+        sa_type=TIMESTAMP,
     )  # 用户取消订阅时间
 
     def __str__(self):

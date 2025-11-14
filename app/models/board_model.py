@@ -1,6 +1,7 @@
 from datetime import datetime, timezone
 from typing import TYPE_CHECKING, Optional, List
-from sqlalchemy import DateTime, ForeignKey
+from sqlalchemy import text, ForeignKey
+from sqlalchemy.dialects.mysql import TIMESTAMP
 from sqlmodel import (
     Column,
     Field,
@@ -34,21 +35,26 @@ class Board(SQLModel, table=True):
 
     id: Optional[int] = Field(default=None, primary_key=True)
     section_id: int = Field(
-        sa_column=Column(ForeignKey("sections.id", ondelete="CASCADE"), nullable=False)
+        sa_column=Column(ForeignKey(
+            "sections.id", ondelete="CASCADE"), nullable=False)
     )
-    chinese_title: str = Field(nullable=False, max_length=100, unique=True)  # 优化长度
+    chinese_title: str = Field(
+        nullable=False, max_length=100, unique=True)  # 优化长度
     english_title: Optional[str] = Field(default=None, max_length=100)  # 优化长度
-    chinese_description: Optional[str] = Field(default=None, max_length=200)  # 优化长度
-    english_description: Optional[str] = Field(default=None, max_length=200)  # 优化长度
+    chinese_description: Optional[str] = Field(
+        default=None, max_length=200)  # 优化长度
+    english_description: Optional[str] = Field(
+        default=None, max_length=200)  # 优化长度
     created_at: datetime = Field(
-        sa_column=Column(
-            DateTime(timezone=True), default=datetime.now(timezone.utc), nullable=False
-        )
+        nullable=False,
+        sa_type=TIMESTAMP,
+        sa_column_kwargs={"server_default": text("CURRENT_TIMESTAMP")},
     )
     updated_at: datetime = Field(
-        sa_column=Column(
-            DateTime(timezone=True), default=None, onupdate=datetime.now(timezone.utc)
-        )
+        nullable=True,
+        sa_type=TIMESTAMP,
+        sa_column_kwargs={"server_default": text(
+            "CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP")},
     )
 
     # 关系字段 - 多对一：一个Board属于一个Section和Seo
@@ -95,10 +101,12 @@ class Board_Comment(SQLModel, table=True):
 
     id: Optional[int] = Field(default=None, primary_key=True)
     board_id: int = Field(
-        sa_column=Column(ForeignKey("boards.id", ondelete="CASCADE"), nullable=False)
+        sa_column=Column(ForeignKey(
+            "boards.id", ondelete="CASCADE"), nullable=False)
     )
     user_id: int = Field(
-        sa_column=Column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+        sa_column=Column(ForeignKey(
+            "users.id", ondelete="CASCADE"), nullable=False)
     )
     parent_id: Optional[int] = Field(
         sa_column=Column(
@@ -108,14 +116,15 @@ class Board_Comment(SQLModel, table=True):
     is_deleted: bool = Field(default=False)
     comment: str = Field(nullable=False, max_length=500)  # 优化长度
     created_at: datetime = Field(
-        sa_column=Column(
-            DateTime(timezone=True), default=datetime.now(timezone.utc), nullable=False
-        )
+        nullable=False,
+        sa_type=TIMESTAMP,
+        sa_column_kwargs={"server_default": text("CURRENT_TIMESTAMP")},
     )
     updated_at: datetime = Field(
-        sa_column=Column(
-            DateTime(timezone=True), default=None, onupdate=datetime.now(timezone.utc)
-        )
+        nullable=True,
+        sa_type=TIMESTAMP,
+        sa_column_kwargs={"server_default": text(
+            "CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP")},
     )
 
     # 关系字段 - 多对一：一个Board_Comment属于一个Board和User

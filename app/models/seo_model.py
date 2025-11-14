@@ -1,6 +1,7 @@
 from datetime import datetime, timezone
 from typing import Optional
-from sqlalchemy import DateTime
+from sqlalchemy import text
+from sqlalchemy.dialects.mysql import TIMESTAMP
 from sqlmodel import (
     Column,
     Field,
@@ -37,14 +38,14 @@ class Seo(SQLModel, table=True):
     english_keywords: Optional[str] = Field(
         default=None, max_length=200)  # 优化长度
     created_at: datetime = Field(
-        sa_column=Column(
-            DateTime(timezone=True), default=datetime.now(timezone.utc), nullable=False
-        )
+        nullable=False,
+        sa_type=TIMESTAMP,
+        sa_column_kwargs={"server_default": text("CURRENT_TIMESTAMP")},
     )
     updated_at: datetime = Field(
-        sa_column=Column(
-            DateTime(timezone=True), default=None, onupdate=datetime.now(timezone.utc)
-        )
+        nullable=True,
+        sa_type=TIMESTAMP,
+        sa_column_kwargs={"server_default": text("CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP")},
     )
 
     def __repr__(self):
