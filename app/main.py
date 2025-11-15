@@ -178,12 +178,14 @@ app.openapi = custom_openapi
 # 启动FastAPI应用
 # if os.getenv("ENV") == "development":
 if __name__ == "__main__":
+    if os.getenv("ENV") == "development":
+        logger.info("🚩 Starting the application in development mode...")
 
-    uvicorn.run(
-        app="app.main:app",
-        host="127.0.0.1",
-        port=8000,
-        reload=True,
-        ssl_keyfile="certs/localhost-key.pem",
-        ssl_certfile="certs/localhost.pem",
-    )
+        uvicorn.run(
+            app="app.main:app",
+            host="127.0.0.1",
+            port=8000,
+            reload=True,
+            ssl_keyfile="certs/localhost-key.pem",
+            ssl_certfile="certs/localhost.pem",
+        )

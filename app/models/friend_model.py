@@ -56,11 +56,11 @@ class Friend(SQLModel, table=True):
         sa_type=TIMESTAMP,
         sa_column_kwargs={"server_default": text("CURRENT_TIMESTAMP")},
     )
-    updated_at: datetime = Field(
+    updated_at: Optional[datetime] = Field(
+        default=None,
         nullable=True,
         sa_type=TIMESTAMP,
-        sa_column_kwargs={"server_default": text(
-            "CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP")},
+        sa_column_kwargs={"onupdate": text("CURRENT_TIMESTAMP")},
     )
 
     # 关系字段定义
@@ -124,11 +124,11 @@ class Friend_List(SQLModel, table=True):
         sa_type=TIMESTAMP,
         sa_column_kwargs={"server_default": text("CURRENT_TIMESTAMP")},
     )
-    updated_at: datetime = Field(
+    updated_at: Optional[datetime] = Field(
+        default=None,
         nullable=True,
         sa_type=TIMESTAMP,
-        sa_column_kwargs={"server_default": text(
-            "CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP")},
+        sa_column_kwargs={"onupdate": text("CURRENT_TIMESTAMP")},
     )
 
     def __repr__(self):

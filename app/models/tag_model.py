@@ -26,7 +26,8 @@ class Tag(SQLModel, table=True):
     )
 
     id: Optional[int] = Field(default=None, primary_key=True)
-    chinese_title: str = Field(nullable=False, max_length=50, unique=True)  # 优化长度
+    chinese_title: str = Field(
+        nullable=False, max_length=50, unique=True)  # 优化长度
     english_title: str = Field(nullable=False, max_length=50)  # 优化长度
     slug: str = Field(nullable=False, max_length=50, unique=True)
     created_at: datetime = Field(
@@ -34,10 +35,11 @@ class Tag(SQLModel, table=True):
         sa_type=TIMESTAMP,
         sa_column_kwargs={"server_default": text("CURRENT_TIMESTAMP")},
     )
-    updated_at: datetime = Field(
+    updated_at: Optional[datetime] = Field(
+        default=None,
         nullable=True,
         sa_type=TIMESTAMP,
-        sa_column_kwargs={"server_default": text("CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP")},
+        sa_column_kwargs={"onupdate": text("CURRENT_TIMESTAMP")},
     )
 
     def __repr__(self):

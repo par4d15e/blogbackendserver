@@ -58,10 +58,13 @@ class Section(SQLModel, table=True):
     )
     type: SectionType = Field(nullable=False)
     slug: str = Field(nullable=False, max_length=100, unique=True)  # 优化长度
-    chinese_title: str = Field(nullable=False, max_length=100, unique=True)  # 优化长度
+    chinese_title: str = Field(
+        nullable=False, max_length=100, unique=True)  # 优化长度
     english_title: Optional[str] = Field(default=None, max_length=100)  # 优化长度
-    chinese_description: Optional[str] = Field(default=None, max_length=200)  # 优化长度
-    english_description: Optional[str] = Field(default=None, max_length=200)  # 优化长度
+    chinese_description: Optional[str] = Field(
+        default=None, max_length=200)  # 优化长度
+    english_description: Optional[str] = Field(
+        default=None, max_length=200)  # 优化长度
     is_active: bool = Field(default=True, nullable=False)
     parent_id: Optional[int] = Field(default=None, foreign_key="sections.id")
     created_at: datetime = Field(
@@ -69,10 +72,11 @@ class Section(SQLModel, table=True):
         sa_type=TIMESTAMP,
         sa_column_kwargs={"server_default": text("CURRENT_TIMESTAMP")},
     )
-    updated_at: datetime = Field(
+    updated_at: Optional[datetime] = Field(
+        default=None,
         nullable=True,
         sa_type=TIMESTAMP,
-        sa_column_kwargs={"server_default": text("CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP")},
+        sa_column_kwargs={"onupdate": text("CURRENT_TIMESTAMP")},
     )
 
     # 关系字段定义

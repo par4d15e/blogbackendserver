@@ -1,8 +1,8 @@
-"""auto
+"""change_updated_at_nullable_on_insert
 
-Revision ID: 1d19f38237f4
+Revision ID: 535f237ef25a
 Revises: 
-Create Date: 2025-11-15 12:30:46.085221
+Create Date: 2025-11-15 12:58:47.592727
 
 """
 from typing import Sequence, Union
@@ -13,7 +13,7 @@ import sqlmodel
 from sqlalchemy.dialects import mysql
 
 # revision identifiers, used by Alembic.
-revision: str = '1d19f38237f4'
+revision: str = '535f237ef25a'
 down_revision: Union[str, Sequence[str], None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -31,7 +31,7 @@ def upgrade() -> None:
     sa.Column('chinese_keywords', sqlmodel.sql.sqltypes.AutoString(length=200), nullable=True),
     sa.Column('english_keywords', sqlmodel.sql.sqltypes.AutoString(length=200), nullable=True),
     sa.Column('created_at', mysql.TIMESTAMP(), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=False),
-    sa.Column('updated_at', mysql.TIMESTAMP(), server_default=sa.text('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'), nullable=True),
+    sa.Column('updated_at', mysql.TIMESTAMP(), nullable=True),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('chinese_title')
     )
@@ -54,7 +54,7 @@ def upgrade() -> None:
     sa.Column('english_title', sqlmodel.sql.sqltypes.AutoString(length=50), nullable=False),
     sa.Column('slug', sqlmodel.sql.sqltypes.AutoString(length=50), nullable=False),
     sa.Column('created_at', mysql.TIMESTAMP(), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=False),
-    sa.Column('updated_at', mysql.TIMESTAMP(), server_default=sa.text('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'), nullable=True),
+    sa.Column('updated_at', mysql.TIMESTAMP(), nullable=True),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('chinese_title'),
     sa.UniqueConstraint('slug')
@@ -69,7 +69,7 @@ def upgrade() -> None:
     sa.Column('tax_rate', sa.Float(), nullable=False),
     sa.Column('is_active', sa.Boolean(), nullable=True),
     sa.Column('created_at', mysql.TIMESTAMP(), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=False),
-    sa.Column('updated_at', mysql.TIMESTAMP(), server_default=sa.text('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'), nullable=True),
+    sa.Column('updated_at', mysql.TIMESTAMP(), nullable=True),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('tax_name')
     )
@@ -94,7 +94,7 @@ def upgrade() -> None:
     sa.Column('is_verified', sa.Boolean(), nullable=False),
     sa.Column('is_deleted', sa.Boolean(), nullable=False),
     sa.Column('created_at', mysql.TIMESTAMP(), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=False),
-    sa.Column('updated_at', mysql.TIMESTAMP(), server_default=sa.text('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'), nullable=True),
+    sa.Column('updated_at', mysql.TIMESTAMP(), nullable=True),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('email'),
     sa.UniqueConstraint('username')
@@ -162,7 +162,7 @@ def upgrade() -> None:
     sa.Column('is_active', sa.Boolean(), nullable=False),
     sa.Column('parent_id', sa.Integer(), nullable=True),
     sa.Column('created_at', mysql.TIMESTAMP(), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=False),
-    sa.Column('updated_at', mysql.TIMESTAMP(), server_default=sa.text('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'), nullable=True),
+    sa.Column('updated_at', mysql.TIMESTAMP(), nullable=True),
     sa.ForeignKeyConstraint(['parent_id'], ['sections.id'], ),
     sa.ForeignKeyConstraint(['seo_id'], ['seo.id'], ondelete='SET NULL'),
     sa.PrimaryKeyConstraint('id'),
@@ -237,7 +237,7 @@ def upgrade() -> None:
     sa.Column('english_content', sa.JSON(), nullable=True),
     sa.Column('content_hash', sqlmodel.sql.sqltypes.AutoString(length=64), nullable=True),
     sa.Column('created_at', mysql.TIMESTAMP(), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=False),
-    sa.Column('updated_at', mysql.TIMESTAMP(), server_default=sa.text('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'), nullable=True),
+    sa.Column('updated_at', mysql.TIMESTAMP(), nullable=True),
     sa.ForeignKeyConstraint(['cover_id'], ['media.id'], ondelete='SET NULL'),
     sa.ForeignKeyConstraint(['section_id'], ['sections.id'], ondelete='CASCADE'),
     sa.ForeignKeyConstraint(['seo_id'], ['seo.id'], ondelete='SET NULL'),
@@ -260,7 +260,7 @@ def upgrade() -> None:
     sa.Column('chinese_description', sqlmodel.sql.sqltypes.AutoString(length=200), nullable=True),
     sa.Column('english_description', sqlmodel.sql.sqltypes.AutoString(length=200), nullable=True),
     sa.Column('created_at', mysql.TIMESTAMP(), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=False),
-    sa.Column('updated_at', mysql.TIMESTAMP(), server_default=sa.text('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'), nullable=True),
+    sa.Column('updated_at', mysql.TIMESTAMP(), nullable=True),
     sa.ForeignKeyConstraint(['section_id'], ['sections.id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('chinese_title')
@@ -278,7 +278,7 @@ def upgrade() -> None:
     sa.Column('chinese_description', sqlmodel.sql.sqltypes.AutoString(length=200), nullable=True),
     sa.Column('english_description', sqlmodel.sql.sqltypes.AutoString(length=200), nullable=True),
     sa.Column('created_at', mysql.TIMESTAMP(), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=False),
-    sa.Column('updated_at', mysql.TIMESTAMP(), server_default=sa.text('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'), nullable=True),
+    sa.Column('updated_at', mysql.TIMESTAMP(), nullable=True),
     sa.ForeignKeyConstraint(['section_id'], ['sections.id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('chinese_title')
@@ -304,7 +304,7 @@ def upgrade() -> None:
     sa.Column('english_content', sa.JSON(), nullable=True),
     sa.Column('content_hash', sqlmodel.sql.sqltypes.AutoString(length=64), nullable=True),
     sa.Column('created_at', mysql.TIMESTAMP(), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=False),
-    sa.Column('updated_at', mysql.TIMESTAMP(), server_default=sa.text('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'), nullable=True),
+    sa.Column('updated_at', mysql.TIMESTAMP(), nullable=True),
     sa.ForeignKeyConstraint(['cover_id'], ['media.id'], ondelete='SET NULL'),
     sa.ForeignKeyConstraint(['section_id'], ['sections.id'], ondelete='SET NULL'),
     sa.ForeignKeyConstraint(['seo_id'], ['seo.id'], ondelete='SET NULL'),
@@ -325,7 +325,7 @@ def upgrade() -> None:
     sa.Column('is_deleted', sa.Boolean(), nullable=False),
     sa.Column('parent_id', sa.Integer(), nullable=True),
     sa.Column('created_at', mysql.TIMESTAMP(), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=False),
-    sa.Column('updated_at', mysql.TIMESTAMP(), server_default=sa.text('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'), nullable=True),
+    sa.Column('updated_at', mysql.TIMESTAMP(), nullable=True),
     sa.ForeignKeyConstraint(['blog_id'], ['blogs.id'], ondelete='CASCADE'),
     sa.ForeignKeyConstraint(['parent_id'], ['blog_comment.id'], ),
     sa.ForeignKeyConstraint(['user_id'], ['users.id'], ondelete='CASCADE'),
@@ -359,7 +359,7 @@ def upgrade() -> None:
     sa.Column('is_archived', sa.Boolean(), nullable=False),
     sa.Column('is_featured', sa.Boolean(), nullable=False),
     sa.Column('created_at', mysql.TIMESTAMP(), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=False),
-    sa.Column('updated_at', mysql.TIMESTAMP(), server_default=sa.text('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'), nullable=True),
+    sa.Column('updated_at', mysql.TIMESTAMP(), nullable=True),
     sa.ForeignKeyConstraint(['blog_id'], ['blogs.id'], ondelete='CASCADE'),
     sa.ForeignKeyConstraint(['user_id'], ['users.id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id'),
@@ -379,7 +379,7 @@ def upgrade() -> None:
     sa.Column('chinese_summary', sa.JSON(), nullable=False),
     sa.Column('english_summary', sa.JSON(), nullable=False),
     sa.Column('created_at', mysql.TIMESTAMP(), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=False),
-    sa.Column('updated_at', mysql.TIMESTAMP(), server_default=sa.text('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'), nullable=True),
+    sa.Column('updated_at', mysql.TIMESTAMP(), nullable=True),
     sa.ForeignKeyConstraint(['blog_id'], ['blogs.id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('blog_id')
@@ -393,7 +393,7 @@ def upgrade() -> None:
     sa.Column('blog_id', sa.Integer(), nullable=False),
     sa.Column('tag_id', sa.Integer(), nullable=False),
     sa.Column('created_at', mysql.TIMESTAMP(), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=False),
-    sa.Column('updated_at', mysql.TIMESTAMP(), server_default=sa.text('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'), nullable=True),
+    sa.Column('updated_at', mysql.TIMESTAMP(), nullable=True),
     sa.ForeignKeyConstraint(['blog_id'], ['blogs.id'], ondelete='CASCADE'),
     sa.ForeignKeyConstraint(['tag_id'], ['tags.id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id')
@@ -410,7 +410,7 @@ def upgrade() -> None:
     sa.Column('chinese_tts_id', sa.Integer(), nullable=True),
     sa.Column('english_tts_id', sa.Integer(), nullable=True),
     sa.Column('created_at', mysql.TIMESTAMP(), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=False),
-    sa.Column('updated_at', mysql.TIMESTAMP(), server_default=sa.text('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'), nullable=True),
+    sa.Column('updated_at', mysql.TIMESTAMP(), nullable=True),
     sa.ForeignKeyConstraint(['blog_id'], ['blogs.id'], ondelete='CASCADE'),
     sa.ForeignKeyConstraint(['chinese_tts_id'], ['media.id'], ondelete='CASCADE'),
     sa.ForeignKeyConstraint(['english_tts_id'], ['media.id'], ondelete='CASCADE'),
@@ -433,7 +433,7 @@ def upgrade() -> None:
     sa.Column('is_deleted', sa.Boolean(), nullable=False),
     sa.Column('comment', sqlmodel.sql.sqltypes.AutoString(length=500), nullable=False),
     sa.Column('created_at', mysql.TIMESTAMP(), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=False),
-    sa.Column('updated_at', mysql.TIMESTAMP(), server_default=sa.text('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'), nullable=True),
+    sa.Column('updated_at', mysql.TIMESTAMP(), nullable=True),
     sa.ForeignKeyConstraint(['board_id'], ['boards.id'], ondelete='CASCADE'),
     sa.ForeignKeyConstraint(['parent_id'], ['board_comments.id'], ondelete='CASCADE'),
     sa.ForeignKeyConstraint(['user_id'], ['users.id'], ondelete='CASCADE'),
@@ -460,7 +460,7 @@ def upgrade() -> None:
     sa.Column('chinese_description', sqlmodel.sql.sqltypes.AutoString(length=200), nullable=False),
     sa.Column('english_description', sqlmodel.sql.sqltypes.AutoString(length=200), nullable=True),
     sa.Column('created_at', mysql.TIMESTAMP(), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=False),
-    sa.Column('updated_at', mysql.TIMESTAMP(), server_default=sa.text('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'), nullable=True),
+    sa.Column('updated_at', mysql.TIMESTAMP(), nullable=True),
     sa.ForeignKeyConstraint(['friend_id'], ['friends.id'], ondelete='CASCADE'),
     sa.ForeignKeyConstraint(['user_id'], ['users.id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id')
@@ -501,7 +501,7 @@ def upgrade() -> None:
     sa.Column('project_id', sa.Integer(), nullable=False),
     sa.Column('attachment_id', sa.Integer(), nullable=False),
     sa.Column('created_at', mysql.TIMESTAMP(), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=False),
-    sa.Column('updated_at', mysql.TIMESTAMP(), server_default=sa.text('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'), nullable=True),
+    sa.Column('updated_at', mysql.TIMESTAMP(), nullable=True),
     sa.ForeignKeyConstraint(['attachment_id'], ['media.id'], ondelete='CASCADE'),
     sa.ForeignKeyConstraint(['project_id'], ['projects.id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id')
@@ -512,7 +512,7 @@ def upgrade() -> None:
     sa.Column('tax_id', sa.Integer(), nullable=True),
     sa.Column('price', sa.Float(), nullable=False),
     sa.Column('created_at', mysql.TIMESTAMP(), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=False),
-    sa.Column('updated_at', mysql.TIMESTAMP(), server_default=sa.text('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'), nullable=True),
+    sa.Column('updated_at', mysql.TIMESTAMP(), nullable=True),
     sa.ForeignKeyConstraint(['project_id'], ['projects.id'], ondelete='CASCADE'),
     sa.ForeignKeyConstraint(['tax_id'], ['taxes.id'], ondelete='SET NULL'),
     sa.PrimaryKeyConstraint('id')
@@ -522,7 +522,7 @@ def upgrade() -> None:
     sa.Column('user_id', sa.Integer(), nullable=False),
     sa.Column('blog_id', sa.Integer(), nullable=False),
     sa.Column('created_at', mysql.TIMESTAMP(), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=False),
-    sa.Column('updated_at', mysql.TIMESTAMP(), server_default=sa.text('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'), nullable=True),
+    sa.Column('updated_at', mysql.TIMESTAMP(), nullable=True),
     sa.ForeignKeyConstraint(['blog_id'], ['blogs.id'], ondelete='CASCADE'),
     sa.ForeignKeyConstraint(['user_id'], ['users.id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id')
