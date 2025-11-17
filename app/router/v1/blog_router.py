@@ -73,12 +73,15 @@ async def update_blog(
     language: Language = Depends(get_language),
 ):
     result = await blog_service.update_blog(
+        language=language,
         user_id=current_user.id,
         blog_slug=form_data.blog_slug,
+        seo_id=form_data.seo_id,
+        cover_id=form_data.cover_id,
         chinese_title=form_data.chinese_title,
         chinese_description=form_data.chinese_description,
         chinese_content=form_data.chinese_content,
-        language=language,
+        blog_tags=form_data.blog_tags,
     )
 
     return SuccessResponse(message=get_message("blog.updateBlog", language), data=result)

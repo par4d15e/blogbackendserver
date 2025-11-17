@@ -60,12 +60,15 @@ class CreateBlogRequest(BaseModel):
 
 class UpdateBlogRequest(BaseModel):
     blog_slug: str = Field(..., description="Blog Slug")
+    seo_id: int = Field(default=1, description="SEO ID")
+    cover_id: int = Field(default=89, description="Cover ID")
     chinese_title: str = Field(default="文章测试", description="Chinese Title")
     chinese_description: str = Field(
         default="文章测试", description="Chinese Description"
     )
     chinese_content: Dict[str, Any] = Field(
         default={"type": "doc", "content": []}, description="Chinese Content")
+    blog_tags: List[int] = Field(default=[9, 10, 11], description="Blog Tags")
 
     @field_validator('chinese_content', mode='before')
     @classmethod

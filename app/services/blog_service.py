@@ -52,20 +52,27 @@ class BlogService:
 
     async def update_blog(
         self,
+        language: Language,
         user_id: int,
         blog_slug: str,
+        seo_id: int,
+        cover_id: int,
         chinese_title: str,
         chinese_description: str,
         chinese_content: dict,
-        language: Language,
+        blog_tags: List[int] = [],
+
     ) -> str:
         return await self.blog_crud.update_blog(
+            language=language,
             user_id=user_id,
+            seo_id=seo_id,
+            cover_id=cover_id,
             blog_slug=blog_slug,
             chinese_title=chinese_title,
             chinese_description=chinese_description,
             chinese_content=chinese_content,
-            language=language,
+            blog_tags=blog_tags,
         )
 
     async def get_blog_details_seo(
@@ -258,13 +265,13 @@ class BlogService:
         size: int = 20,
     ) -> tuple[list[dict], dict]:
         """根据标签slug获取博客列表
-        
+
         Args:
             tag_slug: 标签的slug
             language: 语言设置
             page: 页码
             size: 每页数量
-            
+
         Returns:
             (items, pagination_metadata) - 博客列表和分页元数据
         """
@@ -282,12 +289,12 @@ class BlogService:
         limit: int = 20,
     ) -> Dict[str, Any]:
         """获取归档的博客列表，使用 cursor pagination
-        
+
         Args:
             language: 语言设置
             cursor: 可选的分页游标
             limit: 每页数量
-            
+
         Returns:
             包含归档博客列表和分页信息的字典
         """

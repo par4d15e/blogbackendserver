@@ -875,12 +875,15 @@ class BlogCrud:
 
     async def update_blog(
         self,
+        language: Language,
         user_id: int,
         blog_slug: str,
+        seo_id: int,
         chinese_title: str,
         chinese_description: str,
         chinese_content: dict,
-        language: Language,
+        cover_id: int,
+        blog_tags: List[int] = [],
     ) -> str:
         blog = await self.get_blog_by_slug(blog_slug)
         if not blog or blog.user_id != user_id:
@@ -911,10 +914,12 @@ class BlogCrud:
             english_description = blog.english_description
 
         # 更新博客内容
-        result = await self.db.execute(
+        await self.db.execute(
             update(Blog)
             .where(Blog.id == blog.id)
             .values(
+                seo_id=seo_id,
+                cover_id=cover_id,
                 slug=slug,
                 chinese_title=chinese_title,
                 english_title=english_title,
@@ -924,6 +929,22 @@ class BlogCrud:
                 content_hash=new_content_hash,  # 更新内容hash
             )
         )
+
+        # 更新博客标签：先删除旧标签，再插入新标签
+        if blog_tags:
+            # 删除该博客的所有旧标签
+            await self.db.execute(
+                delete(Blog_Tag).where(Blog_Tag.blog_id == blog.id)
+            )
+            
+            # 插入新标签
+            for tag_id in blog_tags:
+                await self.db.execute(
+                    insert(Blog_Tag).values(
+                        blog_id=blog.id,
+                        tag_id=tag_id,
+                    )
+                )
 
         await self.db.commit()
 
@@ -952,10 +973,13 @@ class BlogCrud:
         # 更新缓存
         await redis_manager.delete_pattern_async("blog_lists:*")
         await redis_manager.delete_async(f"blog_tts:{blog.id}")
-        await redis_manager.delete_async(f"blog_details:{blog.slug}:lang={language}:is_editor=False")
+        await redis_manager.delete_pattern_async(f"blog_details:{blog.slug}:lang={language}:*")
         await redis_manager.delete_async(f"blog_details_seo:{blog.slug}")
-        # 清理导航缓存
-        await redis_manager.delete_pattern_async(f"blog_navigation:{blog.slug}:*")
+        await redis_manager.delete_async(f"blog_summary:{blog.id}:lang={language}")
+        await redis_manager.delete_pattern_async(f"blog_archived_lists:lang={language}:*")
+        await redis_manager.delete_async(f"get_recent_populor_blog:lang={language}")
+        await redis_manager.delete_pattern_async(f"user_saved_blogs:*")
+        await redis_manager.delete_async(f"blog_navigation:{blog.id}:lang={language}")
 
         return slug
 
@@ -1463,7 +1487,8 @@ class BlogCrud:
         if not stats:
             raise HTTPException(
                 status_code=404,
-                detail=get_message("blog.getBlogStats.blogStatsNotFound", language),
+                detail=get_message(
+                    "blog.getBlogStats.blogStatsNotFound", language),
             )
 
         response = {
