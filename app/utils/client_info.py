@@ -31,8 +31,6 @@ class ClientInfoUtils:
 
     def get_client_ip_from_headers(self, headers: dict) -> Optional[str]:
         """从请求头字典中获取客户端真实IP地址（用于Celery任务）"""
-        # 添加调试日志
-        self.logger.info(f"收到的请求头😂😂😂😂😂😂😂😂😂😂😂😂😂😂😂😂😂: {headers}")
 
         # 将headers的key转换为小写,以便不区分大小写匹配
         headers_lower = {k.lower(): v for k, v in headers.items()}

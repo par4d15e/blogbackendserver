@@ -21,6 +21,7 @@ from app.core.logger import logger_manager
 from app.core.security import security_manager
 from app.core.config.settings import settings
 from app.core.database.mysql import mysql_manager
+from app.core.database.redis import redis_manager
 from app.core.i18n.i18n import get_message, Language
 from app.crud.subscriber_crud import get_subscriber_crud
 from app.tasks.client_info_task import client_info_task
@@ -503,6 +504,10 @@ class AuthCrud:
             await subscriber_crud.ensure_subscriber_active(user.email)
 
             self.logger.info(f"User account created successfully: {email}")
+
+            # 清理user list缓存
+            await redis_manager.delete_pattern_async("admin_all_users:page=*")
+
             return True
 
         except HTTPException:
@@ -1026,6 +1031,9 @@ class AuthCrud:
                 )
         except Exception as e:
             self.logger.warning(f"启动客户端信息更新任务失败: {e}")
+
+        # 清理user list缓存
+        await redis_manager.delete_pattern_async("admin_all_users:page=*")
 
         # 返回访问令牌和刷新令牌
         return {
