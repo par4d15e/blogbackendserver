@@ -91,8 +91,8 @@ celery_app.conf.update(
     result_serializer=settings.celery.CELERY_RESULT_SERIALIZER,
     timezone=settings.celery.CELERY_TIMEZONE,
     enable_utc=settings.celery.CELERY_ENABLE_UTC,
-    # 保守策略配置：适合 2核心 2GB 服务器
-    worker_concurrency=2,  # 最多 2 个 worker 进程
+    # 优化配置：适合 2GB 内存服务器
+    worker_concurrency=1,  # 1 个 worker 进程（节省内存）
     worker_prefetch_multiplier=1,  # 避免 worker 预取过多任务
     task_acks_late=True,  # 任务完成后再确认
     worker_max_tasks_per_child=100,  # 每个 worker 处理 100 个任务后重启
