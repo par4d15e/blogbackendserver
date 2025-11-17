@@ -36,7 +36,7 @@ cd /server || { echo "❌ Cannot cd to /server"; exit 1; }
 # 启动 FastAPI
 echo "🚀 Starting FastAPI..."
 "$UVICORN_CMD" app.main:app --host 0.0.0.0 --port 8000 --workers "${UVICORN_WORKERS:-2}" &
-FAST API_PID=$!
+FASTAPI_PID=$!
 sleep 2
 kill -0 "$FASTAPI_PID" 2>/dev/null || { echo "❌ FastAPI failed to start"; exit 1; }
 echo "✅ FastAPI started (PID: $FASTAPI_PID)"
