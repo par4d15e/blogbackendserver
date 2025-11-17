@@ -200,20 +200,6 @@ user_data = [
         "is_verified": True,
         "created_at": datetime.now(),
         "updated_at": None,
-    },
-    {
-        "username": "test123",
-        "email": "ln729500172@outlook.com",
-        "password_hash": "$argon2id$v=19$m=65536,t=2,p=1$GdPaj6Evf6hMCBvPnT58Vw$706Gp5JMyFGy0zXPtUPKhrNrXFUhGNFJGzTPfXIhGw8",
-        "role": RoleType.user,
-        "ip_address": "218.107.132.66",
-        "longitude": 116.397,
-        "latitude": 39.9075,
-        "city": "北京",
-        "is_active": True,
-        "is_verified": True,
-        "created_at": datetime.now(),
-        "updated_at": None,
     }
 ]
 

@@ -30,6 +30,9 @@ class ClientInfoUtils:
 
     def get_client_ip_from_headers(self, headers: dict) -> Optional[str]:
         """从请求头字典中获取客户端真实IP地址（用于Celery任务）"""
+        # 添加调试日志
+        self.logger.info(f"收到的请求头😂😂😂😂😂😂😂😂😂😂😂😂😂😂😂😂😂: {headers}")
+
         possible_headers = [
             "X-Real-IP",
             "X-Forwarded-For",
@@ -42,8 +45,10 @@ class ClientInfoUtils:
             ip = headers.get(header)
             if ip and ip.lower() != "unknown":
                 ip = ip.split(",")[0].strip()
+                self.logger.info(f"从 {header} 解析出的IP: {ip}")
                 return ip
 
+        self.logger.warning("未能从请求头中解析出客户端IP")
         return None
 
     def get_ip_location(self, ip: Optional[str]) -> Dict:
