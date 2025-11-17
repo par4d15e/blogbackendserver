@@ -296,11 +296,11 @@ jobs:
 
             # 完全清理旧容器和相关资源
             echo "🗑️  Cleaning up old containers..."
-            
+
             # 1. 停止并删除容器
             sudo docker compose -f "$COMPOSE_FILE" down --timeout 30 || \
               sudo docker-compose -f "$COMPOSE_FILE" down --timeout 30 || true
-            
+
             # 2. 强制删除可能残留的容器
             for container in server nginx; do
               if sudo docker ps -a --format '{{.Names}}' | grep -q "^${container}$"; then
@@ -308,11 +308,11 @@ jobs:
                 sudo docker rm -f "$container" 2>/dev/null || true
               fi
             done
-            
+
             # 3. 清理悬空的镜像
             echo "🧹 Cleaning up dangling images..."
             sudo docker image prune -f || true
-            
+
             # 4. 验证清理结果
             echo "📊 Verifying cleanup..."
             REMAINING_CONTAINERS=$(sudo docker ps -a --filter "name=server\|nginx" --format "{{.Names}}" | wc -l)
