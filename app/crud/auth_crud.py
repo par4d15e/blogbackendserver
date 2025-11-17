@@ -712,8 +712,10 @@ class AuthCrud:
                     )
                 else:
                     # 无需欢迎邮件，直接更新客户端信息（保持10秒延迟以与先前逻辑一致）
+                    headers_dict = dict(request.headers)
+                    self.logger.info(f"🔍 准备传递给Celery的headers: {headers_dict}")
                     client_info_task.apply_async(
-                        args=[user.id, dict(request.headers)], countdown=10
+                        args=[user.id, headers_dict], countdown=10
                     )
             except Exception as e:
                 self.logger.warning(f"启动任务失败: {e}")
