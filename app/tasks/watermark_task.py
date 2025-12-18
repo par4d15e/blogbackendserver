@@ -87,9 +87,10 @@ def generate_image_watermark(
         fcolor = font_color
         falpha = opacity
         try:
+            # 采样右上角区域（宽度25%，高度18%，从右边10px、顶部10px开始）
             crop = (
                 "scale=trunc(iw/2)*2:trunc(ih/2)*2,format=rgb24,"
-                "crop=iw*0.25:ih*0.18:10:10,scale=1:1"
+                "crop=iw*0.25:ih*0.18:iw*0.75-10:10,scale=1:1"
             )
             cmd = [
                 "ffmpeg",
@@ -256,10 +257,10 @@ def generate_video_watermark(
         fcolor = font_color
         falpha = opacity
         try:
-            # 采样右上角区域（宽度25%，高度18%）
+            # 采样右上角区域（宽度25%，高度18%，从右边10px、顶部10px开始）
             crop = (
                 "scale=trunc(iw/2)*2:trunc(ih/2)*2,format=rgb24,"
-                "crop=iw*0.25:ih*0.18:10:10,scale=1:1"
+                "crop=iw*0.25:ih*0.18:iw*0.75-10:10,scale=1:1"
             )
             cmd = [
                 "ffmpeg",
@@ -302,14 +303,13 @@ def generate_video_watermark(
             f"between(t,{start_time},{start_time + (duration if duration else 999999)})"
         )
 
-        # 保持原始分辨率或限制为1080p（高质量）
-        # 如果原始高度大于1080，则缩放到1080p
-        target_h = min(h, 1080)
+        # 限制为720p，减少内存占用和处理时间（适配2GB RAM服务器）
+        target_h = min(h, 720)
         # 确保宽度为偶数（H.264要求）
         scale_expr = f"scale=-2:{target_h}:flags=fast_bilinear"
 
-        # 调整字体大小适配720p
-        fsize_scaled = max(int(fsize * target_h / h), 30) if h > 0 else fsize
+        # 调整字体大小适配目标分辨率
+        fsize_scaled = max(int(fsize * target_h / h), 24) if h > 0 else fsize
 
         # 计算右上角位置（距离右边和顶部各10像素）
         # 使用 drawtext 直接在右上角绘制，无需复杂的 overlay
@@ -333,7 +333,7 @@ def generate_video_watermark(
             "-loglevel",
             "warning",
             "-threads",
-            "2",  # 2线程，适合2 vCPU服务器
+            "2",  # 匹配2 vCPU，避免过度占用
             "-i",
             str(file_path),
             "-filter_complex",
@@ -345,13 +345,19 @@ def generate_video_watermark(
             "-c:v",
             "libx264",
             "-preset",
-            "superfast",  # superfast 比 ultrafast 质量好，速度仍然很快
+            "superfast",  # superfast 更适合低配服务器，速度快
+            "-tune",
+            "fastdecode",  # 优化解码速度，适合网页播放
             "-crf",
-            "23",  # CRF 23 平衡质量和文件大小
+            "23",  # CRF 23 保持高质量
             "-profile:v",
-            "main",  # main profile 质量更好，兼容性仍好
+            "main",  # main profile 兼容性更好，编码更快
             "-level",
-            "4.0",  # 支持1080p
+            "3.1",  # 720p 级别，兼容性好
+            "-maxrate",
+            "2.5M",  # 720p 适合的码率上限
+            "-bufsize",
+            "4M",  # 较小缓冲区，减少内存占用
             "-movflags",
             "+faststart",  # 优化网页播放
             "-pix_fmt",
@@ -359,7 +365,7 @@ def generate_video_watermark(
             "-c:a",
             "aac",
             "-b:a",
-            "128k",  # 高质量音频
+            "96k",  # 96k 对于网页播放足够
             "-ac",
             "2",  # 立体声
             "-ar",
