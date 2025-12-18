@@ -488,6 +488,37 @@ jobs:
               fi
             fi
 
+            # Auto-detect model changes and generate migration if needed
+            echo "🔍 Checking for model changes..."
+            AUTOGEN_OUTPUT=$(sudo docker exec server /server/.venv/bin/alembic revision --autogenerate -m "Auto migration $(date +%Y%m%d_%H%M%S)" 2>&1) || true
+            
+            if echo "$AUTOGEN_OUTPUT" | grep -q "Generating"; then
+              # New migration was generated
+              GENERATED_FILE=$(echo "$AUTOGEN_OUTPUT" | grep -oE "/server/alembic/versions/[a-f0-9]+_.*\.py" | head -1)
+              
+              if [ -n "$GENERATED_FILE" ]; then
+                # Check if migration has actual changes (not empty)
+                UPGRADE_CONTENT=$(sudo docker exec server cat "$GENERATED_FILE" 2>/dev/null | grep -A 20 "def upgrade" | grep -E "(op\.|pass)" | head -5)
+                
+                if echo "$UPGRADE_CONTENT" | grep -q "op\."; then
+                  echo "✅ Model changes detected, new migration generated"
+                  echo "   File: $GENERATED_FILE"
+                  
+                  # Copy generated migration to host for future reference
+                  sudo docker cp server:"$GENERATED_FILE" "$DEPLOY_DIR/alembic/versions/" 2>/dev/null || true
+                  sudo chown -R ubuntu:ubuntu "$DEPLOY_DIR/alembic/versions/" 2>/dev/null || true
+                else
+                  # Empty migration (no actual changes), remove it
+                  echo "   No actual model changes detected, removing empty migration"
+                  sudo docker exec server rm -f "$GENERATED_FILE" 2>/dev/null || true
+                fi
+              fi
+            elif echo "$AUTOGEN_OUTPUT" | grep -qE "(No changes|Target database is not up to date)"; then
+              echo "   No model changes detected"
+            else
+              echo "   Auto-generation check result: $AUTOGEN_OUTPUT"
+            fi
+
             # Get target version
             TARGET_VERSION_OUTPUT=$(sudo docker exec server /server/.venv/bin/alembic heads 2>&1 || echo "")
             TARGET_VERSION=$(echo "$TARGET_VERSION_OUTPUT" | grep -oE "[a-f0-9]{12}" | head -1 || echo "")
