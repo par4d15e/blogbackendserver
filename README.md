@@ -4,133 +4,133 @@
 
 [![Python](https://img.shields.io/badge/Python-3.13+-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/) [![FastAPI](https://img.shields.io/badge/FastAPI-0.116+-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/) [![License](https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge&logo=opensourceinitiative&logoColor=white)](LICENSE)
 
-一个基于 FastAPI 的现代化博客后端管理系统，采用异步架构设计，支持多语言、支付、媒体管理等丰富功能。
+A modern blog backend management system based on FastAPI, featuring asynchronous architecture with support for multi-language, payments, media management, and more.
 
-[特性](#-特性) • [技术栈](#-技术栈) • [快速开始](#-快速开始) • [项目结构](#-项目结构) • [API 文档](#-api-文档) • [部署](#-部署)
+[Features](#-features) • [Tech Stack](#-tech-stack) • [Quick Start](#-quick-start) • [Project Structure](#-project-structure) • [API Documentation](#-api-documentation) • [Deployment](#-deployment)
 
 </div>
 
 ---
 
-## 📋 目录
+## 📋 Table of Contents
 
-- [特性](#-特性)
-- [技术栈](#-技术栈)
-- [系统架构](#-系统架构)
-- [快速开始](#-快速开始)
-- [项目结构](#-项目结构)
-- [配置说明](#-配置说明)
-- [API 文档](#-api-文档)
-- [数据库迁移](#-数据库迁移)
-- [异步任务](#-异步任务)
-- [部署指南](#-部署指南)
-- [开发指南](#-开发指南)
-- [测试](#-测试)
-- [常见问题](#-常见问题)
-- [贡献指南](#-贡献指南)
-- [许可证](#-许可证)
+- [Features](#-features)
+- [Tech Stack](#-tech-stack)
+- [System Architecture](#-system-architecture)
+- [Quick Start](#-quick-start)
+- [Project Structure](#-project-structure)
+- [Configuration](#-configuration)
+- [API Documentation](#-api-documentation)
+- [Database Migration](#-database-migration)
+- [Async Tasks](#-async-tasks)
+- [Deployment Guide](#-deployment-guide)
+- [Development Guide](#-development-guide)
+- [Testing](#-testing)
+- [FAQ](#-faq)
+- [Contributing](#-contributing)
+- [License](#-license)
 
-## ✨ 特性
+## Features
 
-### 核心功能
+### Core Functionality
 
-- 🔐 **完整的认证系统**
+- **Complete Authentication System**
 
-  - 邮箱验证码登录/注册
-  - OAuth 社交账号登录（Google、GitHub 等）
-  - JWT 双令牌机制（访问令牌 + 刷新令牌）
-  - Argon2 密码加密
-  - CSRF 保护
+  - Email verification code login/registration
+  - OAuth social login (Google, GitHub, etc.)
+  - JWT dual-token mechanism (access token + refresh token)
+  - Argon2 password encryption
+  - CSRF protection
 
-- 📝 **博客管理系统**
+- **Blog Management System**
 
-  - 多语言支持（中文/英文）
-  - 富文本内容编辑
-  - 草稿/发布状态管理
-  - 标签分类系统
-  - SEO 优化支持
-  - 文章封面管理
+  - Multi-language support (Chinese/English)
+  - Rich text content editing
+  - Draft/publish status management
+  - Tag categorization system
+  - SEO optimization support
+  - Article cover management
 
-- 📁 **媒体管理**
+- **Media Management**
 
-  - AWS S3 文件存储
-  - 图片水印自动添加
-  - 缩略图自动生成
-  - 文件分类管理
-  - 用户媒体库
+  - AWS S3 file storage
+  - Automatic image watermarking
+  - Automatic thumbnail generation
+  - File categorization
+  - User media library
 
-- 💳 **支付系统**
+- **Payment System**
 
-  - Stripe 支付集成
-  - 自动生成 PDF 发票
-  - 邮件发送发票
-  - 支付记录管理
+  - Stripe payment integration
+  - Automatic PDF invoice generation
+  - Email invoice delivery
+  - Payment record management
 
-- 🤖 **AI 功能**
+- **AI Features**
 
-  - 内容自动翻译（阿里云通义千问）
-  - 文本转语音（Azure TTS）
-  - 智能内容摘要
+  - Automatic content translation (Alibaba Cloud Qwen)
+  - Text-to-speech (Azure TTS)
+  - Intelligent content summarization
 
-- 📊 **数据分析**
+- **Data Analytics**
 
-  - 访问统计
-  - 用户行为分析
-  - 客户端信息收集
+  - Access statistics
+  - User behavior analysis
+  - Client information collection
 
-- 🔧 **其他功能**
-  - 留言板系统
-  - 友链管理
-  - 项目展示
-  - 订阅者管理
-  - 邮件通知系统
-  - 限流保护
+- 🔧 **Other Features**
+  - Message board system
+  - Friend link management
+  - Project showcase
+  - Subscriber management
+  - Email notification system
+  - Rate limiting protection
 
-## 🛠 技术栈
+## Tech Stack
 
-### 后端框架
+### Backend Framework
 
-- **[FastAPI](https://fastapi.tiangolo.com/)** - 高性能异步 Web 框架
-- **[SQLModel](https://sqlmodel.tiangolo.com/)** - SQL 数据库的 Python ORM
-- **[Pydantic](https://pydantic-docs.helpmanual.io/)** - 数据验证和设置管理
-- **[Alembic](https://alembic.sqlalchemy.org/)** - 数据库迁移工具
+- **[FastAPI](https://fastapi.tiangolo.com/)** - High-performance async web framework
+- **[SQLModel](https://sqlmodel.tiangolo.com/)** - Python ORM for SQL databases
+- **[Pydantic](https://pydantic-docs.helpmanual.io/)** - Data validation and settings management
+- **[Alembic](https://alembic.sqlalchemy.org/)** - Database migration tool
 
-### 数据库与缓存
+### Database & Cache
 
-- **MySQL** - 主数据库
-- **Redis** - 缓存和消息队列
-- **aiomysql** - 异步 MySQL 驱动
+- **MySQL** - Primary database
+- **Redis** - Cache and message queue
+- **aiomysql** - Async MySQL driver
 
-### 异步任务
+### Async Tasks
 
-- **[Celery](https://docs.celeryproject.org/)** - 分布式任务队列
-- **Redis** - Celery 消息代理
+- **[Celery](https://docs.celeryproject.org/)** - Distributed task queue
+- **Redis** - Celery message broker
 
-### 第三方服务
+### Third-Party Services
 
-- **AWS S3** - 对象存储服务
-- **Stripe** - 支付处理
-- **阿里云通义千问** - AI 内容翻译
-- **Azure Cognitive Services** - 语音合成
-- **邮件服务** - 发送通知和发票
+- **AWS S3** - Object storage service
+- **Stripe** - Payment processing
+- **Alibaba Cloud Qwen** - AI content translation
+- **Azure Cognitive Services** - Speech synthesis
+- **Email Service** - Notification and invoice delivery
 
-### 开发工具
+### Development Tools
 
-- **Docker & Docker Compose** - 容器化部署
-- **Nginx** - 反向代理和负载均衡
-- **Pytest** - 测试框架
-- **Ruff** - Python 代码检查
-- **Loguru** - 日志管理
+- **Docker & Docker Compose** - Containerized deployment
+- **Nginx** - Reverse proxy and load balancing
+- **Pytest** - Testing framework
+- **Ruff** - Python code linter
+- **Loguru** - Logging management
 
-## 🏗 系统架构
+## System Architecture
 
 ```
 ┌─────────────┐
-│   Nginx     │  ← 反向代理 & SSL 终止
+│   Nginx     │  ← Reverse Proxy & SSL Termination
 └──────┬──────┘
        │
 ┌──────▼──────┐
-│   FastAPI   │  ← Web 应用服务器
+│   FastAPI   │  ← Web Application Server
 │  (Uvicorn)  │
 └──────┬──────┘
        │
@@ -138,35 +138,35 @@
        │              │              │              │
 ┌──────▼──────┐ ┌────▼─────┐ ┌──────▼──────┐ ┌────▼─────┐
 │    MySQL    │ │  Redis   │ │   AWS S3    │ │  Stripe  │
-│  (数据库)   │ │ (缓存)   │ │  (存储)     │ │  (支付)  │
+│ (Database)  │ │ (Cache)  │ │ (Storage)   │ │ (Payment)│
 └─────────────┘ └────┬─────┘ └─────────────┘ └──────────┘
                      │
               ┌──────▼──────┐
-              │   Celery    │  ← 异步任务处理
+              │   Celery    │  ← Async Task Processing
               │   Worker    │
               └─────────────┘
 ```
 
-## 🚀 快速开始
+## Quick Start
 
-### 前置要求
+### Prerequisites
 
 - Python 3.13+
-- [uv](https://docs.astral.sh/uv/) - 快速的 Python 包管理器
+- [uv](https://docs.astral.sh/uv/) - Fast Python package manager
 - MySQL 8.0+
 - Redis 7.0+
-- Docker & Docker Compose (可选)
+- Docker & Docker Compose (optional)
 
-### 本地开发安装
+### Local Development Setup
 
-1. **克隆仓库**
+1. **Clone the repository**
 
 ```bash
 git clone https://github.com/NING3739/blogbackendserver.git
 cd blogbackendserver
 ```
 
-2. **安装 uv（如果尚未安装）**
+2. **Install uv (if not already installed)**
 
 ```bash
 # macOS/Linux
@@ -176,70 +176,70 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
 ```
 
-3. **安装依赖**
+3. **Install dependencies**
 
 ```bash
-# 使用 uv 同步依赖（自动创建虚拟环境）
+# Use uv to sync dependencies (automatically creates virtual environment)
 uv sync
 ```
 
-4. **配置环境变量**
+4. **Configure environment variables**
 
-在 `secret/` 目录下创建环境配置文件：
+Create environment configuration files in the `secret/` directory:
 
 ```bash
 mkdir -p secret
-touch secret/.env.development  # 开发环境
-touch secret/.env.production   # 生产环境
+touch secret/.env.development  # Development environment
+touch secret/.env.production   # Production environment
 ```
 
-参考 [配置说明](#️-配置说明) 部分填写必要的环境变量。
+Refer to the [Configuration](#-configuration) section to fill in the necessary environment variables.
 
-5. **初始化数据库**
+5. **Initialize database**
 
 ```bash
-# 创建数据库（MySQL 中执行）
+# Create database (execute in MySQL)
 mysql -u root -p
 CREATE DATABASE blog CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 EXIT;
 
-# 运行数据库迁移（详见"数据库迁移"章节）
+# Run database migrations (see "Database Migration" section for details)
 uv run alembic upgrade head
 
-# 初始化数据（可选）
+# Initialize data (optional)
 uv run python script/initial_data.py
 ```
 
-6. **生成 SSL 证书（开发环境）**
+6. **Generate SSL certificates (development environment)**
 
 ```bash
-# 安装 mkcert（如果尚未安装）
+# Install mkcert (if not already installed)
 # macOS
 brew install mkcert
-# 或访问 https://github.com/FiloSottile/mkcert 查看其他平台安装方式
+# Or visit https://github.com/Filole/mkcert cert for other platform installation methods
 
-# 安装本地 CA
+# Install local CA
 mkcert -install
 
-# 生成证书
+# Generate certificates
 mkdir -p certs
 cd certs
 mkcert 127.0.0.1 localhost
-# 将生成 127.0.0.1+1-key.pem 和 127.0.0.1+1.pem
-# 重命名为项目所需的文件名
+# This will generate 127.0.0.1+1-key.pem and 127.0.0.1+1.pem
+# Rename to the required filenames
 mv 127.0.0.1+1-key.pem localhost-key.pem
 mv 127.0.0.1+1.pem localhost.pem
 cd ..
 ```
 
-7. **启动开发服务器**
+7. **Start development server**
 
 ```bash
-# 方法 1：使用 python -m 启动（推荐用于开发调试）
+# Method 1: Start with python -m (recommended for development debugging)
 export ENV=development
 uv run python -m app.main
 
-# 方法 2：使用 uvicorn 直接启动（更灵活）
+# Method 2: Start directly with uvicorn (more flexible)
 ENV=development uv run uvicorn app.main:app \
   --host 127.0.0.1 \
   --port 8000 \
@@ -247,123 +247,123 @@ ENV=development uv run uvicorn app.main:app \
   --ssl-keyfile certs/localhost-key.pem \
   --ssl-certfile certs/localhost.pem
 
-# 启动 Celery Worker（在新终端窗口中）
+# Start Celery Worker (in a new terminal window)
 ENV=development uv run celery -A app.core.celery:celery_app worker --loglevel=info
 
-# 启动 Celery Beat（定时任务调度器，在新终端窗口中）
+# Start Celery Beat (scheduled task scheduler, in a new terminal window)
 ENV=development uv run celery -A app.core.celery:celery_app beat --loglevel=info
 
-# 或同时启动 Worker 和 Beat
+# Or start both Worker and Beat together
 ENV=development uv run celery -A app.core.celery:celery_app worker --beat --loglevel=info
 ```
 
-8. **访问应用**
+8. **Access the application**
 
-- API 文档: https://127.0.0.1:8000/docs
-- ReDoc 文档: https://127.0.0.1:8000/redoc
-- 应用主页: https://127.0.0.1:8000
+- API Documentation: https://127.0.0.1:8000/docs
+- ReDoc Documentation: https://127.0.0.1:8000/redoc
+- Application Homepage: https://127.0.0.1:8000
 
-## 📁 项目结构
+## Project Structure
 
 ```
 backend-server/
-├── alembic/                    # 数据库迁移文件
-│   ├── versions/              # 迁移版本
-│   ├── env.py                 # Alembic 配置
-│   └── script.py.mako         # 迁移脚本模板
-├── app/                        # 应用主目录
-│   ├── core/                  # 核心模块
-│   │   ├── config/           # 配置管理
-│   │   │   ├── modules/      # 配置模块（数据库、JWT、AWS等）
-│   │   │   ├── base.py       # 基础配置类
-│   │   │   └── settings.py   # 全局设置
-│   │   ├── database/         # 数据库连接管理
-│   │   ├── i18n/            # 国际化
-│   │   ├── celery.py        # Celery 配置
-│   │   ├── logger.py        # 日志管理
-│   │   └── security.py      # 安全相关（密码、JWT）
-│   ├── crud/                  # 数据库 CRUD 操作
+├── alembic/                    # Database migration files
+│   ├── versions/              # Migration versions
+│   ├── env.py                 # Alembic configuration
+│   └── script.py.mako         # Migration script template
+├── app/                        # Main application directory
+│   ├── core/                  # Core modules
+│   │   ├── config/           # Configuration management
+│   │   │   ├── modules/      # Config modules (database, JWT, AWS, etc.)
+│   │   │   ├── base.py       # Base configuration class
+│   │   │   └── settings.py   # Global settings
+│   │   ├── database/         # Database connection management
+│   │   ├── i18n/            # Internationalization
+│   │   ├── celery.py        # Celery configuration
+│   │   ├── logger.py        # Logging management
+│   │   └── security.py      # Security (passwords, JWT)
+│   ├── crud/                  # Database CRUD operations
 │   │   ├── auth_crud.py
 │   │   ├── blog_crud.py
 │   │   ├── user_crud.py
 │   │   └── ...
-│   ├── decorators/            # 装饰器
-│   │   └── rate_limiter.py   # 限流装饰器
-│   ├── models/                # 数据模型
+│   ├── decorators/            # Decorators
+│   │   └── rate_limiter.py   # Rate limiting decorator
+│   ├── models/                # Data models
 │   │   ├── auth_model.py
 │   │   ├── blog_model.py
 │   │   ├── user_model.py
 │   │   └── ...
-│   ├── router/                # API 路由
-│   │   └── v1/               # API v1 版本
+│   ├── router/                # API routes
+│   │   └── v1/               # API v1 version
 │   │       ├── auth_router.py
 │   │       ├── blog_router.py
 │   │       └── ...
-│   ├── schemas/               # Pydantic 数据模式
+│   ├── schemas/               # Pydantic data schemas
 │   │   ├── auth_schemas.py
 │   │   ├── blog_schemas.py
 │   │   └── ...
-│   ├── services/              # 业务逻辑层
+│   ├── services/              # Business logicayer
 │   │   ├── auth_service.py
 │   │   ├── blog_service.py
 │   │   └── ...
-│   ├── tasks/                 # Celery 异步任务
+│   ├── tasks/                 # Celery async tasks
 │   │   ├── backup_database_task.py
 │   │   ├── generate_content_audio_task.py
 │   │   ├── large_content_translation_task.py
 │   │   └── ...
-│   ├── utils/                 # 工具函数
-│   └── main.py               # 应用入口
-├── certs/                     # SSL 证书（开发环境）
-├── docs/                      # 项目文档
-├── logs/                      # 日志文件
-├── script/                    # 脚本文件
-│   ├── initial_data.py       # 初始化数据
-│   ├── setup-docker.sh       # Docker 设置脚本
-│   └── setup-server.sh       # 服务器设置脚本
-├── secret/                    # 密钥和环境变量
-│   ├── .env.development      # 开发环境配置
-│   └── .env.production       # 生产环境配置
-├── static/                    # 静态文件
-│   ├── font/                 # 字体文件
-│   ├── image/                # 图片资源
-│   └── template/             # 模板文件
-├── tests/                     # 测试文件
-├── alembic.ini               # Alembic 配置文件
-├── docker-compose.yml        # Docker Compose 配置
-├── Dockerfile                # Docker 镜像构建文件
-├── nginx.conf                # Nginx 配置
-├── pyproject.toml            # 项目依赖配置
-└── README.md                 # 项目说明文档
+│   ├── utils/                 # Utility functions
+│   └── main.py               # Application entry point
+├── certs/                     # SSL certificates (development)
+├── docs/                      # Project documentation
+├── logs/                      # Log files
+├── script/                    # Script files
+│   ├── initial_data.py       # Initialize data
+│   ├── setup-docker.sh       # Docker setup script
+│   └── setup-server.sh       # Server setup script
+├── secret/                    # Secrets and environment variables
+│   ├── .env.development      # Development environment config
+│   └── .env.production       # Production environment config
+├── static/                    # Static files
+│   ├── font/                 # Font files
+│   ├── image/                # Image resources
+│   └── template/             # Template files
+├── tests/                     # Test files
+├── alembic.ini               # Alembic configuration file
+├── docker-compose.yml        # Docker Compose configuration
+├── Dockerfile                # Docker image build file
+├── nginx.conf                # Nginx configuration
+├── pyproject.toml            # Project dependency configuration
+└── README.md                 # Project documentation
 ```
 
-## ⚙️ 配置说明
+## Configuration
 
-### 环境变量
+### Environment Variables
 
-在 `secret/.env.development` 或 `secret/.env.production` 中配置以下环境变量：
+Configure the following environment variables in `secret/.env.development` or `secret/.env.production`:
 
-#### 完整配置示例
+#### Complete Configuration Example
 
 ```env
 # ========================================
-# 应用配置
+# Application Configuration
 # ========================================
 APP_NAME=YourAppName
 
 # ========================================
-# 数据库配置
+# Database Configuration
 # ========================================
-# 格式：mysql+aiomysql://username:password@host:port/database
+# Format: mysql+aiomysql://username:password@host:port/database
 DATABASE_URL=mysql+aiomysql://your_user:your_password@localhost:3306/your_database
 
 # ========================================
-# JWT 配置
+# JWT Configuration
 # ========================================
 JWT_SECRET_KEY=your_random_secret_key_here_at_least_32_characters
 
 # ========================================
-# 邮件配置
+# Email Configuration
 # ========================================
 EMAIL_HOST=smtp.gmail.com
 EMAIL_PORT=587
@@ -371,24 +371,24 @@ EMAIL_HOST_USER=your_email@gmail.com
 EMAIL_HOST_PASSWORD=your_app_password
 
 # ========================================
-# CORS 配置
+# CORS Configuration
 # ========================================
 CORS_ALLOWED_ORIGINS=https://yourdomain.com,https://api.yourdomain.com
 
 # ========================================
-# CSRF 配置
+# CSRF Configuration
 # ========================================
 CSRF_SECRET_KEY=your_csrf_secret_key
 
 # ========================================
-# Celery 和 Redis 配置
+# Celery and Redis Configuration
 # ========================================
 CELERY_BROKER_URL=redis://localhost:6379/0
 CELERY_RESULT_BACKEND=redis://localhost:6379/0
 REDIS_CONNECTION_URL=redis://localhost:6379/0
 
 # ========================================
-# OAuth 配置
+# OAuth Configuration
 # ========================================
 # GitHub OAuth
 GITHUB_CLIENT_ID=your_github_client_id
@@ -401,13 +401,13 @@ GOOGLE_CLIENT_SECRET=your_google_client_secret
 GOOGLE_REDIRECT_URI=https://api.yourdomain.com/api/v1/auth/google-callback
 
 # ========================================
-# 日志配置
+# Logging Configuration
 # ========================================
 LOG_TO_FILE=True
 LOG_FILE_PATH=logs/app.log
 
 # ========================================
-# AWS S3 配置
+# AWS S3 Configuration
 # ========================================
 AWS_ACCESS_KEY_ID=your_aws_access_key_id
 AWS_SECRET_ACCESS_KEY=your_aws_secret_access_key
@@ -415,18 +415,18 @@ AWS_BUCKET_NAME=your_bucket_name
 AWS_REGION=ap-southeast-1
 
 # ========================================
-# AI 服务配置
+# AI Service Configuration
 # ========================================
-# 阿里云通义千问
+# Alibaba Cloud Qwen
 QWEN_API_KEY=your_qwen_api_key
 QWEN_API_MAX_RETRIES=3
 
-# Azure 语音服务
+# Azure Speech Service
 AZURE_SPEECH_KEY=your_azure_speech_key
 AZURE_SPEECH_REGION=eastus
 
 # ========================================
-# Stripe 支付配置
+# Stripe Payment Configuration
 # ========================================
 STRIPE_SECRET_KEY=sk_live_your_stripe_secret_key
 STRIPE_PUBLIC_KEY=pk_live_your_stripe_public_key
@@ -435,7 +435,7 @@ SUCCESS_URL=https://yourdomain.com/payment/success
 CANCEL_URL=https://yourdomain.com/payment/cancel
 
 # ========================================
-# 域名和公司信息
+# Domain and Company Information
 # ========================================
 DOMAIN_URL=https://api.yourdomain.com
 COMPANY_NAME=YourCompanyName
@@ -443,47 +443,47 @@ COMPANY_PHONE=+1234567890
 COMPANY_EMAIL=contact@yourdomain.com
 ```
 
-#### 配置说明
+#### Configuration Notes
 
-**重要提示**：
+**Important Notes**:
 
-- 🔒 **切勿将真实的生产环境配置提交到版本控制**
-- 🔐 生产环境配置应存储在 GitHub Secrets 中（参考部署指南）
-- 🔑 定期轮换敏感密钥
+- Never commit real production configurations to version control
+- Production configurations should be stored in GitHub Secrets (see deployment guide)
+- Regularly rotate sensitive keys
 
-## 📖 API 文档
+## API Documentation
 
-### 访问文档
+### Accessing Documentation
 
-启动服务后，访问以下地址查看 API 文档：
+After starting the service, visit the following URLs to view API documentation:
 
 - **Swagger UI**: https://127.0.0.1:8000/docs
 - **ReDoc**: https://127.0.0.1:8000/redoc
 
-### API 模块
+### API Modules
 
-| 模块   | 路由前缀              | 描述                 |
-| ------ | --------------------- | -------------------- |
-| 认证   | `/api/v1/auth`        | 登录、注册、令牌刷新 |
-| 用户   | `/api/v1/users`       | 用户管理             |
-| 博客   | `/api/v1/blogs`       | 博客文章 CRUD        |
-| 分类   | `/api/v1/sections`    | 博客分类管理         |
-| 标签   | `/api/v1/tags`        | 标签管理             |
-| 媒体   | `/api/v1/media`       | 文件上传和管理       |
-| SEO    | `/api/v1/seo`         | SEO 配置             |
-| 留言板 | `/api/v1/boards`      | 留言管理             |
-| 友链   | `/api/v1/friends`     | 友链管理             |
-| 支付   | `/api/v1/payments`    | 支付处理             |
-| 项目   | `/api/v1/projects`    | 项目展示             |
-| 分析   | `/api/v1/analytics`   | 数据分析             |
-| 订阅   | `/api/v1/subscribers` | 订阅者管理           |
+| Module       | Route Prefix          | Description                      |
+| ------------ | --------------------- | -------------------------------- |
+| Auth         | `/api/v1/auth`        | Login, registration, token refresh |
+| Users        | `/api/v1/users`       | User management                  |
+| Blogs        | `/api/v1/blogs`       | Blog post CRUD                   |
+| Sections     | `/api/v1/sections`    | Blog category management         |
+| Tags         | `/api/v1/tags`        | Tag management                   |
+| Media        | `/api/v1/media`       | File upload and management       |
+| SEO          | `/api/v1/seo`         | SEO configuration                |
+| Boards       | `/api/v1/boards`      | Message management               |
+| Friends      | `/api/v1/friends`     | Friend link management           |
+| Payments     | `/api/v1/payments`    | Payment processing               |
+| Projects     | `/api/v1/projects`    | Project showcase                 |
+| Analytics    | `/api/v1/analytics`   | Data analytics                   |
+| Subscribers  | `/api/v1/subscribers` | Subscriber management            |
 
-### 认证方式
+### Authentication
 
-API 使用 JWT 令牌通过 **HTTP-Only Cookie** 进行认证，令牌自动管理，无需手动设置 Authorization 头。
+The API uses JWT tokens via **HTTP-Only Cookies** for authentication. Tokens are automatically managed without manual Authorization header setup.
 
 ```bash
-# 1. 登录获取令牌（令牌自动保存在 Cookie 中）
+# 1. Login to get token (token automatically saved in Cookie)
 curl -X 'POST' \
   'https://127.0.0.1:8000/api/v1/auth/account-login' \
   -H 'accept: application/json' \
@@ -493,211 +493,211 @@ curl -X 'POST' \
   "email": "ln729500172@gmail.com"
 }'
 
-# 2. 访问受保护的 API（自动携带 Cookie）
+# 2. Access protected API (Cookie automatically included)
 curl -X 'GET' \
   'https://127.0.0.1:8000/api/v1/user/me/get-my-profile' \
   -H 'accept: application/json'
 
-# 3. 刷新令牌
+# 3. Refresh token
 curl -X 'PATCH' \
   'https://127.0.0.1:8000/api/v1/auth/generate-access-token' \
   -H 'accept: application/json'
 
-# 4. 登出（清除 Cookie）
+# 4. Logout (clear Cookie)
 curl -X 'DELETE' \
   'https://127.0.0.1:8000/api/v1/auth/account-logout' \
   -H 'accept: application/json'
 ```
 
-**说明**：
+**Note**:
 
-- 浏览器会自动管理 Cookie，无需手动操作
+- Browsers automatically manage Cookies, no manual operation required
 
-## 🗃 数据库迁移
+## Database Migration
 
-### 创建新迁移
+### Creating New Migrations
 
 ```bash
-# 自动生成迁移文件
-uv run alembic revision --autogenerate -m "描述你的更改"
+# Auto-generate migration file
+uv run alembic revision --autogenerate -m "Describe your changes"
 
-# 手动创建迁移文件
-uv run alembic revision -m "描述你的更改"
+# Manually create migration file
+uv run alembic revision -m "Describe your changes"
 ```
 
-### 执行迁移
+### Executing Migrations
 
 ```bash
-# 升级到最新版本
+# Upgrade to latest version
 uv run alembic upgrade head
 
-# 升级到特定版本
+# Upgrade to specific version
 uv run alembic upgrade <revision_id>
 
-# 降级一个版本
+# Downgrade one version
 uv run alembic downgrade -1
 
-# 查看当前版本
+# View current version
 uv run alembic current
 
-# 查看迁移历史
+# View migration history
 uv run alembic history
 ```
 
-### 迁移最佳实践
+### Migration Best Practices
 
-1. 每次更改数据模型后立即创建迁移
-2. 在迁移文件中添加清晰的注释
-3. 测试迁移的升级和降级
-4. 备份数据库后再执行生产环境迁移
+1. Create migrations immediately after changing data models
+2. Add clear comments in migration files
+3. Test both upgrade and downgrade migrations
+4. Backup database before executing production migrations
 
-## ⚡️ 异步任务
+## ⚡️ Async Tasks
 
-### 可用任务
+### Available Tasks
 
-| 任务                             | 描述           | 调度           |
-| -------------------------------- | -------------- | -------------- |
-| `backup_database_task`           | 数据库备份     | 每天凌晨 2:00  |
-| `generate_content_audio_task`    | 生成内容音频   | 按需触发       |
-| `large_content_translation_task` | AI 内容翻译    | 按需触发       |
-| `greeting_email_task`            | 发送欢迎邮件   | 用户注册时触发 |
-| `send_invoice_email_task`        | 发送发票邮件   | 支付完成后触发 |
-| `watermark_task`                 | 添加图片水印   | 图片上传时触发 |
-| `thumbnail_task`                 | 生成缩略图     | 图片上传时触发 |
-| `delete_user_media_task`         | 删除用户媒体   | 用户删除时触发 |
-| `client_info_task`               | 记录客户端信息 | API 请求时触发 |
-| `summary_content_task`           | 生成内容摘要   | 按需触发       |
+| Task                             | Description                | Schedule                    |
+| -------------------------------- | -------------------------- | --------------------------- |
+| `backup_database_task`           | Database backup            | Daily at 2:00 AM            |
+| `generate_content_audio_task`    | Generate content audio     | On-demand                   |
+| `large_content_translation_task` | AI content translation     | On-demand                   |
+| `greeting_email_task`            | Send welcome email         | Triggered on user registration |
+| `send_invoice_email_task`        | Send invoice email         | Triggered after payment     |
+| `watermark_task`                 | Add image watermark        | Triggered on image upload   |
+| `thumbnail_task`                 | Generate thumbnail         | Triggered on image upload   |
+| `delete_user_media_task`         | Delete user media          | Triggered on user deletion  |
+| `client_info_task`               | Record client information  | Triggered on API request    |
+| `summary_content_task`           | Generate content summary   | On-demand                   |
 
-### 启动 Celery Worker
+### Starting Celery Worker
 
 ```bash
-# 启动 Worker
+# Start Worker
 ENV=development uv run celery -A app.core.celery:celery_app worker --loglevel=info
 
-# 启动 Beat 调度器
+# Start Beat scheduler
 ENV=development uv run celery -A app.core.celery:celery_app beat --loglevel=info
 
-# 同时启动 Worker 和 Beat
+# Start both Worker and Beat together
 ENV=development uv run celery -A app.core.celery:celery_app worker --beat --loglevel=info
 ```
 
-### 监控任务
+### Monitoring Tasks
 
 ```bash
-# 使用 Flower 监控（需要添加到依赖）
+# Use Flower for monitoring (needs to be added to dependencies)
 uv add flower
 ENV=development uv run celery -A app.core.celery:celery_app flower
 ```
 
-访问 http://localhost:5555 查看任务监控面板。
+Visit http://localhost:5555 to view the task monitoring dashboard.
 
-## 🚢 部署指南
+## Deployment Guide
 
-### GitHub Actions 全自动部署
+### Fully Automated GitHub Actions Deployment
 
-本项目采用 **完全自动化** 的 CI/CD 流程，无需手动操作服务器。当你推送代码到 `main` 分支时，GitHub Actions 会自动：
+This project uses a **fully automated** CI/CD workflow that requires no manual server operations. When you push code to the `main` branch, GitHub Actions automatically:
 
-1. ✅ 构建 Docker 镜像
-2. ✅ 推送到 Docker Hub（私有仓库）
-3. ✅ 通过 SSH 连接服务器
-4. ✅ 拉取最新镜像并部署容器
-5. ✅ 执行数据库迁移
-6. ✅ 运行健康检查
+1. ✅ Builds Docker image
+2. ✅ Pushes to Docker Hub (private repository)
+3. ✅ Connects to server via SSH
+4. ✅ Pulls latest image and deploys containers
+5. ✅ Executes database migrations
+6. ✅ Runs health checks
 
-### 部署架构
+### Deployment Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │                       GitHub Actions                         │
-│  (推送代码到 main 分支触发)                                   │
+│  (Triggered by push to main branch)                          │
 └────────────┬────────────────────────────┬───────────────────┘
              │                            │
              ▼                            ▼
     ┌────────────────┐          ┌────────────────┐
-    │  构建 & 推送    │          │  SSH 部署      │
-    │  Docker 镜像   │──────────▶│  到服务器      │
-    │  (私有仓库)    │          │                │
+    │  Build & Push  │          │  SSH Deploy    │
+    │  Docker Image  │──────────▶│  to Server     │
+    │  (Private Repo)│          │                │
     └────────────────┘          └────────┬───────┘
                                          │
                     ┌────────────────────┼────────────────────┐
                     ▼                    ▼                    ▼
             ┌───────────────┐    ┌──────────────┐    ┌──────────────┐
-            │ 数据库服务器   │    │ 应用服务器    │    │ Docker Hub   │
-            │ MySQL + Redis │    │ App + Nginx  │    │ (私有镜像)   │
+            │ DB Server      │    │ App Server   │    │ Docker Hub   │
+            │ MySQL + Redis  │    │ App + Nginx  │    │ (Private)    │
             └───────────────┘    └──────────────┘    └──────────────┘
 ```
 
-### 前置准备
+### Prerequisites
 
-#### 1. 服务器要求
+#### 1. Server Requirements
 
-- **数据库服务器**：
+- **Database Server**:
   - Ubuntu 20.04+ / Debian 11+
-  - 最低 1GB RAM, 推荐 2GB+
-  - MySQL 8.0+ 和 Redis 7.0+
-- **应用服务器**：
+  - Minimum 1GB RAM, recommended 2GB+
+  - MySQL 8.0+ and Redis 7.0+
+- **Application Server**:
   - Ubuntu 20.04+ / Debian 11+
-  - 最低 2GB RAM, 推荐 4GB+
-  - Docker 和 Docker Compose
-  - 开放端口：80 (HTTP), 443 (HTTPS)
+  - Minimum 2GB RAM, recommended 4GB+
+  - Docker and Docker Compose
+  - Open ports: 80 (HTTP), 443 (HTTPS)
 
-#### 2. Docker Hub 账号
+#### 2. Docker Hub Account
 
-创建私有仓库用于存储镜像：
+Create a private repository for storing images:
 
-- 访问 [Docker Hub](https://hub.docker.com/)
-- 创建账号并创建私有仓库
-- 生成 Access Token（Settings → Security → New Access Token）
+- Visit [Docker Hub](https://hub.docker.com/)
+- Create an account and create a private repository
+- Generate Access Token (Settings → Security → New Access Token)
 
-### 配置 GitHub Secrets
+### Configuring GitHub Secrets
 
-在 GitHub 仓库设置 Secrets（Settings → Secrets and variables → Actions）：
+Set up Secrets in your GitHub repository (Settings → Secrets and variables → Actions):
 
-#### Docker 配置
+#### Docker Configuration
 
-| Secret 名称       | 说明                    | 示例             |
+| Secret Name       | Description             | Example          |
 | ----------------- | ----------------------- | ---------------- |
-| `DOCKER_USERNAME` | Docker Hub 用户名       | `your_username`  |
+| `DOCKER_USERNAME` | Docker Hub username     | `your_username`  |
 | `DOCKER_PASSWORD` | Docker Hub Access Token | `dckr_pat_xxxxx` |
 
-#### 服务器 SSH 配置
+#### Server SSH Configuration
 
-| Secret 名称     | 说明                  | 获取方式                                         |
-| --------------- | --------------------- | ------------------------------------------------ |
-| `DB_SERVER_IP`  | 数据库服务器 IP       | `123.456.789.100`                                |
-| `DB_SSH_KEY`    | 数据库服务器 SSH 私钥 | 完整的私钥内容（包括 `-----BEGIN ... KEY-----`） |
-| `APP_SERVER_IP` | 应用服务器 IP         | `123.456.789.101`                                |
-| `APP_SSH_KEY`   | 应用服务器 SSH 私钥   | 完整的私钥内容（包括 `-----BEGIN ... KEY-----`） |
+| Secret Name     | Description                | How to Obtain                                                |
+| --------------- | -------------------------- | ------------------------------------------------------------ |
+| `DB_SERVER_IP`  | Database server IP         | `123.456.789.100`                                            |
+| `DB_SSH_KEY`    | Database server SSH key    | Complete private key content (including `-----BEGIN ... KEY-----`) |
+| `APP_SERVER_IP` | Application server IP      | `123.456.789.101`                                            |
+| `APP_SSH_KEY`   | Application server SSH key | Complete private key content (including `-----BEGIN ... KEY-----`) |
 
-**获取 SSH 私钥**：
+**Obtaining SSH Private Key**:
 
 ```bash
-# 在本地生成 SSH 密钥对
+# Generate SSH key pair locally
 ssh-keygen -t ed25519 -C "github-actions" -f ~/.ssh/github_actions
 
-# 将公钥添加到服务器
+# Add public key to server
 ssh-copy-id -i ~/.ssh/github_actions.pub ubuntu@<SERVER_IP>
 
-# 复制私钥内容到 GitHub Secret
+# Copy private key content to GitHub Secret
 cat ~/.ssh/github_actions
 ```
 
-#### 数据库配置
+#### Database Configuration
 
-| Secret 名称       | 说明             | 示例                   |
-| ----------------- | ---------------- | ---------------------- |
-| `MYSQL_ROOT_PASS` | MySQL root 密码  | 强密码（至少 16 字符） |
-| `MYSQL_APP_USER`  | 应用数据库用户名 | `app_user`             |
-| `MYSQL_APP_PASS`  | 应用数据库密码   | 强密码（至少 16 字符） |
-| `REDIS_PASS`      | Redis 密码       | 强密码（至少 16 字符） |
+| Secret Name       | Description                | Example                        |
+| ----------------- | -------------------------- | ------------------------------ |
+| `MYSQL_ROOT_PASS` | MySQL root password        | Strong password (min 16 chars) |
+| `MYSQL_APP_USER`  | Application database user  | `app_user`                     |
+| `MYSQL_APP_PASS`  | Application database password | Strong password (min 16 chars) |
+| `REDIS_PASS`      | Redis password             | Strong password (min 16 chars) |
 
-#### 应用环境配置
+#### Application Environment Configuration
 
-| Secret 名称           | 说明                                                  |
-| --------------------- | ----------------------------------------------------- |
-| `ENV_PRODUCTION_FILE` | 完整的生产环境配置（**纯 KEY=VALUE 格式，不含注释**） |
+| Secret Name           | Description                                                                |
+| --------------------- | -------------------------------------------------------------------------- |
+| `ENV_PRODUCTION_FILE` | Complete production environment config (**Pure KEY=VALUE format, no comments**) |
 
-**`ENV_PRODUCTION_FILE` 配置示例**：
+**`ENV_PRODUCTION_FILE` Configuration Example**:
 
 ```env
 APP_NAME=YourAppName
@@ -733,62 +733,62 @@ COMPANY_NAME=YourCompany
 COMPANY_EMAIL=contact@yourdomain.com
 ```
 
-⚠️ **重要提示**：
+⚠️ **Important Notes**:
 
-- **不要包含注释行**（`#` 开头的行）
-- **不要包含空格分隔线**
-- 只保留 `KEY=VALUE` 格式
-- 确保所有必需的变量都已配置
+- **Do not include comment lines** (lines starting with `#`)
+- **Do not include separator lines**
+- Only keep `KEY=VALUE` format
+- Ensure all required variables are configured
 
-### 配置 SSL 证书（首次部署前必须完成）
+### Configuring SSL Certificates (Must Complete Before First Deployment)
 
-应用服务器需要配置 SSL 证书才能通过 Nginx 提供 HTTPS 服务。**请在首次部署前完成此步骤。**
+The application server needs SSL certificates configured to provide HTTPS service through Nginx. **Please complete this step before the first deployment.**
 
-#### 方法 1：使用 Let's Encrypt（推荐）
+#### Method 1: Using Let's Encrypt (Recommended)
 
 ```bash
-# SSH 登录应用服务器
+# SSH login to application server
 ssh ubuntu@<APP_SERVER_IP>
 
-# 安装 Certbot
+# Install Certbot
 sudo apt update
 sudo apt install certbot -y
 
-# 获取证书（替换为你的域名）
+# Obtain certificate (replace with your domain)
 sudo certbot certonly --standalone \
   -d api.yourdomain.com \
   --non-interactive \
   --agree-tos \
   --email your-email@example.com
 
-# 证书将保存在：
+# Certificates will be saved at:
 # /etc/letsencrypt/live/api.yourdomain.com/fullchain.pem
 # /etc/letsencrypt/live/api.yourdomain.com/privkey.pem
 
-# 创建证书目录并复制
+# Create certificate directory and copy
 sudo mkdir -p /opt/server/certs
 sudo cp /etc/letsencrypt/live/api.yourdomain.com/fullchain.pem /opt/server/certs/cert.pem
 sudo cp /etc/letsencrypt/live/api.yourdomain.com/privkey.pem /opt/server/certs/key.pem
 sudo chmod 644 /opt/server/certs/cert.pem
 sudo chmod 600 /opt/server/certs/key.pem
 
-# 设置自动续期
+# Set up automatic renewal
 sudo certbot renew --dry-run
 sudo systemctl enable certbot.timer
 sudo systemctl start certbot.timer
 ```
 
-#### 方法 2：使用自有证书
+#### Method 2: Using Your Own Certificate
 
 ```bash
-# 上传你的证书文件到服务器
+# Upload your certificate files to server
 scp cert.pem ubuntu@<APP_SERVER_IP>:/tmp/
 scp key.pem ubuntu@<APP_SERVER_IP>:/tmp/
 
-# SSH 登录服务器
+# SSH login to server
 ssh ubuntu@<APP_SERVER_IP>
 
-# 移动证书到部署目录
+# Move certificates to deployment directory
 sudo mkdir -p /opt/server/certs
 sudo mv /tmp/cert.pem /opt/server/certs/
 sudo mv /tmp/key.pem /opt/server/certs/
@@ -797,358 +797,357 @@ sudo chmod 600 /opt/server/certs/key.pem
 sudo chown ubuntu:ubuntu /opt/server/certs/*
 ```
 
-#### 验证 SSL 配置
+#### Verify SSL Configuration
 
 ```bash
-# 检查证书文件
+# Check certificate files
 ls -lh /opt/server/certs/
 
-# 检查证书有效期
+# Check certificate validity period
 sudo openssl x509 -in /opt/server/certs/cert.pem -noout -dates
 
-# 部署完成后测试 HTTPS 连接
+# Test HTTPS connection after deployment
 curl -I https://api.yourdomain.com
 ```
 
-### 自动部署流程
+### Automated Deployment Workflow
 
-#### 触发部署
+#### Triggering Deployment
 
 ```bash
-# 提交并推送代码到 main 分支
 git add .
 git commit -m "feat: add new feature"
 git push origin main
 ```
 
-推送后，GitHub Actions 会自动执行以下步骤：
+After pushing, GitHub Actions will automatically execute the following steps:
 
-#### 阶段 1：数据库服务器部署（Deploy DB Server）
-
-```
-1️⃣ 上传 setup-mysql-redis.sh 到数据库服务器
-2️⃣ 通过 SSH 执行脚本：
-   - 安装/更新 MySQL 8.0
-   - 安装/更新 Redis 7.0
-   - 创建 blog 数据库（CHARACTER SET utf8mb4）
-   - 创建应用数据库用户并授权
-   - 配置远程访问权限
-   - 设置防火墙规则
-3️⃣ 验证数据库和 Redis 连接
-```
-
-#### 阶段 2：应用服务器部署（Deploy App Server）
+#### Stage 1: Database Server Deployment (Deploy DB Server)
 
 ```
-1️⃣ 代码检出和验证
-   - 验证必需文件存在
-   - 检查数据库迁移文件
+1️⃣ Upload setup-mysql-redis.sh to database server
+2️⃣ Execute script via SSH:
+   - Install/update MySQL 8.0
+   - Install/update Redis 7.0
+   - Create blog database (CHARACTER SET utf8mb4)
+   - Create application database user and grant permissions
+   - Configure remote access permissions
+   - Set up firewall rules
+3️⃣ Verify database and Redis connections
+```
 
-2️⃣ 构建 Docker 镜像
-   - 使用 Docker Buildx 构建
-   - 标签：latest, commit-sha, timestamp
-   - 推送到 Docker Hub 私有仓库
+#### Stage 2: Application Server Deployment (Deploy App Server)
 
-3️⃣ 准备部署文件
-   - 生成 .env.production
-   - 上传配置文件到服务器：
+```
+1️⃣ Code checkout and validation
+   - Verify required files exist
+   - Check database migration files
+
+2️⃣ Build Docker image
+   - Build using Docker Buildx
+   - Tags: latest, commit-sha, timestamp
+   - Push to Docker Hub private repository
+
+3️⃣ Prepare deployment files
+   - Generate .env.production
+   - Upload configuration files to server:
      * docker-compose.yml
      * nginx.conf
-     * alembic 迁移文件
-     * 初始化数据脚本
+     * alembic migration files
+     * Initialization data scripts
 
-4️⃣ 服务器环境准备
-   - 安装 Docker（如需要）
-   - 配置 SSL 证书（Let's Encrypt）
-   - 备份当前配置（保留最近 5 份）
-   - 创建部署目录结构
+4️⃣ Server environment preparation
+   - Install Docker (if needed)
+   - Configure SSL certificates (Let's Encrypt)
+   - Backup current configuration (keep last 5 copies)
+   - Create deployment directory structure
 
-5️⃣ 拉取并启动容器
-   - 登录 Docker Hub
-   - 拉取最新镜像
-   - 停止并清理旧容器
-   - 启动新容器（app + nginx）
-   - 等待容器健康检查通过
+5️⃣ Pull and start containers
+   - Login to Docker Hub
+   - Pull latest image
+   - Stop and clean up old containers
+   - Start new containers (app + nginx)
+   - Wait for container health checks to pass
 
-6️⃣ 数据库迁移
-   - 检查迁移状态
-   - 自动执行 alembic upgrade head
-   - 验证迁移成功
+6️⃣ Database migration
+   - Check migration status
+   - Automatically execute alembic upgrade head
+   - Verify migration success
 
-7️⃣ 初始化数据
-   - 运行 initial_data.py
-   - 创建默认数据（如需要）
+7️⃣ Initialize data
+   - Run initial_data.py
+   - Create default data (if needed)
 
-8️⃣ 健康检查
-   - 验证 API 可访问性
-   - 检查容器状态
-   - 显示资源使用情况
+8️⃣ Health check
+   - Verify API accessibility
+   - Check container status
+   - Display resource usage
 
-9️⃣ 部署完成通知
+9️⃣ Deployment completion notification
 ```
 
-### 监控部署状态
+### Monitoring Deployment Status
 
-#### 在 GitHub 查看部署进度
+#### Viewing Deployment Progress on GitHub
 
-1. 进入仓库的 **Actions** 标签页
-2. 查看正在运行的 Workflows：
-   - `Deploy DB Server` - 数据库部署
-   - `Deploy App Server` - 应用部署
-3. 点击查看详细日志和每个步骤的执行情况
+1. Go to the repository's **Actions** tab
+2. View running Workflows:
+   - `Deploy DB Server` - Database deployment
+   - `Deploy App Server` - Application deployment
+3. Click to view detailed logs and execution status of each step
 
-#### 部署状态标识
+#### Deployment Status Indicators
 
-| 图标 | 状态        | 说明     |
-| ---- | ----------- | -------- |
-| 🟡   | In Progress | 正在部署 |
-| ✅   | Success     | 部署成功 |
-| ❌   | Failed      | 部署失败 |
+| Icon | Status      | Description       |
+| ---- | ----------- | ----------------- |
+| 🟡   | In Progress | Deploying         |
+| ✅   | Success     | Deployment successful |
+| ❌   | Failed      | Deployment failed |
 
-### 运维管理
+### Operations Management
 
-#### 查看服务状态
+#### Viewing Service Status
 
 ```bash
-# SSH 登录应用服务器
+# SSH login to application server
 ssh ubuntu@<APP_SERVER_IP>
 
-# 查看容器状态
+# View container status
 cd /opt/server
 sudo docker-compose ps
 
-# 查看实时日志
+# View real-time logs
 sudo docker-compose logs -f
 
-# 查看特定容器日志
-sudo docker-compose logs -f app     # 应用日志
-sudo docker-compose logs -f nginx   # Nginx 日志
+# View specific container logs
+sudo docker-compose logs -f app     # Application logs
+sudo docker-compose logs -f nginx   # Nginx logs
 ```
 
-#### 常用运维命令
+#### Common Operations Commands
 
 ```bash
-# 重启服务
+# Restart services
 sudo docker-compose restart
 
-# 查看资源使用
+# View resource usage
 sudo docker stats
 
-# 进入应用容器
+# Enter application container
 sudo docker-compose exec app bash
 
-# 查看应用配置
+# View application configuration
 sudo docker-compose exec app env | grep -E "DATABASE|REDIS|JWT"
 
-# 手动执行数据库迁移（调试用）
+# Manually execute database migration (for debugging)
 sudo docker-compose exec app alembic current
 sudo docker-compose exec app alembic upgrade head
 
-# 查看迁移历史
+# View migration history
 sudo docker-compose exec app alembic history
 ```
 
-#### 回滚部署
+#### Rolling Back Deployment
 
-如果新版本有问题，可以快速回滚：
+If the new version has issues, you can quickly roll back:
 
 ```bash
-# 查看备份
+# View backups
 ls -lh /opt/backups/
 
-# 回滚到之前的版本
+# Roll back to previous version
 cd /opt/server
 sudo docker-compose down
 sudo cp -r /opt/backups/server-YYYYMMDD-HHMMSS/* .
 sudo docker-compose up -d
 ```
 
-### 部署检查清单
+### Deployment Checklist
 
-部署前确认以下事项：
+Confirm the following before deployment:
 
-**GitHub 配置**
+**GitHub Configuration**
 
-- [ ] 所有 GitHub Secrets 已正确配置
-- [ ] Docker Hub Access Token 有效
-- [ ] SSH 私钥格式正确（包含 BEGIN/END 标记）
+- [ ] All GitHub Secrets are correctly configured
+- [ ] Docker Hub Access Token is valid
+- [ ] SSH private key format is correct (includes BEGIN/END markers)
 
-**服务器准备**
+**Server Preparation**
 
-- [ ] 服务器已安装 Ubuntu 20.04+ 或 Debian 11+
-- [ ] SSH 公钥已添加到服务器的 `~/.ssh/authorized_keys`
-- [ ] 服务器防火墙已开放端口：
-  - 数据库服务器：3306 (MySQL), 6379 (Redis)
-  - 应用服务器：80 (HTTP), 443 (HTTPS)
-- [ ] 应用服务器已配置 SSL 证书（Let's Encrypt 或其他）
+- [ ] Server has Ubuntu 20.04+ or Debian 11+ installed
+- [ ] SSH public key has been added to server's `~/.ssh/authorized_keys`
+- [ ] Server firewall has opened ports:
+  - Database server: 3306 (MySQL), 6379 (Redis)
+  - Application server: 80 (HTTP), 443 (HTTPS)
+- [ ] Application server has SSL certificates configured (Let's Encrypt or other)
 
-**环境配置**
+**Environment Configuration**
 
-- [ ] `ENV_PRODUCTION_FILE` 包含所有必需变量
-- [ ] 数据库连接信息正确（IP、端口、用户名、密码）
-- [ ] Redis 连接信息正确
-- [ ] 第三方服务密钥已配置（AWS、Stripe、OAuth 等）
+- [ ] `ENV_PRODUCTION_FILE` contains all required variables
+- [ ] Database connection information is correct (IP, port, username, password)
+- [ ] Redis connection information is correct
+- [ ] Third-party service keys are configured (AWS, Stripe, OAuth, etc.)
 
-**域名和 SSL**
+**Domain and SSL**
 
-- [ ] 域名 DNS 已正确指向应用服务器 IP
-- [ ] SSL 证书已配置（推荐使用 Let's Encrypt）
-- [ ] Nginx 配置中的域名正确
+- [ ] Domain DNS correctly points to application server IP
+- [ ] SSL certificates are configured (Let's Encrypt recommended)
+- [ ] Domain in Nginx configuration is correct
 
-**首次部署特别检查**
+**First Deployment Special Checks**
 
-- [ ] Docker Hub 私有仓库已创建
-- [ ] 数据库服务器可从应用服务器访问
-- [ ] 已准备好初始化数据（如需要）
+- [ ] Docker Hub private repository has been created
+- [ ] Database server is accessible from application server
+- [ ] Initialization data is ready (if needed)
 
-### 故障排查
+### Troubleshooting
 
-#### GitHub Actions 部署失败
+#### GitHub Actions Deployment Failed
 
-**问题 1：SSH 连接失败**
+**Issue 1: SSH Connection Failed**
 
 ```bash
-# 症状：Permission denied (publickey)
-# 解决方案：
-# 1. 检查 SSH 私钥格式是否完整（包含 BEGIN/END 标记）
-# 2. 验证公钥是否已添加到服务器
+# Symptom: Permission denied (publickey)
+# Solutions:
+# 1. Check if SSH private key format is complete (includes BEGIN/END markers)
+# 2. Verify public key has been added to server
 ssh-copy-id -i ~/.ssh/github_actions.pub ubuntu@<SERVER_IP>
 
-# 3. 测试 SSH 连接
+# 3. Test SSH connection
 ssh -i ~/.ssh/github_actions ubuntu@<SERVER_IP>
 ```
 
-**问题 2：Docker Hub 推送失败**
+**Issue 2: Docker Hub Push Failed**
 
 ```bash
-# 症状：unauthorized: authentication required
-# 解决方案：
-# 1. 验证 DOCKER_USERNAME 和 DOCKER_PASSWORD
-# 2. 确认 Access Token 有 Read & Write 权限
-# 3. 检查仓库是否存在（在 Docker Hub 创建）
+# Symptom: unauthorized: authentication required
+# Solutions:
+# 1. Verify DOCKER_USERNAME and DOCKER_PASSWORD
+# 2. Confirm Access Token has Read & Write permissions
+# 3. Check if repository exists (create in Docker Hub)
 ```
 
-**问题 3：文件上传失败**
+**Issue 3: File Upload Failed**
 
 ```bash
-# 症状：No space left on device
-# 解决方案：在服务器上清理磁盘空间
+# Symptom: No space left on device
+# Solution: Clean up disk space on server
 df -h
 docker system prune -a --volumes
-rm -rf /opt/backups/server-* # 删除旧备份
+rm -rf /opt/backups/server-* # Delete old backups
 ```
 
-**问题 4：数据库迁移失败**
+**Issue 4: Database Migration Failed**
 
 ```bash
-# 症状：Can't locate revision
-# 原因：数据库版本与迁移文件不匹配
-# 解决方案：
-# 1. 查看当前数据库版本
+# Symptom: Can't locate revision
+# Cause: Database version doesn't match migration files
+# Solutions:
+# 1. View current database version
 sudo docker-compose exec app alembic current
 
-# 2. 查看迁移历史
+# 2. View migration history
 sudo docker-compose exec app alembic history
 
-# 3. 如果版本不一致，需要手动修复或重置数据库
+# 3. If versions don't match, need to manually fix or reset database
 ```
 
-#### 应用运行问题
+#### Application Runtime Issues
 
-**问题 1：容器启动失败**
+**Issue 1: Container Startup Failed**
 
 ```bash
-# 查看详细日志
+# View detailed logs
 cd /opt/server
 sudo docker-compose logs --tail=200 app
 
-# 检查容器状态
+# Check container status
 sudo docker-compose ps
 
-# 检查配置文件
+# Check configuration file
 sudo docker-compose config
 
-# 重新启动
+# Restart
 sudo docker-compose restart app
 ```
 
-**问题 2：数据库连接失败**
+**Issue 2: Database Connection Failed**
 
 ```bash
-# 从应用服务器测试数据库连接
+# Test database connection from application server
 mysql -h <DB_SERVER_IP> -u <MYSQL_APP_USER> -p
 
-# 检查数据库服务器防火墙
-# 在数据库服务器执行：
+# Check database server firewall
+# Execute on database server:
 sudo ufw status
 sudo ufw allow from <APP_SERVER_IP> to any port 3306
 
-# 检查 MySQL 绑定地址
+# Check MySQL bind address
 sudo cat /etc/mysql/mysql.conf.d/mysqld.cnf | grep bind-address
-# 应该是：bind-address = 0.0.0.0
+# Should be: bind-address = 0.0.0.0
 ```
 
-**问题 3：Redis 连接失败**
+**Issue 3: Redis Connection Failed**
 
 ```bash
-# 测试 Redis 连接
+# Test Redis connection
 redis-cli -h <DB_SERVER_IP> -p 6379 -a <REDIS_PASS> ping
 
-# 检查 Redis 配置
-# 在数据库服务器执行：
+# Check Redis configuration
+# Execute on database server:
 sudo cat /etc/redis/redis.conf | grep -E "bind|requirepass"
 ```
 
-**问题 4：环境变量未生效**
+**Issue 4: Environment Variables Not Taking Effect**
 
 ```bash
-# 检查环境变量是否正确加载
+# Check if environment variables are loaded correctly
 sudo docker-compose exec app env | grep -E "DATABASE|REDIS|JWT"
 
-# 重新生成 .env.production
-# 在 GitHub Secrets 中更新 ENV_PRODUCTION_FILE
-# 然后重新触发部署
+# Regenerate .env.production
+# Update ENV_PRODUCTION_FILE in GitHub Secrets
+# Then trigger deployment again
 ```
 
-#### 性能问题
+#### Performance Issues
 
-**问题 1：内存不足**
+**Issue 1: Out of Memory**
 
 ```bash
-# 查看内存使用情况
+# View memory usage
 free -h
 sudo docker stats
 
-# 优化配置（在 ENV_PRODUCTION_FILE 中添加）
-UVICORN_WORKERS=2           # 减少 worker 数量
-MYSQL_POOL_SIZE=5           # 减小连接池
-REDIS_MAX_CONNECTIONS=20    # 减少 Redis 连接
+# Optimize configuration (add to ENV_PRODUCTION_FILE)
+UVICORN_WORKERS=2           # Reduce worker count
+MYSQL_POOL_SIZE=5           # Reduce connection pool
+REDIS_MAX_CONNECTIONS=20    # Reduce Redis connections
 
-# 启用 swap（临时方案）
+# Enable swap (temporary solution)
 sudo fallocate -l 2G /swapfile
 sudo chmod 600 /swapfile
 sudo mkswap /swapfile
 sudo swapon /swapfile
 ```
 
-**问题 2：响应速度慢**
+**Issue 2: Slow Response**
 
 ```bash
-# 检查数据库查询性能
+# Check database query performance
 sudo docker-compose exec app alembic current
 
-# 查看 Nginx 访问日志
+# View Nginx access logs
 sudo docker-compose logs nginx | tail -100
 
-# 检查网络延迟
+# Check network latency
 ping <DB_SERVER_IP>
 ```
 
-### 性能优化建议
+### Performance Optimization Recommendations
 
-#### 小内存服务器（2GB RAM）
+#### Small Memory Server (2GB RAM)
 
-在 `ENV_PRODUCTION_FILE` 中配置：
+Configure in `ENV_PRODUCTION_FILE`:
 
 ```env
 UVICORN_WORKERS=2
@@ -1157,47 +1156,47 @@ MYSQL_MAX_OVERFLOW=10
 REDIS_MAX_CONNECTIONS=20
 ```
 
-## 💻 开发指南
+## 💻 Development Guide
 
-### 代码风格
+### Code Style
 
-项目使用 Ruff 进行代码检查和格式化：
+The project uses Ruff for code linting and formatting:
 
 ```bash
-# 检查代码
+# Check code
 ruff check .
 
-# 自动修复
+# Auto-fix issues
 ruff check --fix .
 
-# 格式化代码
+# Format code
 ruff format .
 ```
 
-### 项目规范
+### Project Standards
 
-- 使用 async/await 编写异步代码
-- 所有 API 路由必须有类型注解
-- 使用 Pydantic 模型进行数据验证
-- 业务逻辑放在 service 层
-- 数据库操作放在 crud 层
-- 添加适当的日志记录
-- 编写必要的单元测试
+- Use async/await for asynchronous code
+- All API routes must have type annotations
+- Use Pydantic models for data validation
+- Business logic goes in the service layer
+- Database operations go in the crud layer
+- Add appropriate logging
+- Write necessary unit tests
 
-### 添加新功能
+### Adding New Features
 
-1. **创建数据模型** (`app/models/`)
-2. **创建 Pydantic 模式** (`app/schemas/`)
-3. **实现 CRUD 操作** (`app/crud/`)
-4. **编写业务逻辑** (`app/services/`)
-5. **创建 API 路由** (`app/router/v1/`)
-6. **创建数据库迁移**
-7. **编写测试**
+1. **Create data model** (`app/models/`)
+2. **Create Pydantic schemas** (`app/schemas/`)
+3. **Implement CRUD operations** (`app/crud/`)
+4. **Write business logic** (`app/services/`)
+5. **Create API routes** (`app/router/v1/`)
+6. **Create database migration**
+7. **Write tests**
 
-### 示例：添加新模块
+### Example: Adding a New Module
 
 ```python
-# 1. 模型 (app/models/example_model.py)
+# 1. Model (app/models/example_model.py)
 from sqlmodel import SQLModel, Field
 
 class Example(SQLModel, table=True):
@@ -1206,7 +1205,7 @@ class Example(SQLModel, table=True):
     name: str
     description: str | None = None
 
-# 2. 模式 (app/schemas/example_schemas.py)
+# 2. Schema (app/schemas/example_schemas.py)
 from pydantic import BaseModel
 
 class ExampleCreate(BaseModel):
@@ -1216,45 +1215,45 @@ class ExampleCreate(BaseModel):
 # 3. CRUD (app/crud/example_crud.py)
 class ExampleCrud:
     async def create_example(self, data: ExampleCreate) -> int:
-        # 实现创建逻辑
+        # Implement creation logic
         pass
 
-# 4. 服务 (app/services/example_service.py)
+# 4. Service (app/services/example_service.py)
 class ExampleService:
     async def create_example(self, data: ExampleCreate) -> dict:
-        # 实现业务逻辑
+        # Implement business logic
         pass
 
-# 5. 路由 (app/router/v1/example_router.py)
+# 5. Router (app/router/v1/example_router.py)
 from fastapi import APIRouter
 
 router = APIRouter(prefix="/examples", tags=["Examples"])
 
 @router.post("/")
 async def create_example(data: ExampleCreate):
-    # 调用服务
+    # Call service
     pass
 ```
 
-## 🧪 测试
+## 🧪 Testing
 
-### 运行测试
+### Running Tests
 
 ```bash
-# 运行所有测试
+# Run all tests
 uv run pytest
 
-# 运行特定测试文件
+# Run specific test file
 uv run pytest tests/test_auth.py
 
-# 运行并显示覆盖率
+# Run with coverage report
 uv run pytest --cov=app --cov-report=html
 
-# 运行并显示详细输出
+# Run with verbose output
 uv run pytest -v
 ```
 
-### 编写测试
+### Writing Tests
 
 ```python
 import pytest
@@ -1271,103 +1270,103 @@ async def test_create_blog():
         assert response.status_code == 201
 ```
 
-## ❓ 常见问题
+## FAQ
 
-### 1. 数据库连接失败
+### 1. Database Connection Failed
 
-**问题**: `Can't connect to MySQL server`
+**Issue**: `Can't connect to MySQL server`
 
-**解决方案**:
+**Solutions**:
 
-- 检查 MySQL 服务是否运行
-- 验证数据库配置（主机、端口、用户名、密码）
-- 确保数据库已创建
-- 检查防火墙设置
+- Check if MySQL service is running
+- Verify database configuration (host, port, username, password)
+- Ensure database is created
+- Check firewall settings
 
-### 2. Redis 连接失败
+### 2. Redis Connection Failed
 
-**问题**: `Error connecting to Redis`
+**Issue**: `Error connecting to Redis`
 
-**解决方案**:
+**Solutions**:
 
-- 检查 Redis 服务是否运行
-- 验证 Redis 配置
-- 检查 Redis 密码设置
+- Check if Redis service is running
+- Verify Redis configuration
+- Check Redis password settings
 
-### 3. SSL 证书错误（开发环境）
+### 3. SSL Certificate Error (Development)
 
-**问题**: `SSL certificate verification failed`
+**Issue**: `SSL certificate verification failed`
 
-**解决方案**:
+**Solutions**:
 
-- 生成自签名证书（见快速开始部分）
-- 浏览器信任证书
-- 或在开发环境禁用 SSL
+- Generate self-signed certificate (see Quick Start section)
+- Trust certificate in browser
+- Or disable SSL in development environment
 
-### 4. Celery 任务不执行
+### 4. Celery Tasks Not Executing
 
-**问题**: 异步任务未被处理
+**Issue**: Async tasks not being processed
 
-**解决方案**:
+**Solutions**:
 
-- 确保 Celery Worker 正在运行
-- 检查 Redis 连接
-- 查看 Celery 日志
-- 确认任务已正确注册
+- Ensure Celery Worker is running
+- Check Redis connection
+- View Celery logs
+- Confirm tasks are properly registered
 
-### 5. 文件上传失败
+### 5. File Upload Failed
 
-**问题**: AWS S3 上传错误
+**Issue**: AWS S3 upload error
 
-**解决方案**:
+**Solutions**:
 
-- 验证 AWS 凭证
-- 检查 S3 存储桶权限
-- 确认 CORS 配置
-- 检查文件大小限制
+- Verify AWS credentials
+- Check S3 bucket permissions
+- Confirm CORS configuration
+- Check file size limits
 
-### 6. 内存不足
+### 6. Out of Memory
 
-**问题**: 服务器内存耗尽
+**Issue**: Server running out of memory
 
-**解决方案**:
+**Solutions**:
 
-- 减少 Uvicorn Workers 数量
-- 优化数据库连接池大小
-- 使用 swap 分区
-- 升级服务器配置
+- Reduce number of Uvicorn Workers
+- Optimize database connection pool size
+- Use swap partition
+- Upgrade server configuration
 
-## 🤝 贡献指南
+## Contributing
 
-欢迎贡献！请遵循以下步骤：
+Contributions are welcome! Please follow these steps:
 
-1. Fork 本仓库
-2. 创建特性分支 (`git checkout -b feature/AmazingFeature`)
-3. 提交更改 (`git commit -m 'Add some AmazingFeature'`)
-4. 推送到分支 (`git push origin feature/AmazingFeature`)
-5. 开启 Pull Request
+1. Fork this repository
+2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
 
-### 贡献规范
+### Contribution Guidelines
 
-- 遵循项目代码风格
-- 添加必要的测试
-- 更新相关文档
-- 确保所有测试通过
-- 编写清晰的提交信息
+- Follow project code style
+- Add necessary tests
+- Update relevant documentation
+- Ensure all tests pass
+- Write clear commit messages
 
-## 📄 许可证
+## License
 
-本项目采用 MIT 许可证 - 详见 [LICENSE](LICENSE) 文件
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details
 
-## 📞 联系方式
+## Contact
 
-- 作者: NING3739
-- 仓库: [https://github.com/NING3739/blogbackendserver](https://github.com/NING3739/blogbackendserver)
-- 问题反馈: [GitHub Issues](https://github.com/NING3739/blogbackendserver/issues)
+- Author: NING3739
+- Repository: [https://github.com/NING3739/blogbackendserver](https://github.com/NING3739/blogbackendserver)
+- Issue Tracker: [GitHub Issues](https://github.com/NING3739/blogbackendserver/issues)
 
-## 🙏 致谢
+## Acknowledgments
 
-感谢以下开源项目：
+Thanks to the following open source projects:
 
 - [FastAPI](https://fastapi.tiangolo.com/)
 - [SQLModel](https://sqlmodel.tiangolo.com/)
@@ -1378,7 +1377,7 @@ async def test_create_blog():
 
 <div align="center">
 
-**如果这个项目对你有帮助，请给一个 ⭐️**
+**If this project helps you, please give it a ⭐️**
 
 Made with ❤️ by NING3739
 
