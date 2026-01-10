@@ -210,33 +210,30 @@ app.include_router(subscriber_router.router, prefix="/api/v1")
 def custom_openapi(self: FastAPI) -> dict[str, Any]:
     if self.openapi_schema:
         return self.openapi_schema
-    
+
     openapi_schema = get_openapi(
         title=settings.app.APP_NAME,
         version=settings.app.APP_VERSION,
         description=settings.app.APP_DESCRIPTION,
         routes=self.routes,
+        terms_of_service="https://heyxiaoli.com/copyright",
+        contact={
+            "name": "Ning Li",
+            "url": "https://heyxiaoli.com",
+            "email": "ln729500172@gmail.com",
+        },
+        license_info={
+            "name": "MIT License",
+            "url": "https://github.com/ning3739/blogbackendserver?tab=MIT-1-ov-file",
+        },
     )
-    
+
     # 添加 Logo
     openapi_schema["info"]["x-logo"] = {
-        "url": "/static/image/logo.png",
+        "url": "https://github.com/ning3739/blogbackendserver/blob/main/static/image/logo.png?raw=true",
         "altText": settings.app.APP_NAME,
     }
-    
-    # 添加联系信息
-    openapi_schema["info"]["contact"] = {
-        "name": "API Support",
-        "url": "https://heyxiaoli.com",
-        "email": "ln729500172@gmail.com",
-    }
-    
-    # 添加许可证信息
-    openapi_schema["info"]["license"] = {
-        "name": "MIT",
-        "url": "https://github.com/ning3739/blogbackendserver?tab=MIT-1-ov-file",
-    }
-    
+
     # 自定义标签描述和排序（名称必须与路由中定义的完全匹配）
     openapi_schema["tags"] = [
         {"name": "Health", "description": "Health check endpoints"},
@@ -255,7 +252,7 @@ def custom_openapi(self: FastAPI) -> dict[str, Any]:
         {"name": "Analytic", "description": "Analytics and statistics data"},
         {"name": "Subscriber", "description": "Newsletter subscriber management"},
     ]
-    
+
     self.openapi_schema = openapi_schema
     return self.openapi_schema
 
