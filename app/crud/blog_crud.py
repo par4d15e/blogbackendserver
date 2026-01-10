@@ -16,7 +16,6 @@ from app.models.blog_model import (
     Blog_Summary,
     Blog_Comment,
     Saved_Blog,
-
 )
 from app.models.tag_model import Tag
 from app.models.seo_model import Seo
@@ -25,16 +24,20 @@ from app.core.database.mysql import mysql_manager
 from app.core.database.redis import redis_manager
 from app.core.logger import logger_manager
 from app.models.user_model import User, RoleType
-from app.utils.keyset_pagination import paginator_asc, paginator_desc
+from app.utils.keyset_pagination import paginator_desc
 from app.utils.offset_pagination import offset_paginator
 from app.utils.agent import agent_utils
 
 from app.utils.client_info import client_info_utils
 from app.core.i18n.i18n import get_message, Language
 
-from app.tasks import large_content_translation_task, generate_content_audio_task, summary_blog_content
+from app.tasks import (
+    large_content_translation_task,
+    generate_content_audio_task,
+    summary_blog_content,
+)
 from app.schemas.common import LargeContentTranslationType
-from celery import chain  # type: ignore
+from celery import chain
 
 
 class BlogCrud:
@@ -44,6 +47,7 @@ class BlogCrud:
 
     def _get_content_hash(self, content: dict) -> str:
         import json
+
         # 将dict转换为JSON字符串后计算hash
         content_str = json.dumps(content, sort_keys=True, ensure_ascii=False)
         return hashlib.md5(content_str.encode("utf-8")).hexdigest()
@@ -54,10 +58,14 @@ class BlogCrud:
         return result.scalar_one_or_none()
 
     async def get_blog_by_slug(self, slug: str) -> Optional[Blog]:
-        statement = select(Blog).options(
-            joinedload(Blog.cover),
-            selectinload(Blog.blog_tags).selectinload(Blog_Tag.tag)
-        ).where(Blog.slug == slug)
+        statement = (
+            select(Blog)
+            .options(
+                joinedload(Blog.cover),
+                selectinload(Blog.blog_tags).selectinload(Blog_Tag.tag),
+            )
+            .where(Blog.slug == slug)
+        )
         result = await self.db.execute(statement)
         return result.scalar_one_or_none()
 
@@ -81,11 +89,13 @@ class BlogCrud:
             for stats in stats_list
         }
 
-    async def _get_blog_comment_by_id(self, comment_id: int, include_deleted: bool = False) -> Optional[Blog_Comment]:
+    async def _get_blog_comment_by_id(
+        self, comment_id: int, include_deleted: bool = False
+    ) -> Optional[Blog_Comment]:
         """获取博客评论，可选择是否包含已删除的评论"""
         statement = select(Blog_Comment).where(Blog_Comment.id == comment_id)
         if not include_deleted:
-            statement = statement.where(Blog_Comment.is_deleted == False)
+            statement = statement.where(not Blog_Comment.is_deleted)
         result = await self.db.execute(statement)
         return result.scalar_one_or_none()
 
@@ -188,8 +198,7 @@ class BlogCrud:
 
             # 实时获取统计数据和变现信息并添加到缓存数据中
             if cached_items:
-                blog_ids = [item["blog_id"]
-                            for item in cached_items]
+                blog_ids = [item["blog_id"] for item in cached_items]
                 stats = await self._get_real_time_blog_stats(blog_ids)
 
                 # 为每个博客项添加实时统计数据和变现信息（不修改缓存）
@@ -216,7 +225,7 @@ class BlogCrud:
                 )
                 .where(
                     Blog.section_id == section_id,
-                    Blog_Status.is_published == True,
+                    Blog_Status.is_published,
                 )
             )
         else:
@@ -229,11 +238,8 @@ class BlogCrud:
                 .where(Blog.section_id == section_id)
             )
 
-        count_stmt = (
-            select(func.count(Blog.id))
-            .where(
-                Blog.section_id == section_id,
-            )
+        count_stmt = select(func.count(Blog.id)).where(
+            Blog.section_id == section_id,
         )
 
         rows, pagination_metadata = await offset_paginator.get_paginated_join_result(
@@ -242,7 +248,7 @@ class BlogCrud:
             count_stmt=count_stmt,
             page=page,
             size=size,
-            order_by=[Blog.created_at.desc(), Blog.id.desc()]
+            order_by=[Blog.created_at.desc(), Blog.id.desc()],
         )
 
         # 计算本月的博客数量
@@ -254,18 +260,21 @@ class BlogCrud:
                     now.year + 1, 1, 1, tzinfo=timezone.utc)
             else:
                 next_month_start = datetime(
-                    now.year, now.month + 1, 1, tzinfo=timezone.utc)
+                    now.year, now.month + 1, 1, tzinfo=timezone.utc
+                )
 
             count_this_month = await self.db.execute(
                 select(func.count(Blog.id)).where(
-                    Blog.created_at.between(month_start, next_month_start))
+                    Blog.created_at.between(month_start, next_month_start)
+                )
             )
             count_this_month = count_this_month.scalar_one_or_none()
 
             # 计算更新的博客数量
             count_updated = await self.db.execute(
                 select(func.count(Blog.id)).where(
-                    Blog.updated_at.between(month_start, next_month_start))
+                    Blog.updated_at.between(month_start, next_month_start)
+                )
             )
             count_updated = count_updated.scalar_one_or_none()
             pagination_metadata["new_items_this_month"] = count_this_month
@@ -278,9 +287,7 @@ class BlogCrud:
             {
                 "blog_id": blog.id,
                 "blog_slug": blog.slug,
-                "cover_url": blog.cover.watermark_filepath_url
-                if blog.cover
-                else None,
+                "cover_url": blog.cover.watermark_filepath_url if blog.cover else None,
                 "created_at": blog.created_at.isoformat(),
                 "updated_at": blog.updated_at.isoformat() if blog.updated_at else None,
             }
@@ -289,44 +296,50 @@ class BlogCrud:
 
         if published_only is True:
             for i, blog in enumerate(blogs):
-                items[i].update({
-                    "blog_title": blog.chinese_title
-                    if language == Language.ZH_CN
-                    else blog.english_title,
-                    "blog_description": blog.chinese_description
-                    if language == Language.ZH_CN
-                    else blog.english_description,
-                    "blog_tags": [
-                        {
-                            "tag_id": tag.id,
-                            "tag_title": tag.tag.chinese_title if language == Language.ZH_CN
-                            else tag.tag.english_title,
-                        }
-                        for tag in blog.blog_tags
-                    ],
-                })
+                items[i].update(
+                    {
+                        "blog_title": blog.chinese_title
+                        if language == Language.ZH_CN
+                        else blog.english_title,
+                        "blog_description": blog.chinese_description
+                        if language == Language.ZH_CN
+                        else blog.english_description,
+                        "blog_tags": [
+                            {
+                                "tag_id": tag.id,
+                                "tag_title": tag.tag.chinese_title
+                                if language == Language.ZH_CN
+                                else tag.tag.english_title,
+                            }
+                            for tag in blog.blog_tags
+                        ],
+                    }
+                )
 
         else:
             for i, blog in enumerate(blogs):
-                items[i].update({
-                    "blog_title": blog.chinese_title,
-                    "blog_description": blog.chinese_description,
-                    "section_slug": blog.section.slug,
-                    "is_published": blog.blog_status.is_published,
-                    "is_archived": blog.blog_status.is_archived,
-                    "is_featured": blog.blog_status.is_featured,
-                    "blog_tags": [
-                        {
-                            "tag_id": tag.id,
-                            "tag_title": tag.tag.chinese_title,
-                        }
-                        for tag in blog.blog_tags
-                    ],
-                })
+                items[i].update(
+                    {
+                        "blog_title": blog.chinese_title,
+                        "blog_description": blog.chinese_description,
+                        "section_slug": blog.section.slug,
+                        "is_published": blog.blog_status.is_published,
+                        "is_archived": blog.blog_status.is_archived,
+                        "is_featured": blog.blog_status.is_featured,
+                        "blog_tags": [
+                            {
+                                "tag_id": tag.id,
+                                "tag_title": tag.tag.chinese_title,
+                            }
+                            for tag in blog.blog_tags
+                        ],
+                    }
+                )
 
         # 缓存结果（不包含统计数据）
         cache_payload = offset_paginator.create_response_data(
-            items, pagination_metadata)
+            items, pagination_metadata
+        )
         await redis_manager.set_async(cache_key, json.dumps(cache_payload))
 
         # 实时获取统计数据和变现信息并添加到返回数据中
@@ -384,7 +397,9 @@ class BlogCrud:
             )
 
         # 缓存键
-        cache_key = f"blog_lists_by_tag_slug:{tag_slug}:lang={language}:page={page}:size={size}"
+        cache_key = (
+            f"blog_lists_by_tag_slug:{tag_slug}:lang={language}:page={page}:size={size}"
+        )
         cache_data = await redis_manager.get_async(cache_key)
 
         if cache_data:
@@ -404,7 +419,7 @@ class BlogCrud:
             )
             .where(
                 Blog_Tag.tag_id == tag.id,
-                Blog_Status.is_published == True,
+                Blog_Status.is_published,
             )
         )
 
@@ -414,7 +429,7 @@ class BlogCrud:
             .join(Blog_Status, Blog_Status.blog_id == Blog.id)
             .where(
                 Blog_Tag.tag_id == tag.id,
-                Blog_Status.is_published == True,
+                Blog_Status.is_published,
             )
         )
 
@@ -424,7 +439,7 @@ class BlogCrud:
             count_stmt=count_stmt,
             page=page,
             size=size,
-            order_by=[Blog.created_at.desc(), Blog.id.desc()]
+            order_by=[Blog.created_at.desc(), Blog.id.desc()],
         )
 
         # rows 为 JOIN 结果，当前 select 仅选择 Blog，因此每行第一个元素为 Blog 实例
@@ -435,8 +450,12 @@ class BlogCrud:
                 "blog_id": blog.id,
                 "blog_slug": blog.slug,
                 "section_slug": blog.section.slug if blog.section else None,
-                "blog_title": blog.chinese_title if language == Language.ZH_CN else blog.english_title,
-                "blog_description": blog.chinese_description if language == Language.ZH_CN else blog.english_description,
+                "blog_title": blog.chinese_title
+                if language == Language.ZH_CN
+                else blog.english_title,
+                "blog_description": blog.chinese_description
+                if language == Language.ZH_CN
+                else blog.english_description,
                 "created_at": blog.created_at.isoformat(),
                 "updated_at": blog.updated_at.isoformat() if blog.updated_at else None,
             }
@@ -445,7 +464,8 @@ class BlogCrud:
 
         # 缓存结果
         cache_payload = offset_paginator.create_response_data(
-            items, pagination_metadata)
+            items, pagination_metadata
+        )
         await redis_manager.set_async(cache_key, json.dumps(cache_payload))
 
         return items, pagination_metadata
@@ -480,7 +500,7 @@ class BlogCrud:
             .options(
                 joinedload(Blog.section),
             )
-            .where(Blog_Status.is_archived == True)
+            .where(Blog_Status.is_archived)
         )
 
         # 应用 keyset pagination 过滤
@@ -512,15 +532,25 @@ class BlogCrud:
         # 格式化响应数据
         items: List[Dict[str, Any]] = []
         for blog in blogs:
-            items.append({
-                "blog_id": blog.id,
-                "blog_slug": blog.slug,
-                "section_slug": blog.section.slug if blog.section else None,
-                "blog_title": blog.chinese_title if language == Language.ZH_CN else blog.english_title,
-                "blog_description": blog.chinese_description if language == Language.ZH_CN else blog.english_description,
-                "created_at": blog.created_at.isoformat() if blog.created_at else None,
-                "updated_at": blog.updated_at.isoformat() if blog.updated_at else None,
-            })
+            items.append(
+                {
+                    "blog_id": blog.id,
+                    "blog_slug": blog.slug,
+                    "section_slug": blog.section.slug if blog.section else None,
+                    "blog_title": blog.chinese_title
+                    if language == Language.ZH_CN
+                    else blog.english_title,
+                    "blog_description": blog.chinese_description
+                    if language == Language.ZH_CN
+                    else blog.english_description,
+                    "created_at": blog.created_at.isoformat()
+                    if blog.created_at
+                    else None,
+                    "updated_at": blog.updated_at.isoformat()
+                    if blog.updated_at
+                    else None,
+                }
+            )
 
         # 生成下一页的 cursor
         next_cursor = None
@@ -558,8 +588,7 @@ class BlogCrud:
         if not blog:
             raise HTTPException(
                 status_code=404,
-                detail=get_message(
-                    "blog.common.blogNotFound", language),
+                detail=get_message("blog.common.blogNotFound", language),
             )
 
         # 使用 LEFT JOIN 查询博客和 SEO 信息
@@ -574,8 +603,7 @@ class BlogCrud:
         if not row:
             raise HTTPException(
                 status_code=404,
-                detail=get_message(
-                    "blog.common.blogNotFound", language),
+                detail=get_message("blog.common.blogNotFound", language),
             )
 
         _, blog_seo = row
@@ -584,8 +612,7 @@ class BlogCrud:
         if not blog_seo or blog_seo.id is None:
             raise HTTPException(
                 status_code=404,
-                detail=get_message(
-                    "blog.common.blogNotFound", language),
+                detail=get_message("blog.common.blogNotFound", language),
             )
 
         response = {
@@ -616,7 +643,9 @@ class BlogCrud:
         user_id: Optional[int] = None,
     ) -> Optional[Dict]:
         details_cache_key = f"blog_details:{blog_slug}:lang={language}:is_editor={is_editor}:user_id={user_id}"
-        hash_cache_key = f"blog_details_hash:{blog_slug}:is_editor={is_editor}:user_id={user_id}"
+        hash_cache_key = (
+            f"blog_details_hash:{blog_slug}:is_editor={is_editor}:user_id={user_id}"
+        )
         cache_data = await redis_manager.get_async(details_cache_key)
         current_ip = client_info_utils.get_client_ip(request)
         user_agent = client_info_utils.get_user_agent(request)
@@ -625,13 +654,13 @@ class BlogCrud:
         if not blog:
             raise HTTPException(
                 status_code=404,
-                detail=get_message(
-                    "blog.common.blogNotFound", language),
+                detail=get_message("blog.common.blogNotFound", language),
             )
 
         # 计算哈希值
         hash_key = hashlib.sha256(
-            f"{current_ip}:{user_agent}:{is_editor}".encode()).hexdigest()
+            f"{current_ip}:{user_agent}:{is_editor}".encode()
+        ).hexdigest()
 
         # 命中缓存：统一使用 Redis 缓存进行 hash 比对
         if cache_data:
@@ -657,8 +686,9 @@ class BlogCrud:
         is_saved = False
         if user_id is not None:
             saved_blog_result = await self.db.execute(
-                select(Saved_Blog)
-                .where(Saved_Blog.blog_id == blog.id, Saved_Blog.user_id == user_id)
+                select(Saved_Blog).where(
+                    Saved_Blog.blog_id == blog.id, Saved_Blog.user_id == user_id
+                )
             )
             is_saved = saved_blog_result.scalar_one_or_none() is not None
 
@@ -689,10 +719,7 @@ class BlogCrud:
                 "cover_url": blog.cover.watermark_filepath_url if blog.cover else None,
                 "chinese_content": blog.chinese_content,
                 "blog_tags": [
-                    {
-                        "tag_id": tag.tag_id,
-                        "chinese_title": tag.tag.chinese_title
-                    }
+                    {"tag_id": tag.tag_id, "chinese_title": tag.tag.chinese_title}
                     for tag in blog.blog_tags
                 ],
                 "created_at": blog.created_at.isoformat(),
@@ -711,9 +738,7 @@ class BlogCrud:
                 else blog.english_description
                 if blog.english_description
                 else None,
-                "cover_url": blog.cover.watermark_filepath_url
-                if blog.cover
-                else None,
+                "cover_url": blog.cover.watermark_filepath_url if blog.cover else None,
                 "blog_content": blog.chinese_content
                 if language == Language.ZH_CN
                 else blog.english_content
@@ -763,7 +788,11 @@ class BlogCrud:
             )
 
         # 根据语言选择对应的 TTS ID
-        tts_id = blog_tts.chinese_tts_id if language == Language.ZH_CN else blog_tts.english_tts_id
+        tts_id = (
+            blog_tts.chinese_tts_id
+            if language == Language.ZH_CN
+            else blog_tts.english_tts_id
+        )
 
         if not tts_id:
             response = {
@@ -772,8 +801,9 @@ class BlogCrud:
             }
         else:
             # 通过 TTS ID 查询 Media 获取 URL
-            media_statement = select(
-                Media.original_filepath_url).where(Media.id == tts_id)
+            media_statement = select(Media.original_filepath_url).where(
+                Media.id == tts_id
+            )
             media_result = await self.db.execute(media_statement)
             tts_url = media_result.scalar_one_or_none()
 
@@ -868,7 +898,7 @@ class BlogCrud:
             large_content_translation_task.s(
                 content=chinese_content,
                 content_type=LargeContentTranslationType.BLOG,
-                content_id=blog_id
+                content_id=blog_id,
             ),
             summary_blog_content.si(blog_id=blog_id),
             generate_content_audio_task.si(blog_id=blog_id),
@@ -891,7 +921,7 @@ class BlogCrud:
         chinese_content: dict,
         cover_id: int,
         blog_tags: List[int] = [],
-    ) -> str:
+    ) -> Optional[str]:
         blog = await self.get_blog_by_slug(blog_slug)
         if not blog or blog.user_id != user_id:
             raise HTTPException(
@@ -910,7 +940,9 @@ class BlogCrud:
         if blog_title_changed:
             english_title = await agent_utils.translate(text=chinese_title)
             # 生成slug并限制长度
-            slug = slugify(english_title, max_length=200)  # 限制在200字符以内，留一些缓冲
+            slug = slugify(
+                english_title, max_length=200
+            )  # 限制在200字符以内，留一些缓冲
         else:
             english_title = blog.english_title
             slug = blog.slug
@@ -940,9 +972,7 @@ class BlogCrud:
         # 更新博客标签：先删除旧标签，再插入新标签
         if blog_tags:
             # 删除该博客的所有旧标签
-            await self.db.execute(
-                delete(Blog_Tag).where(Blog_Tag.blog_id == blog.id)
-            )
+            await self.db.execute(delete(Blog_Tag).where(Blog_Tag.blog_id == blog.id))
 
             # 插入新标签
             for tag_id in blog_tags:
@@ -958,34 +988,39 @@ class BlogCrud:
         # 检查是否English_content 有变化
         if blog_content_changed:
             self.logger.info(
-                f"Content changed detected, starting task chain for blog ID {blog.id}")
+                f"Content changed detected, starting task chain for blog ID {blog.id}"
+            )
             # TODO 使用celery Task 任务链： 翻译博客内容 -> 生成博客摘要 -> 生成目录 -> 生成中英TTS删除旧的TTS并上传新的TTS到s3 bucket
             task_chain = chain(
                 large_content_translation_task.s(
                     content=chinese_content,
                     content_type=LargeContentTranslationType.BLOG,
-                    content_id=blog.id
+                    content_id=blog.id,
                 ),
                 summary_blog_content.si(blog_id=blog.id),
                 generate_content_audio_task.si(blog_id=blog.id),
-
             )
             task_chain.apply_async()
             self.logger.info(
                 f"Task chain started successfully for blog ID {blog.id}")
         else:
             self.logger.info(
-                f"No content change detected for blog ID {blog.id}, skipping task chain")
+                f"No content change detected for blog ID {blog.id}, skipping task chain"
+            )
 
         # 更新缓存
         await redis_manager.delete_pattern_async("blog_lists:*")
         await redis_manager.delete_async(f"blog_tts:{blog.id}")
-        await redis_manager.delete_pattern_async(f"blog_details:{blog.slug}:lang={language}:*")
+        await redis_manager.delete_pattern_async(
+            f"blog_details:{blog.slug}:lang={language}:*"
+        )
         await redis_manager.delete_async(f"blog_details_seo:{blog.slug}")
         await redis_manager.delete_async(f"blog_summary:{blog.id}:lang={language}")
-        await redis_manager.delete_pattern_async(f"blog_archived_lists:lang={language}:*")
+        await redis_manager.delete_pattern_async(
+            f"blog_archived_lists:lang={language}:*"
+        )
         await redis_manager.delete_async(f"get_recent_populor_blog:lang={language}")
-        await redis_manager.delete_pattern_async(f"user_saved_blogs:*")
+        await redis_manager.delete_pattern_async("user_saved_blogs:*")
         await redis_manager.delete_async(f"blog_navigation:{blog.id}:lang={language}")
 
         return slug
@@ -1034,13 +1069,15 @@ class BlogCrud:
             return json.loads(cache_data)
 
         # 先获取父评论（parent_id 为 None 的评论）
-        parent_statement = (select(Blog_Comment)
-                            .options(selectinload(Blog_Comment.user).selectinload(User.avatar))
-                            .where(Blog_Comment.blog_id == blog_id,
-                                   Blog_Comment.is_deleted == False,
-                                   Blog_Comment.parent_id == None,
-                                   )
-                            )
+        parent_statement = (
+            select(Blog_Comment)
+            .options(selectinload(Blog_Comment.user).selectinload(User.avatar))
+            .where(
+                Blog_Comment.blog_id == blog_id,
+                not Blog_Comment.is_deleted,
+                Blog_Comment.parent_id is None,
+            )
+        )
 
         # 应用 keyset pagination 过滤到父评论
         if cursor:
@@ -1073,7 +1110,8 @@ class BlogCrud:
             raise HTTPException(
                 status_code=404,
                 detail=get_message(
-                    "blog.getBlogCommentLists.commentNotFound", language),
+                    "blog.getBlogCommentLists.commentNotFound", language
+                ),
             )
 
         # 获取所有父评论的子评论和孙评论，确保评论树完整（支持三级嵌套）
@@ -1084,10 +1122,11 @@ class BlogCrud:
         children_statement = (
             select(Blog_Comment)
             .options(selectinload(Blog_Comment.user).selectinload(User.avatar))
-            .where(Blog_Comment.blog_id == blog_id,
-                   Blog_Comment.is_deleted == False,
-                   Blog_Comment.parent_id.in_(parent_ids),
-                   )
+            .where(
+                Blog_Comment.blog_id == blog_id,
+                not Blog_Comment.is_deleted,
+                Blog_Comment.parent_id.in_(parent_ids),
+            )
         )
 
         children_result = await self.db.execute(children_statement)
@@ -1100,10 +1139,11 @@ class BlogCrud:
             grandchildren_statement = (
                 select(Blog_Comment)
                 .options(selectinload(Blog_Comment.user).selectinload(User.avatar))
-                .where(Blog_Comment.blog_id == blog_id,
-                       Blog_Comment.is_deleted == False,
-                       Blog_Comment.parent_id.in_(children_ids),
-                       )
+                .where(
+                    Blog_Comment.blog_id == blog_id,
+                    not Blog_Comment.is_deleted,
+                    Blog_Comment.parent_id.in_(children_ids),
+                )
             )
 
             grandchildren_result = await self.db.execute(grandchildren_statement)
@@ -1149,24 +1189,26 @@ class BlogCrud:
         blog_id: int,
         comment: str,
         language: Language,
-        parent_id: Optional[int] = None
+        parent_id: Optional[int] = None,
     ) -> bool:
         blog = await self.get_blog_by_id(blog_id)
         if not blog:
             raise HTTPException(
                 status_code=404,
-                detail=get_message(
-                    "blog.common.blogNotFound", language),
+                detail=get_message("blog.common.blogNotFound", language),
             )
 
         # 检查是否parent_id是否存在
         if parent_id:
-            parent_comment = await self._get_blog_comment_by_id(comment_id=parent_id, include_deleted=False)
+            parent_comment = await self._get_blog_comment_by_id(
+                comment_id=parent_id, include_deleted=False
+            )
             if not parent_comment:
                 raise HTTPException(
                     status_code=404,
                     detail=get_message(
-                        "blog.getBlogCommentLists.commentNotFound", language),
+                        "blog.getBlogCommentLists.commentNotFound", language
+                    ),
                 )
 
         # 创建评论
@@ -1182,7 +1224,9 @@ class BlogCrud:
         await self.db.commit()
 
         # 改变博客评论数
-        await self._change_blog_comment_count(blog_id=blog_id, comment_type="create", language=language)
+        await self._change_blog_comment_count(
+            blog_id=blog_id, comment_type="create", language=language
+        )
 
         # 更新缓存
         await redis_manager.delete_pattern_async(f"blog_comment_lists:{blog_id}:*")
@@ -1196,12 +1240,15 @@ class BlogCrud:
         comment: str,
         language: Language,
     ) -> bool:
-        comment_obj = await self._get_blog_comment_by_id(comment_id=comment_id, include_deleted=False)
+        comment_obj = await self._get_blog_comment_by_id(
+            comment_id=comment_id, include_deleted=False
+        )
         if not comment_obj or comment_obj.user_id != user_id:
             raise HTTPException(
                 status_code=404,
                 detail=get_message(
-                    "blog.getBlogCommentLists.commentNotFound", language),
+                    "blog.getBlogCommentLists.commentNotFound", language
+                ),
             )
 
         # 更新评论
@@ -1213,7 +1260,9 @@ class BlogCrud:
         await self.db.commit()
 
         # 更新缓存
-        await redis_manager.delete_pattern_async(f"blog_comment_lists:{comment_obj.blog_id}:*")
+        await redis_manager.delete_pattern_async(
+            f"blog_comment_lists:{comment_obj.blog_id}:*"
+        )
 
         return True
 
@@ -1224,13 +1273,16 @@ class BlogCrud:
         comment_id: int,
         language: Language,
     ) -> bool:
-        comment_obj = await self._get_blog_comment_by_id(comment_id=comment_id, include_deleted=False)
+        comment_obj = await self._get_blog_comment_by_id(
+            comment_id=comment_id, include_deleted=False
+        )
 
         if not comment_obj:
             raise HTTPException(
                 status_code=404,
                 detail=get_message(
-                    "blog.getBlogCommentLists.commentNotFound", language),
+                    "blog.getBlogCommentLists.commentNotFound", language
+                ),
             )
 
         # 允许作者或管理员删除，其余情况返回404（与博客评论删除逻辑一致）
@@ -1238,7 +1290,8 @@ class BlogCrud:
             raise HTTPException(
                 status_code=404,
                 detail=get_message(
-                    "blog.getBlogCommentLists.commentNotFound", language),
+                    "blog.getBlogCommentLists.commentNotFound", language
+                ),
             )
 
         # 软删除评论（设置is_deleted为True）
@@ -1250,10 +1303,14 @@ class BlogCrud:
         await self.db.commit()
 
         # 改变博客评论数
-        await self._change_blog_comment_count(blog_id=comment_obj.blog_id, comment_type="delete", language=language)
+        await self._change_blog_comment_count(
+            blog_id=comment_obj.blog_id, comment_type="delete", language=language
+        )
 
         # 更新缓存
-        await redis_manager.delete_pattern_async(f"blog_comment_lists:{comment_obj.blog_id}:*")
+        await redis_manager.delete_pattern_async(
+            f"blog_comment_lists:{comment_obj.blog_id}:*"
+        )
 
         return True
 
@@ -1268,14 +1325,14 @@ class BlogCrud:
         if not blog:
             raise HTTPException(
                 status_code=404,
-                detail=get_message(
-                    "blog.common.blogNotFound", language),
+                detail=get_message("blog.common.blogNotFound", language),
             )
 
         # 检查是否已经保存
         saved_blog_result = await self.db.execute(
-            select(Saved_Blog).where(Saved_Blog.user_id ==
-                                     user_id, Saved_Blog.blog_id == blog_id)
+            select(Saved_Blog).where(
+                Saved_Blog.user_id == user_id, Saved_Blog.blog_id == blog_id
+            )
         )
         saved_blog = saved_blog_result.scalar_one_or_none()
 
@@ -1285,13 +1342,15 @@ class BlogCrud:
         if saved_blog:
             # 删除保存
             await self.db.execute(
-                delete(Saved_Blog).where(Saved_Blog.user_id ==
-                                         user_id, Saved_Blog.blog_id == blog_id)
+                delete(Saved_Blog).where(
+                    Saved_Blog.user_id == user_id, Saved_Blog.blog_id == blog_id
+                )
             )
             # 减少博客的保存数
             await self.db.execute(
-                update(Blog_Stats).where(Blog_Stats.blog_id ==
-                                         blog_id).values(saves=Blog_Stats.saves - 1)
+                update(Blog_Stats)
+                .where(Blog_Stats.blog_id == blog_id)
+                .values(saves=Blog_Stats.saves - 1)
             )
             await self.db.commit()
 
@@ -1306,22 +1365,25 @@ class BlogCrud:
             )
             # 增加博客的保存数
             await self.db.execute(
-                update(Blog_Stats).where(Blog_Stats.blog_id ==
-                                         blog_id).values(saves=Blog_Stats.saves + 1)
+                update(Blog_Stats)
+                .where(Blog_Stats.blog_id == blog_id)
+                .values(saves=Blog_Stats.saves + 1)
             )
             await self.db.commit()
 
             return True
 
-    async def like_blog_button(self, blog_id: int, language: Language, ip_address: str) -> bool:
-
+    async def like_blog_button(
+        self, blog_id: int, language: Language, ip_address: str
+    ) -> bool:
         cache_key = f"blog_like_button:{blog_id}:ip={ip_address}"
         cache_data = await redis_manager.get_async(cache_key)
         if cache_data:
             # 用户已经点赞过，那么取消点赞
             await self.db.execute(
-                update(Blog_Stats).where(Blog_Stats.blog_id ==
-                                         blog_id).values(likes=Blog_Stats.likes - 1)
+                update(Blog_Stats)
+                .where(Blog_Stats.blog_id == blog_id)
+                .values(likes=Blog_Stats.likes - 1)
             )
             await self.db.commit()
             await redis_manager.delete_async(cache_key)
@@ -1331,14 +1393,14 @@ class BlogCrud:
         if not blog:
             raise HTTPException(
                 status_code=404,
-                detail=get_message(
-                    "blog.common.blogNotFound", language),
+                detail=get_message("blog.common.blogNotFound", language),
             )
 
         # 增加点赞数
         await self.db.execute(
-            update(Blog_Stats).where(Blog_Stats.blog_id ==
-                                     blog_id).values(likes=Blog_Stats.likes + 1)
+            update(Blog_Stats)
+            .where(Blog_Stats.blog_id == blog_id)
+            .values(likes=Blog_Stats.likes + 1)
         )
         await self.db.commit()
 
@@ -1347,7 +1409,14 @@ class BlogCrud:
 
         return True
 
-    async def update_blog_status(self, blog_id: int, language: Language, is_published: Optional[bool] = None, is_archived: Optional[bool] = None, is_featured: Optional[bool] = None) -> bool:
+    async def update_blog_status(
+        self,
+        blog_id: int,
+        language: Language,
+        is_published: Optional[bool] = None,
+        is_archived: Optional[bool] = None,
+        is_featured: Optional[bool] = None,
+    ) -> bool:
         # 验证只能有一个状态被更新
         status_params = [is_published, is_archived, is_featured]
         non_none_count = sum(1 for param in status_params if param is not None)
@@ -1356,7 +1425,8 @@ class BlogCrud:
             raise HTTPException(
                 status_code=400,
                 detail=get_message(
-                    "blog.updateBlogStatus.invalidStatusUpdate", language),
+                    "blog.updateBlogStatus.invalidStatusUpdate", language
+                ),
             )
 
         blog = await self.get_blog_by_id(blog_id=blog_id)
@@ -1376,8 +1446,9 @@ class BlogCrud:
             update_values["is_featured"] = is_featured
 
         await self.db.execute(
-            update(Blog_Status).where(Blog_Status.blog_id ==
-                                      blog.id).values(**update_values)
+            update(Blog_Status)
+            .where(Blog_Status.blog_id == blog.id)
+            .values(**update_values)
         )
         await self.db.commit()
 
@@ -1388,7 +1459,9 @@ class BlogCrud:
 
         return True
 
-    async def get_blog_navigation(self, blog_id: int, language: Language) -> Optional[Dict]:
+    async def get_blog_navigation(
+        self, blog_id: int, language: Language
+    ) -> Optional[Dict]:
         """获取博客的上一篇和下一篇导航信息
 
         Args:
@@ -1413,8 +1486,7 @@ class BlogCrud:
         if not blog:
             raise HTTPException(
                 status_code=404,
-                detail=get_message(
-                    "blog.common.blogNotFound", language),
+                detail=get_message("blog.common.blogNotFound", language),
             )
 
         # 从博客获取section_id
@@ -1429,10 +1501,10 @@ class BlogCrud:
             .join(Blog_Status, Blog_Status.blog_id == Blog.id)
             .where(
                 Blog.section_id == section_id,
-                Blog_Status.is_published == True,
+                Blog_Status.is_published,
                 # 使用复合条件：时间更早，或者时间相同但ID更小
-                (Blog.created_at < current_created_at) |
-                ((Blog.created_at == current_created_at) & (Blog.id < current_id))
+                (Blog.created_at < current_created_at)
+                | ((Blog.created_at == current_created_at) & (Blog.id < current_id)),
             )
             .order_by(Blog.created_at.desc(), Blog.id.desc())
             .limit(1)
@@ -1447,10 +1519,10 @@ class BlogCrud:
             .join(Blog_Status, Blog_Status.blog_id == Blog.id)
             .where(
                 Blog.section_id == section_id,
-                Blog_Status.is_published == True,
+                Blog_Status.is_published,
                 # 使用复合条件：时间更晚，或者时间相同但ID更大
-                (Blog.created_at > current_created_at) |
-                ((Blog.created_at == current_created_at) & (Blog.id > current_id))
+                (Blog.created_at > current_created_at)
+                | ((Blog.created_at == current_created_at) & (Blog.id > current_id)),
             )
             .order_by(Blog.created_at.asc(), Blog.id.asc())
             .limit(1)
@@ -1459,17 +1531,16 @@ class BlogCrud:
         next_blog = next_result.scalar_one_or_none()
 
         # 构建响应数据
-        response = {
-            "previous": None,
-            "next": None
-        }
+        response = {"previous": None, "next": None}
 
         # 处理上一篇博客
         if prev_blog:
             response["previous"] = {
                 "section_slug": prev_blog.section.slug,
                 "blog_slug": prev_blog.slug,
-                "blog_title": prev_blog.chinese_title if language == Language.ZH_CN else prev_blog.english_title,
+                "blog_title": prev_blog.chinese_title
+                if language == Language.ZH_CN
+                else prev_blog.english_title,
             }
 
         # 处理下一篇博客
@@ -1477,7 +1548,9 @@ class BlogCrud:
             response["next"] = {
                 "section_slug": next_blog.section.slug,
                 "blog_slug": next_blog.slug,
-                "blog_title": next_blog.chinese_title if language == Language.ZH_CN else next_blog.english_title,
+                "blog_title": next_blog.chinese_title
+                if language == Language.ZH_CN
+                else next_blog.english_title,
             }
 
         # 缓存结果（设置较短的缓存时间，因为导航信息相对稳定）
@@ -1518,9 +1591,7 @@ class BlogCrud:
 
         try:
             # 删除博客（级联删除相关数据）
-            await self.db.execute(
-                delete(Blog).where(Blog.id == blog_id)
-            )
+            await self.db.execute(delete(Blog).where(Blog.id == blog_id))
             await self.db.commit()
 
             # 更新缓存 - 使用try-except包装，避免缓存错误影响删除结果
@@ -1533,7 +1604,8 @@ class BlogCrud:
             except Exception as cache_error:
                 # 记录缓存清理错误，但不影响删除结果
                 self.logger.warning(
-                    f"Warning: Failed to clear cache after blog deletion: {cache_error}")
+                    f"Warning: Failed to clear cache after blog deletion: {cache_error}"
+                )
 
             return True
         except Exception as e:
@@ -1609,7 +1681,7 @@ class BlogCrud:
         count_this_month = await self.db.execute(
             select(func.count(Saved_Blog.id)).where(
                 Saved_Blog.created_at.between(month_start, next_month_start),
-                Saved_Blog.user_id == user_id
+                Saved_Blog.user_id == user_id,
             )
         )
         count_this_month = count_this_month.scalar_one_or_none()
@@ -1622,7 +1694,9 @@ class BlogCrud:
                 f"Processing saved_blog: {saved_blog}, blog: {blog}")
             formatted_items.append(
                 {
-                    "cover_url": blog.cover.thumbnail_filepath_url if blog.cover else None,
+                    "cover_url": blog.cover.thumbnail_filepath_url
+                    if blog.cover
+                    else None,
                     "section_slug": blog.section.slug,
                     "blog_id": blog.id,
                     "blog_slug": blog.slug,
@@ -1664,12 +1738,16 @@ class BlogCrud:
             .join(Blog_Status, Blog_Status.blog_id == Blog.id)
             .options(
                 joinedload(Blog.cover),
-                selectinload(Blog.blog_tags).selectinload(Blog_Tag.tag)
+                selectinload(Blog.blog_tags).selectinload(Blog_Tag.tag),
             )
-            .where(Blog_Status.is_published == True)
+            .where(Blog_Status.is_published)
             .order_by(
-                (Blog_Stats.views + Blog_Stats.likes +
-                 Blog_Stats.comments + Blog_Stats.saves).desc()
+                (
+                    Blog_Stats.views
+                    + Blog_Stats.likes
+                    + Blog_Stats.comments
+                    + Blog_Stats.saves
+                ).desc()
             )
             .limit(9)
         )
@@ -1680,28 +1758,40 @@ class BlogCrud:
         # 格式化响应数据
         items: List[Dict[str, Any]] = []
         for blog, stats in rows:
-            items.append({
-                "blog_id": blog.id,
-                "section_slug": blog.section.slug,
-                "blog_slug": blog.slug,
-                "blog_title": blog.chinese_title if language == Language.ZH_CN else blog.english_title,
-                "blog_description": blog.chinese_description if language == Language.ZH_CN else blog.english_description,
-                "cover_url": blog.cover.thumbnail_filepath_url if blog.cover else None,
-                "blog_tags": [
-                    {
-                        "tag_id": tag.id,
-                        "tag_title": tag.tag.chinese_title if language == Language.ZH_CN else tag.tag.english_title,
-                    }
-                    for tag in blog.blog_tags
-                ],
-                "blog_stats": {
-                    "views": stats.views,
-                    "likes": stats.likes,
-                    "comments": stats.comments,
-                    "saves": stats.saves,
-                },
-                "created_at": blog.created_at.isoformat() if blog.created_at else None,
-            })
+            items.append(
+                {
+                    "blog_id": blog.id,
+                    "section_slug": blog.section.slug,
+                    "blog_slug": blog.slug,
+                    "blog_title": blog.chinese_title
+                    if language == Language.ZH_CN
+                    else blog.english_title,
+                    "blog_description": blog.chinese_description
+                    if language == Language.ZH_CN
+                    else blog.english_description,
+                    "cover_url": blog.cover.thumbnail_filepath_url
+                    if blog.cover
+                    else None,
+                    "blog_tags": [
+                        {
+                            "tag_id": tag.id,
+                            "tag_title": tag.tag.chinese_title
+                            if language == Language.ZH_CN
+                            else tag.tag.english_title,
+                        }
+                        for tag in blog.blog_tags
+                    ],
+                    "blog_stats": {
+                        "views": stats.views,
+                        "likes": stats.likes,
+                        "comments": stats.comments,
+                        "saves": stats.saves,
+                    },
+                    "created_at": blog.created_at.isoformat()
+                    if blog.created_at
+                    else None,
+                }
+            )
 
         # 缓存结果（缓存1小时）
         await redis_manager.set_async(cache_key, json.dumps(items), ex=3600)

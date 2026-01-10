@@ -4,7 +4,7 @@
 
 import json
 import os
-from typing import Dict
+from typing import Dict, Optional
 from enum import Enum
 from fastapi import Request
 
@@ -41,15 +41,17 @@ class I18nManager:
                 return json.load(f)
         except (FileNotFoundError, json.JSONDecodeError) as e:
             # 如果文件不存在或解析失败，返回空字典
-            print(f"Warning: Failed to load messages for {language.value}: {e}")
+            print(
+                f"Warning: Failed to load messages for {language.value}: {e}")
             return {}
 
-    def get_localized_message(self, key: str, language: Language = None) -> str:
+    def get_localized_message(self, key: str, language: Optional[Language] = None) -> str:
         """获取指定语言的消息"""
         if language is None:
             language = self._default_language
 
-        messages = self._messages.get(language, self._messages[self._default_language])
+        messages = self._messages.get(
+            language, self._messages[self._default_language])
 
         # 支持嵌套key访问，如 "common.internalError"
         if "." in key:
@@ -69,7 +71,8 @@ class I18nManager:
             )
 
         return messages.get(
-            key, messages.get("common", {}).get("internalError", "Unknown error")
+            key, messages.get("common", {}).get(
+                "internalError", "Unknown error")
         )
 
     def get_supported_languages(self) -> list:

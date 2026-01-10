@@ -1,6 +1,7 @@
 from collections.abc import AsyncGenerator
-from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
-from sqlalchemy import create_engine, text
+from typing import Optional
+from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession, AsyncEngine
+from sqlalchemy import create_engine, text, Engine
 from sqlalchemy.orm import sessionmaker, Session
 from app.core.logger import logger_manager
 from app.core.config.settings import settings
@@ -11,10 +12,10 @@ class MySQLManager:
 
     def __init__(self):
         self.logger = logger_manager.get_logger(__name__)
-        self.async_engine: create_async_engine | None = None
-        self.async_session_maker: async_sessionmaker | None = None
-        self.sync_engine: create_engine | None = None
-        self.sync_session_maker: sessionmaker | None = None
+        self.async_engine: Optional[AsyncEngine] = None
+        self.async_session_maker: Optional[async_sessionmaker[AsyncSession]] = None
+        self.sync_engine: Optional[Engine] = None
+        self.sync_session_maker: Optional[sessionmaker[Session]] = None
 
     def get_sqlalchemy_url(self) -> str:
         """构建 SQLAlchemy 异步连接 URL"""

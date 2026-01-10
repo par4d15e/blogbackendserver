@@ -12,7 +12,7 @@ class BoardService:
     async def get_board_details(
         self,
         language: str,
-    ) -> Dict[str, any]:
+    ) -> Dict[str, Any]:
         return await self.board_crud.get_board_details(language=language)
 
     async def update_board(
@@ -80,7 +80,9 @@ class BoardService:
         language: Language,
     ) -> bool:
         return await self.board_crud.delete_board_comment(
-            user_id=user_id, board_comment_id=board_comment_id, language=language,
+            user_id=user_id,
+            board_comment_id=board_comment_id,
+            language=language,
             role=role,
         )
 

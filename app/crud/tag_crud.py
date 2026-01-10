@@ -44,8 +44,7 @@ class TagCrud:
         """Get tag lists with traditional pagination"""
         # 验证分页参数
         try:
-            page, size = offset_paginator.validate_pagination_params(
-                page, size)
+            page, size = offset_paginator.validate_pagination_params(page, size)
         except ValueError:
             raise HTTPException(
                 status_code=400,
@@ -72,22 +71,22 @@ class TagCrud:
         now = datetime.now(timezone.utc)
         month_start = datetime(now.year, now.month, 1, tzinfo=timezone.utc)
         if now.month == 12:
-            next_month_start = datetime(
-                now.year + 1, 1, 1, tzinfo=timezone.utc)
+            next_month_start = datetime(now.year + 1, 1, 1, tzinfo=timezone.utc)
         else:
-            next_month_start = datetime(
-                now.year, now.month + 1, 1, tzinfo=timezone.utc)
+            next_month_start = datetime(now.year, now.month + 1, 1, tzinfo=timezone.utc)
 
         count_this_month = await self.db.execute(
             select(func.count(Tag.id)).where(
-                Tag.created_at.between(month_start, next_month_start))
+                Tag.created_at.between(month_start, next_month_start)
+            )
         )
         count_this_month = count_this_month.scalar_one_or_none()
 
         # 计算本月更新的tag数量
         count_updated = await self.db.execute(
             select(func.count(Tag.id)).where(
-                Tag.updated_at.between(month_start, next_month_start))
+                Tag.updated_at.between(month_start, next_month_start)
+            )
         )
         count_updated = count_updated.scalar_one_or_none()
 
@@ -107,14 +106,20 @@ class TagCrud:
 
         if published_only is True:
             for i, tag in enumerate(items):
-                response_items[i].update({
-                    "title": tag.chinese_title if language == Language.ZH_CN else tag.english_title,
-                })
+                response_items[i].update(
+                    {
+                        "title": tag.chinese_title
+                        if language == Language.ZH_CN
+                        else tag.english_title,
+                    }
+                )
         else:
             for i, tag in enumerate(items):
-                response_items[i].update({
-                    "title": tag.chinese_title,
-                })
+                response_items[i].update(
+                    {
+                        "title": tag.chinese_title,
+                    }
+                )
 
         # 缓存结果
         cache_data = offset_paginator.create_response_data(
@@ -133,8 +138,7 @@ class TagCrud:
         if role != RoleType.admin:
             raise HTTPException(
                 status_code=403,
-                detail=get_message(
-                    key="common.insufficientPermissions", lang=language),
+                detail=get_message(key="common.insufficientPermissions", lang=language),
             )
 
         # 检查tag是否已经存在
@@ -142,8 +146,7 @@ class TagCrud:
         if existing_tag:
             raise HTTPException(
                 status_code=400,
-                detail=get_message(
-                    key="tag.createTag.tagAlreadyExists", lang=language),
+                detail=get_message(key="tag.createTag.tagAlreadyExists", lang=language),
             )
 
         # 翻译english name
@@ -151,7 +154,9 @@ class TagCrud:
 
         # 生成slug
         # 生成slug并限制长度
-        slug = slugify.slugify(english_title, max_length=40)  # 限制在40字符以内，留一些缓冲
+        slug = slugify.slugify(
+            english_title, max_length=40
+        )  # 限制在40字符以内，留一些缓冲
 
         # 插入tag
         await self.db.execute(
@@ -178,8 +183,7 @@ class TagCrud:
         if role != RoleType.admin:
             raise HTTPException(
                 status_code=403,
-                detail=get_message(
-                    key="common.insufficientPermissions", lang=language),
+                detail=get_message(key="common.insufficientPermissions", lang=language),
             )
 
         # 检查tag是否已经存在
@@ -189,8 +193,7 @@ class TagCrud:
         if not tag:
             raise HTTPException(
                 status_code=404,
-                detail=get_message(
-                    key="tag.common.tagNotFound", lang=language),
+                detail=get_message(key="tag.common.tagNotFound", lang=language),
             )
 
         # 检查是否存在相同的chinese_title（排除当前记录）
@@ -205,8 +208,7 @@ class TagCrud:
         if existing_tag:
             raise HTTPException(
                 status_code=400,
-                detail=get_message(
-                    key="tag.createTag.tagAlreadyExists", lang=language),
+                detail=get_message(key="tag.createTag.tagAlreadyExists", lang=language),
             )
 
         # 翻译english name
@@ -214,7 +216,8 @@ class TagCrud:
             english_title = await agent_utils.translate(text=chinese_title)
             # 生成slug并限制长度
             slug = slugify.slugify(
-                english_title, max_length=40)  # 限制在40字符以内，留一些缓冲
+                english_title, max_length=40
+            )  # 限制在40字符以内，留一些缓冲
         else:
             english_title = tag.english_title
             slug = tag.slug
@@ -245,8 +248,7 @@ class TagCrud:
         if role == RoleType.user:
             raise HTTPException(
                 status_code=403,
-                detail=get_message(
-                    key="common.insufficientPermissions", lang=language),
+                detail=get_message(key="common.insufficientPermissions", lang=language),
             )
 
         # 检查tag是否存在
@@ -254,8 +256,7 @@ class TagCrud:
         if not tag:
             raise HTTPException(
                 status_code=404,
-                detail=get_message(
-                    key="tag.common.tagNotFound", lang=language),
+                detail=get_message(key="tag.common.tagNotFound", lang=language),
             )
 
         # 删除tag

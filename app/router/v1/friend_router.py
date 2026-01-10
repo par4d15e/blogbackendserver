@@ -71,10 +71,11 @@ async def get_friend_lists(
     current_user=Depends(get_current_user_dependency),
     friend_service: FriendService = Depends(get_friend_service),
 ):
-    items, pagination_metadata = await friend_service.get_friend_lists_by_offset_pagination(
-        role=current_user.role,
-        page=page,
-        size=size
+    (
+        items,
+        pagination_metadata,
+    ) = await friend_service.get_friend_lists_by_offset_pagination(
+        role=current_user.role, page=page, size=size
     )
     return SuccessResponse(
         message="获取友链列表成功",

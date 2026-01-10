@@ -1,6 +1,10 @@
 from typing import Optional
 from fastapi import APIRouter, Depends, Response, Query
-from app.schemas.project_schemas import ProjectCreateRequest, ProjectUpdateRequest, PublishOrUnpublishRequest
+from app.schemas.project_schemas import (
+    ProjectCreateRequest,
+    ProjectUpdateRequest,
+    PublishOrUnpublishRequest,
+)
 from app.schemas.common import SuccessResponse
 from app.router.v1.auth_router import get_current_user_dependency
 from app.services.project_service import get_project_service, ProjectService
@@ -117,7 +121,10 @@ async def get_project_details_router(
     project_service: ProjectService = Depends(get_project_service),
 ):
     result = await project_service.get_project_details(
-        language=language, project_slug=project_slug, user_id=user_id, is_editor=is_editor
+        language=language,
+        project_slug=project_slug,
+        user_id=user_id,
+        is_editor=is_editor,
     )
     return SuccessResponse(
         message=get_message("project.getProjectDetails", language),

@@ -1,5 +1,5 @@
 import random
-from typing import Dict
+from typing import Dict, Optional, Union
 from authlib.integrations.starlette_client import OAuth
 from fastapi.security import APIKeyCookie
 from fastapi.responses import RedirectResponse
@@ -39,7 +39,7 @@ class AuthService:
             client_kwargs={"scope": "openid email profile"},
         )
 
-    def random_username() -> str:
+    def random_username(self) -> str:
         """Generate a random username."""
         username = "".join(random.choices(
             "abcdefghijklmnopqrstuvwxyz0123456789", k=6))
@@ -54,7 +54,7 @@ class AuthService:
         provider: SocialProvider,
         provider_user_id: str,
         language: Language,
-    ) -> Dict[str, str]:
+    ) -> Dict[str, Optional[str]]:
         """Social account login."""
         # 创建或更新社交账户
         tokens = await self.auth_crud.social_account_login(
@@ -238,7 +238,8 @@ class AuthService:
             raise HTTPException(
                 status_code=404,
                 detail=get_message(
-                    "auth.generateAccessToken.refreshTokenNotFound", language),
+                    "auth.generateAccessToken.refreshTokenNotFound", language
+                ),
             )
 
         # 解码refresh_token
@@ -270,7 +271,8 @@ class AuthService:
             raise HTTPException(
                 status_code=404,
                 detail=get_message(
-                    "auth.generateAccessToken.accessTokenNotFound", language),
+                    "auth.generateAccessToken.accessTokenNotFound", language
+                ),
             )
 
         # 设置access token cookie
@@ -289,7 +291,7 @@ class AuthService:
             "access_token": access_token,
         }
 
-    async def check_auth_token(self, request, language: Language) -> Dict[str, str]:
+    async def check_auth_token(self, request, language: Language) -> Dict[str, Union[str, bool]]:
         """Check access token."""
         access_token = APIKeyCookie(name="access_token", auto_error=False)
         access_token = await access_token(request)
@@ -377,7 +379,8 @@ class AuthService:
                     raise HTTPException(
                         status_code=404,
                         detail=get_message(
-                            "auth.githubCallback.githubEmailNotFound", language),
+                            "auth.githubCallback.githubEmailNotFound", language
+                        ),
                     )
 
         # 创建或更新社交账户
@@ -401,9 +404,15 @@ class AuthService:
 
         # 跳转到前端
         allowed_origins = [
-            x.strip() for x in settings.cors.CORS_ALLOWED_ORIGINS.split(',') if x.strip()]
+            x.strip()
+            for x in settings.cors.CORS_ALLOWED_ORIGINS.split(",")
+            if x.strip()
+        ]
         redirect_response = RedirectResponse(
-            url=allowed_origins[0] if allowed_origins else settings.cors.CORS_ALLOWED_ORIGINS.strip())
+            url=allowed_origins[0]
+            if allowed_origins
+            else settings.cors.CORS_ALLOWED_ORIGINS.strip()
+        )
 
         # 设置access token cookie
         redirect_response.set_cookie(
@@ -484,9 +493,15 @@ class AuthService:
 
         # 跳转到前端
         allowed_origins = [
-            x.strip() for x in settings.cors.CORS_ALLOWED_ORIGINS.split(',') if x.strip()]
+            x.strip()
+            for x in settings.cors.CORS_ALLOWED_ORIGINS.split(",")
+            if x.strip()
+        ]
         redirect_response = RedirectResponse(
-            url=allowed_origins[0] if allowed_origins else settings.cors.CORS_ALLOWED_ORIGINS.strip())
+            url=allowed_origins[0]
+            if allowed_origins
+            else settings.cors.CORS_ALLOWED_ORIGINS.strip()
+        )
 
         # 设置access token cookie
         redirect_response.set_cookie(

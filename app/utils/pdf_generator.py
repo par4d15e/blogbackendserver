@@ -77,7 +77,8 @@ class InvoicePDFGenerator:
                 language_code = language
             else:
                 language_code = language.value
-            template_name = self._select_template_name("invoice", language_code)
+            template_name = self._select_template_name(
+                "invoice", language_code)
 
             # Get template
             template = self.env.get_template(f"{template_name}.html")
@@ -169,6 +170,9 @@ class InvoicePDFGenerator:
         output_path: Optional[Union[str, Path]] = None,
     ) -> Union[bytes, Path]:
         """Generate invoice PDF from template data."""
+        # 确保 language 有默认值
+        if language is None:
+            language = Language.ZH_CN
         try:
             # Render HTML content
             html_content = self.render_invoice_html(

@@ -68,8 +68,10 @@ class EmailTemplateLoader:
                 f"Template '{template_name}' not found in '{self.template_dir}'"
             )
         except Exception as e:
-            self.logger.error(f"Error rendering template '{template_name}': {e}")
-            raise ValueError(f"Failed to render template '{template_name}': {str(e)}")
+            self.logger.error(
+                f"Error rendering template '{template_name}': {e}")
+            raise ValueError(
+                f"Failed to render template '{template_name}': {str(e)}")
 
     def template_exists(self, template_name: str) -> bool:
         """Check if template exists."""
@@ -159,7 +161,8 @@ class SMTPEmailBackend(EmailBackend):
             )
 
             server.sendmail(
-                self.email_settings.EMAIL_HOST_USER, message["To"], message.as_string()
+                self.email_settings.EMAIL_HOST_USER, message["To"], message.as_string(
+                )
             )
             self.logger.info(f"Email sent successfully to {message['To']}")
 
@@ -427,7 +430,6 @@ class EmailService:
         mime_message = email_message.build()
 
         # Retry mechanism with exponential backoff
-        last_exception = None
         for attempt in range(retries):
             try:
                 await asyncio.wait_for(
@@ -438,8 +440,7 @@ class EmailService:
                 )
                 return
 
-            except AsyncioTimeoutError as e:
-                last_exception = e
+            except AsyncioTimeoutError:
                 self.logger.warning(
                     f"Timeout error while sending email to {recipient}, attempt {attempt + 1}/{retries}"
                 )
@@ -447,7 +448,6 @@ class EmailService:
                 # Re-raise HTTP exceptions immediately
                 raise e
             except Exception as e:
-                last_exception = e
                 self.logger.error(
                     f"Error sending email to {recipient}, attempt {attempt + 1}/{retries}: {e}"
                 )
@@ -475,10 +475,14 @@ class EmailService:
         **template_vars,
     ) -> Dict[str, Any]:
         """Send bulk emails with batching support."""
-        results = {"success": [], "failed": [], "total": len(recipients)}
+        results: Dict[str, Any] = {
+            "success": [],
+            "failed": [],
+            "total": len(recipients),
+        }
 
         for i in range(0, len(recipients), batch_size):
-            batch = recipients[i : i + batch_size]
+            batch = recipients[i: i + batch_size]
             tasks = []
 
             for recipient in batch:

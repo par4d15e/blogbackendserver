@@ -10,7 +10,8 @@ from app.models.blog_model import Blog, Blog_Summary
 
 
 @celery_app.task(
-    name="summary blog content", bind=True, max_retries=3, default_retry_delay=30)
+    name="summary blog content", bind=True, max_retries=3, default_retry_delay=30
+)
 @with_db_init
 def summary_blog_content(self, blog_id: int) -> bool:
     """
@@ -20,8 +21,7 @@ def summary_blog_content(self, blog_id: int) -> bool:
 
     try:
         with mysql_manager.get_sync_db() as session:
-            blog = session.execute(
-                select(Blog).where(Blog.id == blog_id)).first()
+            blog = session.execute(select(Blog).where(Blog.id == blog_id)).first()
             if not blog:
                 logger.warning(f"Blog not found with ID: {blog_id}")
                 return False
@@ -51,36 +51,42 @@ def summary_blog_content(self, blog_id: int) -> bool:
             if chinese_content:
                 try:
                     chinese_summary_result = loop.run_until_complete(
-                        agent_utils.summary(chinese_content))
+                        agent_utils.summary(chinese_content)
+                    )
                     chinese_summary = chinese_summary_result
                     logger.info(
-                        f"Successfully generated Chinese summary for blog ID: {blog_id}")
+                        f"Successfully generated Chinese summary for blog ID: {blog_id}"
+                    )
                 except Exception as e:
                     logger.error(
-                        f"Failed to generate Chinese summary for blog ID {blog_id}: {str(e)}")
+                        f"Failed to generate Chinese summary for blog ID {blog_id}: {str(e)}"
+                    )
                     # 继续处理英文内容，不因为中文摘要失败而停止
 
             if english_content:
                 try:
                     english_summary_result = loop.run_until_complete(
-                        agent_utils.summary(english_content))
+                        agent_utils.summary(english_content)
+                    )
                     english_summary = english_summary_result
                     logger.info(
-                        f"Successfully generated English summary for blog ID: {blog_id}")
+                        f"Successfully generated English summary for blog ID: {blog_id}"
+                    )
                 except Exception as e:
                     logger.error(
-                        f"Failed to generate English summary for blog ID {blog_id}: {str(e)}")
+                        f"Failed to generate English summary for blog ID {blog_id}: {str(e)}"
+                    )
                     # 继续处理，不因为英文摘要失败而停止
 
             # 检查是否至少有一个摘要生成成功
             if not chinese_summary and not english_summary:
-                logger.error(
-                    f"Failed to generate any summary for blog ID: {blog_id}")
+                logger.error(f"Failed to generate any summary for blog ID: {blog_id}")
                 return False
 
             # 检查是否数据库存在
             blog_summary_result = session.execute(
-                select(Blog_Summary).where(Blog_Summary.blog_id == blog_id)).first()
+                select(Blog_Summary).where(Blog_Summary.blog_id == blog_id)
+            ).first()
 
             if blog_summary_result:
                 # 如果存在，更新现有记录

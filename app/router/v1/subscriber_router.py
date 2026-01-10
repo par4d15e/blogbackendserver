@@ -42,9 +42,7 @@ async def create_subscriber_router(
 ):
     """创建订阅者"""
 
-    result = await subscriber_service.create_subscriber(
-        email=form_data.email
-    )
+    result = await subscriber_service.create_subscriber(email=form_data.email)
     return SuccessResponse(
         message=get_message("subscriber.createSubscriber", language),
         data=result,
@@ -59,9 +57,7 @@ async def unsubscribe_subscriber_router(
 ):
     """取消订阅者"""
 
-    result = await subscriber_service.unsubscribe_subscriber(
-        email=form_data.email
-    )
+    result = await subscriber_service.unsubscribe_subscriber(email=form_data.email)
     return SuccessResponse(
         message=get_message("subscriber.unsubscribeSubscriber", language),
         data=result,

@@ -13,7 +13,6 @@ from app.models.section_model import Section
 from app.models.tag_model import Tag
 from app.core.logger import logger_manager
 from app.crud.project_crud import convert_project_type
-from app.core.config.settings import settings
 from app.core.database.mysql import mysql_manager
 from app.core.database.redis import redis_manager
 
@@ -32,14 +31,13 @@ class AnalyticCrud:
             start = now - timedelta(days=now.weekday())
             start = start.replace(hour=0, minute=0, second=0, microsecond=0)
         elif period == "month":
-            start = now.replace(day=1, hour=0, minute=0,
-                                second=0, microsecond=0)
+            start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
         elif period == "year":
-            start = now.replace(month=1, day=1, hour=0,
-                                minute=0, second=0, microsecond=0)
+            start = now.replace(
+                month=1, day=1, hour=0, minute=0, second=0, microsecond=0
+            )
         else:
-            start = now.replace(day=1, hour=0, minute=0,
-                                second=0, microsecond=0)
+            start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
 
         return start, now
 
@@ -57,11 +55,13 @@ class AnalyticCrud:
         locations = []
         for row in rows:
             if row.longitude is not None and row.latitude is not None:
-                locations.append({
-                    "city": row.city,
-                    "longitude": row.longitude,
-                    "latitude": row.latitude
-                })
+                locations.append(
+                    {
+                        "city": row.city,
+                        "longitude": row.longitude,
+                        "latitude": row.latitude,
+                    }
+                )
 
         await redis_manager.set_async(cache_key, json.dumps(locations))
         return locations
@@ -79,22 +79,19 @@ class AnalyticCrud:
 
         # 已发布博客数
         published_blogs = await self.db.execute(
-            select(func.count(Blog_Status.id)).where(
-                Blog_Status.is_published == True)
+            select(func.count(Blog_Status.id)).where(Blog_Status.is_published)
         )
         published_blogs = published_blogs.scalar_one()
 
         # 归档博客数
         archived_blogs = await self.db.execute(
-            select(func.count(Blog_Status.id)).where(
-                Blog_Status.is_archived == True)
+            select(func.count(Blog_Status.id)).where(Blog_Status.is_archived)
         )
         archived_blogs = archived_blogs.scalar_one()
 
         # 精选博客数
         featured_blogs = await self.db.execute(
-            select(func.count(Blog_Status.id)).where(
-                Blog_Status.is_featured == True)
+            select(func.count(Blog_Status.id)).where(Blog_Status.is_featured)
         )
         featured_blogs = featured_blogs.scalar_one()
 
@@ -102,8 +99,7 @@ class AnalyticCrud:
         start_date, end_date = self._get_date_range("month")
         new_blogs_this_month = await self.db.execute(
             select(func.count(Blog.id)).where(
-                Blog.created_at >= start_date,
-                Blog.created_at <= end_date
+                Blog.created_at >= start_date, Blog.created_at <= end_date
             )
         )
         new_blogs_this_month = new_blogs_this_month.scalar_one()
@@ -111,8 +107,7 @@ class AnalyticCrud:
         # 本月更新博客
         updated_blogs_this_month = await self.db.execute(
             select(func.count(Blog.id)).where(
-                Blog.updated_at >= start_date,
-                Blog.updated_at <= end_date
+                Blog.updated_at >= start_date, Blog.updated_at <= end_date
             )
         )
         updated_blogs_this_month = updated_blogs_this_month.scalar_one()
@@ -123,7 +118,7 @@ class AnalyticCrud:
                 func.sum(Blog_Stats.views),
                 func.sum(Blog_Stats.likes),
                 func.sum(Blog_Stats.comments),
-                func.sum(Blog_Stats.saves)
+                func.sum(Blog_Stats.saves),
             )
         )
         stats_row = stats_totals.first()
@@ -135,8 +130,9 @@ class AnalyticCrud:
             .group_by(Section.id, Section.chinese_title)
             .order_by(func.count(Blog.id).desc())
         )
-        section_dist = [{"section": row[0], "count": row[1]}
-                        for row in section_distribution.all()]
+        section_dist = [
+            {"section": row[0], "count": row[1]} for row in section_distribution.all()
+        ]
 
         result = {
             "total_blogs": total_blogs,
@@ -164,8 +160,7 @@ class AnalyticCrud:
 
         # 最多浏览
         top_views = await self.db.execute(
-            select(Blog.slug, Section.slug,
-                   Blog.chinese_title, Blog_Stats.views)
+            select(Blog.slug, Section.slug, Blog.chinese_title, Blog_Stats.views)
             .join(Blog_Stats, Blog_Stats.blog_id == Blog.id)
             .join(Section, Section.id == Blog.section_id)
             .order_by(Blog_Stats.views.desc())
@@ -183,8 +178,7 @@ class AnalyticCrud:
 
         # 最多点赞
         top_likes = await self.db.execute(
-            select(Blog.slug, Section.slug,
-                   Blog.chinese_title, Blog_Stats.likes)
+            select(Blog.slug, Section.slug, Blog.chinese_title, Blog_Stats.likes)
             .join(Blog_Stats, Blog_Stats.blog_id == Blog.id)
             .join(Section, Section.id == Blog.section_id)
             .order_by(Blog_Stats.likes.desc())
@@ -202,8 +196,7 @@ class AnalyticCrud:
 
         # 最多评论
         top_comments = await self.db.execute(
-            select(Blog.slug, Section.slug,
-                   Blog.chinese_title, Blog_Stats.comments)
+            select(Blog.slug, Section.slug, Blog.chinese_title, Blog_Stats.comments)
             .join(Blog_Stats, Blog_Stats.blog_id == Blog.id)
             .join(Section, Section.id == Blog.section_id)
             .order_by(Blog_Stats.comments.desc())
@@ -221,8 +214,7 @@ class AnalyticCrud:
 
         # 最多收藏
         top_saves = await self.db.execute(
-            select(Blog.slug, Section.slug,
-                   Blog.chinese_title, Blog_Stats.saves)
+            select(Blog.slug, Section.slug, Blog.chinese_title, Blog_Stats.saves)
             .join(Blog_Stats, Blog_Stats.blog_id == Blog.id)
             .join(Section, Section.id == Blog.section_id)
             .order_by(Blog_Stats.saves.desc())
@@ -288,7 +280,7 @@ class AnalyticCrud:
 
         # 已发布项目数
         published_projects = await self.db.execute(
-            select(func.count(Project.id)).where(Project.is_published == True)
+            select(func.count(Project.id)).where(Project.is_published)
         )
         published_projects = published_projects.scalar_one()
 
@@ -296,8 +288,7 @@ class AnalyticCrud:
         start_date, end_date = self._get_date_range("month")
         new_projects_this_month = await self.db.execute(
             select(func.count(Project.id)).where(
-                Project.created_at >= start_date,
-                Project.created_at <= end_date
+                Project.created_at >= start_date, Project.created_at <= end_date
             )
         )
         new_projects_this_month = new_projects_this_month.scalar_one()
@@ -306,8 +297,10 @@ class AnalyticCrud:
         type_distribution = await self.db.execute(
             select(Project.type, func.count(Project.id)).group_by(Project.type)
         )
-        type_dist = {convert_project_type(ProjectType(row[0]).name): row[1]
-                     for row in type_distribution.all()}
+        type_dist = {
+            convert_project_type(ProjectType(row[0]).name): row[1]
+            for row in type_distribution.all()
+        }
 
         # 各栏目项目分布
         section_distribution = await self.db.execute(
@@ -317,8 +310,9 @@ class AnalyticCrud:
             .group_by(Section.id, Section.chinese_title)
             .order_by(func.count(Project.id).desc())
         )
-        section_dist = [{"section": row[0], "count": row[1]}
-                        for row in section_distribution.all()]
+        section_dist = [
+            {"section": row[0], "count": row[1]} for row in section_distribution.all()
+        ]
 
         result = {
             "total_projects": total_projects,
@@ -364,7 +358,7 @@ class AnalyticCrud:
             select(func.sum(Payment_Record.amount)).where(
                 Payment_Record.payment_status == PaymentStatus.success,
                 Payment_Record.created_at >= start_date,
-                Payment_Record.created_at <= end_date
+                Payment_Record.created_at <= end_date,
             )
         )
         monthly_revenue = float(monthly_revenue.scalar_one() or 0)
@@ -373,7 +367,7 @@ class AnalyticCrud:
         monthly_payments = await self.db.execute(
             select(func.count(Payment_Record.id)).where(
                 Payment_Record.created_at >= start_date,
-                Payment_Record.created_at <= end_date
+                Payment_Record.created_at <= end_date,
             )
         )
         monthly_payments = monthly_payments.scalar_one()
@@ -384,15 +378,16 @@ class AnalyticCrud:
             select(func.sum(Payment_Record.amount)).where(
                 Payment_Record.payment_status == PaymentStatus.success,
                 Payment_Record.created_at >= year_start,
-                Payment_Record.created_at <= end_date
+                Payment_Record.created_at <= end_date,
             )
         )
         yearly_revenue = float(yearly_revenue.scalar_one() or 0)
 
         # 支付方式分布
         payment_type_distribution = await self.db.execute(
-            select(Payment_Record.payment_type, func.count(Payment_Record.id))
-            .group_by(Payment_Record.payment_type)
+            select(Payment_Record.payment_type, func.count(Payment_Record.id)).group_by(
+                Payment_Record.payment_type
+            )
         )
         payment_type_dist = {
             PaymentType(row[0]).name.capitalize(): row[1]
@@ -401,9 +396,9 @@ class AnalyticCrud:
 
         # 支付状态分布
         payment_status_distribution = await self.db.execute(
-            select(Payment_Record.payment_status,
-                   func.count(Payment_Record.id))
-            .group_by(Payment_Record.payment_status)
+            select(
+                Payment_Record.payment_status, func.count(Payment_Record.id)
+            ).group_by(Payment_Record.payment_status)
         )
         payment_status_dist = {
             PaymentStatus(row[0]).name: row[1]
@@ -480,7 +475,7 @@ class AnalyticCrud:
 
         # 头像数量
         avatar_count = await self.db.execute(
-            select(func.count(Media.id)).where(Media.is_avatar == True)
+            select(func.count(Media.id)).where(Media.is_avatar)
         )
         avatar_count = avatar_count.scalar_one()
 
@@ -488,8 +483,7 @@ class AnalyticCrud:
         start_date, end_date = self._get_date_range("month")
         new_media_this_month = await self.db.execute(
             select(func.count(Media.id)).where(
-                Media.created_at >= start_date,
-                Media.created_at <= end_date
+                Media.created_at >= start_date, Media.created_at <= end_date
             )
         )
         new_media_this_month = new_media_this_month.scalar_one()
@@ -517,41 +511,39 @@ class AnalyticCrud:
         user_growth = await self.db.execute(
             select(
                 func.date(User.created_at).label("date"),
-                func.count(User.id).label("count")
+                func.count(User.id).label("count"),
             )
             .where(User.created_at >= start_date)
             .group_by(func.date(User.created_at))
             .order_by(func.date(User.created_at))
         )
         user_trend = [
-            {"date": row[0].isoformat(), "count": row[1]}
-            for row in user_growth.all()
+            {"date": row[0].isoformat(), "count": row[1]} for row in user_growth.all()
         ]
 
         # 博客增长趋势
         blog_growth = await self.db.execute(
             select(
                 func.date(Blog.created_at).label("date"),
-                func.count(Blog.id).label("count")
+                func.count(Blog.id).label("count"),
             )
             .where(Blog.created_at >= start_date)
             .group_by(func.date(Blog.created_at))
             .order_by(func.date(Blog.created_at))
         )
         blog_trend = [
-            {"date": row[0].isoformat(), "count": row[1]}
-            for row in blog_growth.all()
+            {"date": row[0].isoformat(), "count": row[1]} for row in blog_growth.all()
         ]
 
         # 收入趋势
         revenue_growth = await self.db.execute(
             select(
                 func.date(Payment_Record.created_at).label("date"),
-                func.sum(Payment_Record.amount).label("revenue")
+                func.sum(Payment_Record.amount).label("revenue"),
             )
             .where(
                 Payment_Record.created_at >= start_date,
-                Payment_Record.payment_status == PaymentStatus.success
+                Payment_Record.payment_status == PaymentStatus.success,
             )
             .group_by(func.date(Payment_Record.created_at))
             .order_by(func.date(Payment_Record.created_at))
@@ -584,8 +576,7 @@ class AnalyticCrud:
         # 活跃用户数（is_active 为 True 且未删除的用户）
         active_users = await self.db.execute(
             select(func.count(User.id)).where(
-                User.is_active == True,
-                User.is_deleted == False
+                User.is_active, not User.is_deleted
             )
         )
         active_users = active_users.scalar_one()
@@ -594,8 +585,7 @@ class AnalyticCrud:
         start_date, end_date = self._get_date_range("month")
         new_users_this_month = await self.db.execute(
             select(func.count(User.id)).where(
-                User.created_at >= start_date,
-                User.created_at <= end_date
+                User.created_at >= start_date, User.created_at <= end_date
             )
         )
         new_users_this_month = new_users_this_month.scalar_one()

@@ -62,7 +62,9 @@ async def create_blog(
         blog_tags=form_data.blog_tags,
     )
 
-    return SuccessResponse(message=get_message("blog.createBlog", language), data=result)
+    return SuccessResponse(
+        message=get_message("blog.createBlog", language), data=result
+    )
 
 
 @router.patch("/admin/update-blog", response_model=SuccessResponse)
@@ -84,7 +86,9 @@ async def update_blog(
         blog_tags=form_data.blog_tags,
     )
 
-    return SuccessResponse(message=get_message("blog.updateBlog", language), data=result)
+    return SuccessResponse(
+        message=get_message("blog.updateBlog", language), data=result
+    )
 
 
 @router.get("/get-blog-details-seo/{blog_slug}", response_model=SuccessResponse)
@@ -97,7 +101,9 @@ async def get_blog_details_seo(
         blog_slug=blog_slug,
         language=language,
     )
-    return SuccessResponse(message=get_message("blog.getBlogDetailsSeo", language), data=result)
+    return SuccessResponse(
+        message=get_message("blog.getBlogDetailsSeo", language), data=result
+    )
 
 
 @router.get("/get-blog-details/{blog_slug}", response_model=SuccessResponse)
@@ -116,7 +122,9 @@ async def get_blog_details(
         is_editor=is_editor,
         user_id=user_id,
     )
-    return SuccessResponse(message=get_message("blog.getBlogDetails", language), data=result)
+    return SuccessResponse(
+        message=get_message("blog.getBlogDetails", language), data=result
+    )
 
 
 @router.get("/get-blog-tts/{blog_id}", response_model=SuccessResponse)
@@ -129,7 +137,9 @@ async def get_blog_tts(
         blog_id=blog_id,
         language=language,
     )
-    return SuccessResponse(message=get_message("blog.getBlogTTS.getBlogTTSSuccess", language), data=result)
+    return SuccessResponse(
+        message=get_message("blog.getBlogTTS.getBlogTTSSuccess", language), data=result
+    )
 
 
 @router.get("/get-blog-summary/{blog_id}", response_model=SuccessResponse)
@@ -142,7 +152,10 @@ async def get_blog_summary(
         blog_id=blog_id,
         language=language,
     )
-    return SuccessResponse(message=get_message("blog.getBlogSummary.getBlogSummarySuccess", language), data=result)
+    return SuccessResponse(
+        message=get_message("blog.getBlogSummary.getBlogSummarySuccess", language),
+        data=result,
+    )
 
 
 @router.get("/get-blog-comment-lists/{blog_id}", response_model=SuccessResponse)
@@ -159,7 +172,12 @@ async def get_blog_comment_lists(
         cursor=cursor,
         language=language,
     )
-    return SuccessResponse(message=get_message("blog.getBlogCommentLists.getBlogCommentListsSuccess", language), data=result)
+    return SuccessResponse(
+        message=get_message(
+            "blog.getBlogCommentLists.getBlogCommentListsSuccess", language
+        ),
+        data=result,
+    )
 
 
 @router.post("/create-blog-comment", response_model=SuccessResponse)
@@ -176,7 +194,9 @@ async def create_blog_comment(
         parent_id=form_data.parent_id,
         language=language,
     )
-    return SuccessResponse(message=get_message("blog.createBlogComment", language), data=result)
+    return SuccessResponse(
+        message=get_message("blog.createBlogComment", language), data=result
+    )
 
 
 @router.patch("/update-blog-comment", response_model=SuccessResponse)
@@ -192,7 +212,9 @@ async def update_blog_comment(
         comment=form_data.comment,
         language=language,
     )
-    return SuccessResponse(message=get_message("blog.updateBlogComment", language), data=result)
+    return SuccessResponse(
+        message=get_message("blog.updateBlogComment", language), data=result
+    )
 
 
 @router.delete("/delete-blog-comment/{comment_id}", response_model=SuccessResponse)
@@ -208,7 +230,9 @@ async def delete_blog_comment(
         comment_id=comment_id,
         language=language,
     )
-    return SuccessResponse(message=get_message("blog.deleteBlogComment", language), data=result)
+    return SuccessResponse(
+        message=get_message("blog.deleteBlogComment", language), data=result
+    )
 
 
 @router.post("/save-blog-button", response_model=SuccessResponse)
@@ -224,10 +248,18 @@ async def save_blog_button(
         language=language,
     )
 
-    if result == True:
-        return SuccessResponse(message=get_message("blog.saveBlogButton.saveBlogButtonSuccess", language), data=result)
+    if result:
+        return SuccessResponse(
+            message=get_message("blog.saveBlogButton.saveBlogButtonSuccess", language),
+            data=result,
+        )
     else:
-        return SuccessResponse(message=get_message("blog.saveBlogButton.unsaveBlogButtonSuccess", language), data=result)
+        return SuccessResponse(
+            message=get_message(
+                "blog.saveBlogButton.unsaveBlogButtonSuccess", language
+            ),
+            data=result,
+        )
 
 
 @router.post("/like-blog-button", response_model=SuccessResponse)
@@ -243,10 +275,18 @@ async def like_blog_button(
         language=language,
     )
 
-    if result == True:
-        return SuccessResponse(message=get_message("blog.likeBlogButton.likedBlogButtonSuccess", language), data=result)
+    if result:
+        return SuccessResponse(
+            message=get_message("blog.likeBlogButton.likedBlogButtonSuccess", language),
+            data=result,
+        )
     else:
-        return SuccessResponse(message=get_message("blog.likeBlogButton.unlikeBlogButtonSuccess", language), data=result)
+        return SuccessResponse(
+            message=get_message(
+                "blog.likeBlogButton.unlikeBlogButtonSuccess", language
+            ),
+            data=result,
+        )
 
 
 @router.patch("/update-blog-status", response_model=SuccessResponse)
@@ -264,18 +304,42 @@ async def update_blog_status(
         is_featured=form_data.is_featured,
         role=current_user.role,
     )
-    if result == True and form_data.is_published == True:
-        return SuccessResponse(message=get_message("blog.updateBlogStatus.blogPublishedSuccess", language), data=result)
-    elif result == True and form_data.is_published == False:
-        return SuccessResponse(message=get_message("blog.updateBlogStatus.blogUnpublishedSuccess", language), data=result)
-    elif result == True and form_data.is_archived == True:
-        return SuccessResponse(message=get_message("blog.updateBlogStatus.blogArchivedSuccess", language), data=result)
-    elif result == True and form_data.is_archived == False:
-        return SuccessResponse(message=get_message("blog.updateBlogStatus.blogUnarchivedSuccess", language), data=result)
-    elif result == True and form_data.is_featured == True:
-        return SuccessResponse(message=get_message("blog.updateBlogStatus.blogFeaturedSuccess", language), data=result)
+    if result and form_data.is_published:
+        return SuccessResponse(
+            message=get_message("blog.updateBlogStatus.blogPublishedSuccess", language),
+            data=result,
+        )
+    elif result and not form_data.is_published:
+        return SuccessResponse(
+            message=get_message(
+                "blog.updateBlogStatus.blogUnpublishedSuccess", language
+            ),
+            data=result,
+        )
+    elif result and form_data.is_archived:
+        return SuccessResponse(
+            message=get_message("blog.updateBlogStatus.blogArchivedSuccess", language),
+            data=result,
+        )
+    elif result and not form_data.is_archived:
+        return SuccessResponse(
+            message=get_message(
+                "blog.updateBlogStatus.blogUnarchivedSuccess", language
+            ),
+            data=result,
+        )
+    elif result and form_data.is_featured:
+        return SuccessResponse(
+            message=get_message("blog.updateBlogStatus.blogFeaturedSuccess", language),
+            data=result,
+        )
     else:
-        return SuccessResponse(message=get_message("blog.updateBlogStatus.blogUnfeaturedSuccess", language), data=result)
+        return SuccessResponse(
+            message=get_message(
+                "blog.updateBlogStatus.blogUnfeaturedSuccess", language
+            ),
+            data=result,
+        )
 
 
 @router.get("/get-blog-navigation/{blog_id}", response_model=SuccessResponse)
@@ -288,7 +352,9 @@ async def get_blog_navigation(
         blog_id=blog_id,
         language=language,
     )
-    return SuccessResponse(message=get_message("blog.getBlogNavigation", language), data=result)
+    return SuccessResponse(
+        message=get_message("blog.getBlogNavigation", language), data=result
+    )
 
 
 @router.get("/get-blog-stats/{blog_id}", response_model=SuccessResponse)
@@ -301,7 +367,10 @@ async def get_blog_stats(
         blog_id=blog_id,
         language=language,
     )
-    return SuccessResponse(message=get_message("blog.getBlogStats.getBlogStatsSuccess", language), data=result)
+    return SuccessResponse(
+        message=get_message("blog.getBlogStats.getBlogStatsSuccess", language),
+        data=result,
+    )
 
 
 @router.delete("/admin/delete-blog/{blog_id}", response_model=SuccessResponse)
@@ -316,7 +385,9 @@ async def delete_blog(
         language=language,
         role=current_user.role,
     )
-    return SuccessResponse(message=get_message("blog.deleteBlog.deleteBlogSuccess", language), data=result)
+    return SuccessResponse(
+        message=get_message("blog.deleteBlog.deleteBlogSuccess", language), data=result
+    )
 
 
 @router.get("/get-saved-blog-lists", response_model=SuccessResponse)
@@ -333,7 +404,9 @@ async def get_saved_blog_lists(
         page=page,
         size=size,
     )
-    return SuccessResponse(message=get_message("blog.getSavedBlogLists", language), data=result)
+    return SuccessResponse(
+        message=get_message("blog.getSavedBlogLists", language), data=result
+    )
 
 
 @router.get("/get-recent-popular-blog", response_model=SuccessResponse)
@@ -341,11 +414,11 @@ async def get_recent_popular_blog(
     language: Language = Depends(get_language),
     blog_service: BlogService = Depends(get_blog_service),
 ):
-    result = await blog_service.get_recent_populor_blog(
-        language=language
-    )
+    result = await blog_service.get_recent_populor_blog(language=language)
 
-    return SuccessResponse(message=get_message("blog.getRecentPopularBlog", language), data=result)
+    return SuccessResponse(
+        message=get_message("blog.getRecentPopularBlog", language), data=result
+    )
 
 
 @router.get("/get-blog-lists-by-tag-slug/{tag_slug}", response_model=SuccessResponse)
@@ -370,8 +443,7 @@ async def get_blog_lists_by_tag_slug(
 
     # 返回标准分页数据结构
     return SuccessResponse(
-        message=get_message(
-            "blog.getBlogListsByTagSlug", language),
+        message=get_message("blog.getBlogListsByTagSlug", language),
         data=offset_paginator.create_response_data(items, pagination_metadata),
     )
 
@@ -390,7 +462,6 @@ async def get_archived_blog_lists(
         limit=limit,
     )
     return SuccessResponse(
-        message=get_message(
-            "blog.getArchivedBlogLists", language),
+        message=get_message("blog.getArchivedBlogLists", language),
         data=result,
     )

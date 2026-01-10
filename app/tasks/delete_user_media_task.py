@@ -1,6 +1,8 @@
+from typing import Any, cast
 from sqlmodel import select
 from sqlalchemy.orm import load_only
 from sqlalchemy import delete
+from sqlalchemy.sql.elements import ColumnElement
 from app.models.user_model import User
 from app.models.media_model import Media
 from app.core.logger import logger_manager
@@ -45,19 +47,19 @@ def delete_user_media_task(self, user_id: int) -> None:
                 select(Media)
                 .options(
                     load_only(
-                        Media.id,
-                        Media.original_filepath_url,
-                        Media.thumbnail_filepath_url,
-                        Media.watermark_filepath_url,
+                        cast(Any, Media.id),
+                        cast(Any, Media.original_filepath_url),
+                        cast(Any, Media.thumbnail_filepath_url),
+                        cast(Any, Media.watermark_filepath_url),
                     )
                 )
                 .filter(
                     # 只删除s3文件
-                    Media.original_filepath_url.like(
+                    cast(Any, Media.original_filepath_url).like(
                         f"%{aws_bucket_name}.s3.{aws_region}.amazonaws.com/%"
                     )
                 )
-                .where(Media.user_id == user_id)
+                .where(cast(ColumnElement[bool], Media.user_id == user_id))
             )
 
             result = session.execute(statement)
@@ -109,7 +111,8 @@ def delete_user_media_task(self, user_id: int) -> None:
                     try:
 
                         def progress_callback(deleted_count, total_files, _):
-                            logger.info(f"S3删除进度: {deleted_count}/{total_files}")
+                            logger.info(
+                                f"S3删除进度: {deleted_count}/{total_files}")
 
                         deletion_results = s3_bucket.delete_files(
                             s3_keys=s3_keys_to_delete,
@@ -153,7 +156,8 @@ def delete_user_media_task(self, user_id: int) -> None:
         if s3_deletion_success:
             try:
                 with mysql_manager.get_sync_db() as session:
-                    delete_statement = delete(User).where(User.id == user_id)
+                    delete_statement = delete(User).where(
+                        cast(ColumnElement[bool], User.id == user_id))
                     deleted_rows = session.execute(delete_statement)
                     session.commit()
                     logger.info(

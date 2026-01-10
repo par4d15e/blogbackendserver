@@ -8,7 +8,7 @@ class AWSSettings(EnvBaseSettings):
     AWS_ACCESS_KEY_ID: str = Field(default="", description="AWS access key ID")
 
     AWS_SECRET_ACCESS_KEY: SecretStr = Field(
-        default="", description="AWS secret access key"
+        default=SecretStr(""), description="AWS secret access key"
     )
 
     AWS_REGION: str = Field(default="us-east-1", description="AWS region")

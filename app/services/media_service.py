@@ -306,7 +306,7 @@ class MediaService:
 
         # 根据媒体类型决定ACL设置
         acl_setting = None
-        if media_type == MediaType.audio or is_avatar == True:
+        if media_type == MediaType.audio or is_avatar:
             acl_setting = "public-read"  # 音频文件设为公开访问
 
         # 上传原始文件到S3
@@ -332,17 +332,16 @@ class MediaService:
             else:
                 # 私有文件使用预签名URL
                 original_filepath_url = s3_bucket.generate_presigned_url(
-                    original_s3_key)
+                    original_s3_key
+                )
 
             if thumbnail_s3_key:
-                thumbnail_filepath_url = s3_bucket.get_file_url(
-                    thumbnail_s3_key)
+                thumbnail_filepath_url = s3_bucket.get_file_url(thumbnail_s3_key)
             else:
                 thumbnail_filepath_url = None
 
             if watermark_s3_key:
-                watermark_filepath_url = s3_bucket.get_file_url(
-                    watermark_s3_key)
+                watermark_filepath_url = s3_bucket.get_file_url(watermark_s3_key)
             else:
                 watermark_filepath_url = None
 
@@ -365,8 +364,7 @@ class MediaService:
 
         # 对于图片和视频，异步处理缩略图和水印
         if media_type in [MediaType.image, MediaType.video]:
-            self._schedule_media_processing(
-                media_uuid, original_s3_key, media_type)
+            self._schedule_media_processing(media_uuid, original_s3_key, media_type)
 
         self.logger.info(f"媒体文件上传成功: {media_uuid}, 类型: {media_type.name}")
 
@@ -472,33 +470,39 @@ class MediaService:
                 # 根据ACL设置决定URL类型
                 if acl_list[i] == "public-read":
                     # 公开文件使用直接URL
-                    original_url = s3_bucket.get_file_url(
-                        original_s3_key) if original_s3_key else None
+                    original_url = (
+                        s3_bucket.get_file_url(original_s3_key)
+                        if original_s3_key
+                        else None
+                    )
                 else:
                     # 私有文件使用预签名URL
-                    original_url = s3_bucket.generate_presigned_url(
-                        original_s3_key) if original_s3_key else None
+                    original_url = (
+                        s3_bucket.generate_presigned_url(original_s3_key)
+                        if original_s3_key
+                        else None
+                    )
 
                 if mt == MediaType.image:
                     stem = lp.stem
                     thumb_key = f"{settings.files.S3_IMAGE_THUMBNAIL_PATH}/{stem}_thumbnail.webp"
                     wm_key = f"{settings.files.S3_IMAGE_WATERMARK_PATH}/{stem}_watermark.webp"
                     thumbnail_url = (
-                        s3_bucket.get_file_url(
-                            thumb_key) if thumb_key else None
+                        s3_bucket.get_file_url(thumb_key) if thumb_key else None
                     )
-                    watermark_url = s3_bucket.get_file_url(
-                        wm_key) if wm_key else None
+                    watermark_url = s3_bucket.get_file_url(wm_key) if wm_key else None
                 elif mt == MediaType.video:
                     stem = lp.stem
-                    thumb_key = f"{settings.files.S3_VIDEO_THUMBNAIL_PATH}/{stem}_thumbnail.mp4"
-                    wm_key = f"{settings.files.S3_VIDEO_WATERMARK_PATH}/{stem}_watermark.mp4"
-                    thumbnail_url = (
-                        s3_bucket.get_file_url(
-                            thumb_key) if thumb_key else None
+                    thumb_key = (
+                        f"{settings.files.S3_VIDEO_THUMBNAIL_PATH}/{stem}_thumbnail.mp4"
                     )
-                    watermark_url = s3_bucket.get_file_url(
-                        wm_key) if wm_key else None
+                    wm_key = (
+                        f"{settings.files.S3_VIDEO_WATERMARK_PATH}/{stem}_watermark.mp4"
+                    )
+                    thumbnail_url = (
+                        s3_bucket.get_file_url(thumb_key) if thumb_key else None
+                    )
+                    watermark_url = s3_bucket.get_file_url(wm_key) if wm_key else None
                 else:
                     thumb_key = None
                     wm_key = None
@@ -519,8 +523,7 @@ class MediaService:
                 )
 
                 if mt in [MediaType.image, MediaType.video]:
-                    self._schedule_media_processing(
-                        media_uuid, original_s3_key, mt)
+                    self._schedule_media_processing(media_uuid, original_s3_key, mt)
 
                 # 构建响应项，只在有实际URL时才包含缩略图和水印字段
                 response_item = {
@@ -577,11 +580,14 @@ class MediaService:
                 media_type_str = item.get("media_type")  # 从CRUD层获取的是字符串格式
                 if media_type_str == "audio":
                     # 音频文件使用直接URL（因为上传时设为公开）
-                    response_item["original_filepath_url"] = item["original_filepath_url"]
+                    response_item["original_filepath_url"] = item[
+                        "original_filepath_url"
+                    ]
                 else:
                     # 其他文件类型使用预签名URL
                     original_key = s3_bucket.extract_s3_key(
-                        item["original_filepath_url"])
+                        item["original_filepath_url"]
+                    )
                     response_item["original_filepath_url"] = (
                         s3_bucket.generate_presigned_url(original_key)
                         if original_key
@@ -673,8 +679,7 @@ class MediaService:
             with create_s3_bucket(verify_bucket=False) as s3_bucket:
                 for media in media_list:
                     # 提取原始文件的S3键
-                    original_key = s3_bucket.extract_s3_key(
-                        media.original_filepath_url)
+                    original_key = s3_bucket.extract_s3_key(media.original_filepath_url)
                     if original_key:
                         s3_keys_to_delete.append(original_key)
 

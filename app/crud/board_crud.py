@@ -67,7 +67,7 @@ class BoardCrud:
     async def get_board_details(
         self,
         language: Language,
-    ) -> Dict[str, any]:
+    ) -> Dict[str, Any]:
         # 获取缓存
         cache_key = f"board_details:lang={language}"
         cache_result = await redis_manager.get_async(cache_key)
@@ -206,8 +206,8 @@ class BoardCrud:
             .options(selectinload(Board_Comment.user).selectinload(User.avatar))
             .where(
                 Board_Comment.board_id == board_id,
-                Board_Comment.is_deleted == False,
-                Board_Comment.parent_id == None,  # 只获取父评论
+                not Board_Comment.is_deleted,
+                Board_Comment.parent_id is None,  # 只获取父评论
             )
         )
 
@@ -238,7 +238,8 @@ class BoardCrud:
             raise HTTPException(
                 status_code=404,
                 detail=get_message(
-                    "board.createBoardComment.commentNotFound", language),
+                    "board.createBoardComment.commentNotFound", language
+                ),
             )
 
         # 获取所有父评论的子评论和孙评论，确保评论树完整（支持三级嵌套）
@@ -252,7 +253,7 @@ class BoardCrud:
                 .options(selectinload(Board_Comment.user).selectinload(User.avatar))
                 .where(
                     Board_Comment.board_id == board_id,
-                    Board_Comment.is_deleted == False,
+                    not Board_Comment.is_deleted,
                     Board_Comment.parent_id.in_(parent_ids),
                 )
             )
@@ -269,7 +270,7 @@ class BoardCrud:
                     .options(selectinload(Board_Comment.user).selectinload(User.avatar))
                     .where(
                         Board_Comment.board_id == board_id,
-                        Board_Comment.is_deleted == False,
+                        not Board_Comment.is_deleted,
                         Board_Comment.parent_id.in_(children_ids),
                     )
                 )

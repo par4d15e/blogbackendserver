@@ -1,7 +1,7 @@
 import boto3
 import mimetypes
 import threading
-from typing import Optional, Dict, Union, Callable, cast
+from typing import Any, Optional, Dict, Union, Callable, cast
 from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor
 from botocore.exceptions import ClientError, NoCredentialsError
@@ -153,7 +153,7 @@ class RobustS3Bucket:
             self.logger.error(f"验证上传失败: {str(e)}")
             return False
 
-    def get_file_info(self, s3_key: str) -> Optional[Dict[str, any]]:
+    def get_file_info(self, s3_key: str) -> Optional[Dict[str, Any]]:
         """
         获取S3对象的信息，包括大小、ETag、内容类型等
 
@@ -161,7 +161,7 @@ class RobustS3Bucket:
             s3_key: S3文件键
 
         Returns:
-            Optional[Dict[str, any]]: 对象信息，若不存在或获取失败返回None
+            Optional[Dict[str, Any]]: 对象信息，若不存在或获取失败返回None
         """
         try:
             response = self.s3_client.head_object(
@@ -302,13 +302,12 @@ class RobustS3Bucket:
             self.logger.error(
                 f"上传文件到S3失败 {local_file_path}: "
                 f"错误代码={error_code}, 错误信息={error_msg}",
-                exc_info=True
+                exc_info=True,
             )
             return False
         except Exception as e:
             self.logger.error(
-                f"上传文件失败 {local_file_path}: {str(e)}",
-                exc_info=True
+                f"上传文件失败 {local_file_path}: {str(e)}", exc_info=True
             )
             return False
 
@@ -371,12 +370,18 @@ class RobustS3Bucket:
                 if isinstance(acl, (list, tuple)) and len(cast(list, acl)) > 0
                 else (acl if isinstance(acl, str) else None)
             )
+            # 将三参数回调转换为二参数回调
+            single_progress_callback: Optional[Callable[[
+                int, int], None]] = None
+            if progress_callback:
+                def single_progress_callback(uploaded: int, total: int) -> None:
+                    progress_callback(0, uploaded, total)
             return self._upload_single_file(
                 local_file_path=file_paths[0],
                 s3_key=s3_keys[0],
                 metadata=metadata_list[0] if metadata_list else None,
                 content_type=content_types[0] if content_types else None,
-                progress_callback=progress_callback,
+                progress_callback=single_progress_callback,
                 verify=verify,
                 acl=single_acl,
             )

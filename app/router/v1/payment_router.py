@@ -62,7 +62,9 @@ async def get_payment_success_details_router(
     )
 
     return SuccessResponse(
-        message=get_message("payment.paymentSuccess.getSuccessDetailsSuccess", language),
+        message=get_message(
+            "payment.paymentSuccess.getSuccessDetailsSuccess", language
+        ),
         data=payment_details,
     )
 

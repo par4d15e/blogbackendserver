@@ -73,7 +73,7 @@ class Dependencies:
                             select(Token).where(
                                 Token.user_id == user_id,
                                 Token.type == TokenType.access,
-                                Token.is_active == True,
+                                Token.is_active,
                                 Token.expired_at > func.utc_timestamp(),
                             )
                         )
@@ -104,13 +104,11 @@ class Dependencies:
                                 f"No valid token found in database for user_id: {user_id}"
                             )
                     else:
-                        self.logger.warning(
-                            "No user_id found in decoded token")
+                        self.logger.warning("No user_id found in decoded token")
                 else:
                     self.logger.warning("Token decode returned None")
             except Exception as e:
-                self.logger.warning(
-                    f"Access token validation failed: {str(e)}")
+                self.logger.warning(f"Access token validation failed: {str(e)}")
 
         # 如果所有token都无效，抛出未授权错误
         self.logger.warning("All token validation attempts failed")

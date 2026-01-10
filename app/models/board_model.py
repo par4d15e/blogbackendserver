@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import datetime
 from typing import TYPE_CHECKING, Optional, List
 from sqlalchemy import text, ForeignKey
 from sqlalchemy.dialects.mysql import TIMESTAMP
@@ -35,16 +35,12 @@ class Board(SQLModel, table=True):
 
     id: Optional[int] = Field(default=None, primary_key=True)
     section_id: int = Field(
-        sa_column=Column(ForeignKey(
-            "sections.id", ondelete="CASCADE"), nullable=False)
+        sa_column=Column(ForeignKey("sections.id", ondelete="CASCADE"), nullable=False)
     )
-    chinese_title: str = Field(
-        nullable=False, max_length=100, unique=True)  # 优化长度
+    chinese_title: str = Field(nullable=False, max_length=100, unique=True)  # 优化长度
     english_title: Optional[str] = Field(default=None, max_length=100)  # 优化长度
-    chinese_description: Optional[str] = Field(
-        default=None, max_length=200)  # 优化长度
-    english_description: Optional[str] = Field(
-        default=None, max_length=200)  # 优化长度
+    chinese_description: Optional[str] = Field(default=None, max_length=200)  # 优化长度
+    english_description: Optional[str] = Field(default=None, max_length=200)  # 优化长度
     created_at: datetime = Field(
         nullable=False,
         sa_type=TIMESTAMP,
@@ -101,12 +97,10 @@ class Board_Comment(SQLModel, table=True):
 
     id: Optional[int] = Field(default=None, primary_key=True)
     board_id: int = Field(
-        sa_column=Column(ForeignKey(
-            "boards.id", ondelete="CASCADE"), nullable=False)
+        sa_column=Column(ForeignKey("boards.id", ondelete="CASCADE"), nullable=False)
     )
     user_id: int = Field(
-        sa_column=Column(ForeignKey(
-            "users.id", ondelete="CASCADE"), nullable=False)
+        sa_column=Column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     )
     parent_id: Optional[int] = Field(
         sa_column=Column(

@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import datetime
 from typing import TYPE_CHECKING, Optional, List, Dict, Any
 from sqlalchemy import text, JSON, ForeignKey
 from sqlalchemy.dialects.mysql import TIMESTAMP
@@ -39,31 +39,26 @@ class Blog(SQLModel, table=True):
 
     id: Optional[int] = Field(default=None, primary_key=True)
     user_id: Optional[int] = Field(
-        sa_column=Column(ForeignKey(
-            "users.id", ondelete="CASCADE"), nullable=True)
+        sa_column=Column(ForeignKey("users.id", ondelete="CASCADE"), nullable=True)
     )
     section_id: int = Field(
-        sa_column=Column(ForeignKey(
-            "sections.id", ondelete="CASCADE"), nullable=False)
+        sa_column=Column(ForeignKey("sections.id", ondelete="CASCADE"), nullable=False)
     )
     seo_id: Optional[int] = Field(
-        sa_column=Column(
-            ForeignKey("seo.id", ondelete="SET NULL"), nullable=True
-        )
+        sa_column=Column(ForeignKey("seo.id", ondelete="SET NULL"), nullable=True)
     )
     cover_id: Optional[int] = Field(
-        sa_column=Column(ForeignKey(
-            "media.id", ondelete="SET NULL"), nullable=True)
+        sa_column=Column(ForeignKey("media.id", ondelete="SET NULL"), nullable=True)
     )
     slug: Optional[str] = Field(max_length=255, nullable=True, unique=True)
     chinese_title: str = Field(nullable=False, max_length=200)  # 优化长度
     english_title: Optional[str] = Field(default=None, max_length=200)  # 优化长度
     chinese_description: Optional[str] = Field(default=None, max_length=500)
     english_description: Optional[str] = Field(default=None, max_length=500)
-    chinese_content: Dict[str, Any] = Field(
-        sa_column=Column(JSON, nullable=False))
+    chinese_content: Dict[str, Any] = Field(sa_column=Column(JSON, nullable=False))
     english_content: Optional[Dict[str, Any]] = Field(
-        default=None, sa_column=Column(JSON))
+        default=None, sa_column=Column(JSON)
+    )
     content_hash: Optional[str] = Field(
         max_length=64, default=None
     )  # 博客内容hash值，用于判断博客内容是否发生变化
@@ -195,8 +190,7 @@ class Blog_Status(SQLModel, table=True):
 
     id: Optional[int] = Field(default=None, primary_key=True)
     user_id: Optional[int] = Field(
-        sa_column=Column(ForeignKey(
-            "users.id", ondelete="CASCADE"), nullable=True)
+        sa_column=Column(ForeignKey("users.id", ondelete="CASCADE"), nullable=True)
     )
     blog_id: int = Field(
         sa_column=Column(
@@ -293,17 +287,14 @@ class Blog_Comment(SQLModel, table=True):
 
     id: Optional[int] = Field(default=None, primary_key=True)
     blog_id: int = Field(
-        sa_column=Column(ForeignKey(
-            "blogs.id", ondelete="CASCADE"), nullable=False)
+        sa_column=Column(ForeignKey("blogs.id", ondelete="CASCADE"), nullable=False)
     )
     user_id: int = Field(
-        sa_column=Column(ForeignKey(
-            "users.id", ondelete="CASCADE"), nullable=False)
+        sa_column=Column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     )
     comment: str = Field(nullable=False, max_length=255)
     is_deleted: bool = Field(default=False, nullable=False)
-    parent_id: Optional[int] = Field(
-        default=None, foreign_key="blog_comment.id")
+    parent_id: Optional[int] = Field(default=None, foreign_key="blog_comment.id")
     created_at: datetime = Field(
         nullable=False,
         sa_type=TIMESTAMP,
@@ -374,12 +365,10 @@ class Saved_Blog(SQLModel, table=True):
 
     id: Optional[int] = Field(default=None, primary_key=True)
     user_id: int = Field(
-        sa_column=Column(ForeignKey(
-            "users.id", ondelete="CASCADE"), nullable=False)
+        sa_column=Column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     )
     blog_id: int = Field(
-        sa_column=Column(ForeignKey(
-            "blogs.id", ondelete="CASCADE"), nullable=False)
+        sa_column=Column(ForeignKey("blogs.id", ondelete="CASCADE"), nullable=False)
     )
     created_at: datetime = Field(
         nullable=False,
@@ -433,12 +422,10 @@ class Blog_Tag(SQLModel, table=True):
 
     id: Optional[int] = Field(default=None, primary_key=True)
     blog_id: int = Field(
-        sa_column=Column(ForeignKey(
-            "blogs.id", ondelete="CASCADE"), nullable=False)
+        sa_column=Column(ForeignKey("blogs.id", ondelete="CASCADE"), nullable=False)
     )
     tag_id: int = Field(
-        sa_column=Column(ForeignKey(
-            "tags.id", ondelete="CASCADE"), nullable=False)
+        sa_column=Column(ForeignKey("tags.id", ondelete="CASCADE"), nullable=False)
     )
     created_at: datetime = Field(
         nullable=False,
@@ -493,10 +480,8 @@ class Blog_Summary(SQLModel, table=True):
             ForeignKey("blogs.id", ondelete="CASCADE"), nullable=False, unique=True
         )
     )
-    chinese_summary: Dict[str, Any] = Field(
-        sa_column=Column(JSON, nullable=False))
-    english_summary: Dict[str, Any] = Field(
-        sa_column=Column(JSON, nullable=False))
+    chinese_summary: Dict[str, Any] = Field(sa_column=Column(JSON, nullable=False))
+    english_summary: Dict[str, Any] = Field(sa_column=Column(JSON, nullable=False))
     created_at: datetime = Field(
         nullable=False,
         sa_type=TIMESTAMP,
@@ -534,10 +519,8 @@ class Blog_TTS(SQLModel, table=True):
         Index("idx_blog_tts_chinese_tts_id", "chinese_tts_id"),
         Index("idx_blog_tts_english_tts_id", "english_tts_id"),
         # 复合索引 - 优化查询性能
-        Index("idx_blog_tts_blog_id_chinese_tts_id",
-              "blog_id", "chinese_tts_id"),
-        Index("idx_blog_tts_blog_id_english_tts_id",
-              "blog_id", "english_tts_id"),
+        Index("idx_blog_tts_blog_id_chinese_tts_id", "blog_id", "chinese_tts_id"),
+        Index("idx_blog_tts_blog_id_english_tts_id", "blog_id", "english_tts_id"),
         Index(
             "idx_blog_tts_blog_id_chinese_tts_id_english_tts_id",
             "blog_id",
@@ -551,18 +534,15 @@ class Blog_TTS(SQLModel, table=True):
 
     id: Optional[int] = Field(default=None, primary_key=True)
     blog_id: int = Field(
-        sa_column=Column(ForeignKey(
-            "blogs.id", ondelete="CASCADE"), nullable=False)
+        sa_column=Column(ForeignKey("blogs.id", ondelete="CASCADE"), nullable=False)
     )
     chinese_tts_id: Optional[int] = Field(
         default=None,
-        sa_column=Column(ForeignKey(
-            "media.id", ondelete="CASCADE"), nullable=True)
+        sa_column=Column(ForeignKey("media.id", ondelete="CASCADE"), nullable=True),
     )
     english_tts_id: Optional[int] = Field(
         default=None,
-        sa_column=Column(ForeignKey(
-            "media.id", ondelete="CASCADE"), nullable=True)
+        sa_column=Column(ForeignKey("media.id", ondelete="CASCADE"), nullable=True),
     )
     created_at: datetime = Field(
         nullable=False,

@@ -35,10 +35,7 @@ async def get_api_documentation():
                 f"README path: {docs_path}, "
                 f"Current file: {Path(__file__).resolve()}"
             )
-            raise HTTPException(
-                status_code=404,
-                detail=error_detail
-            )
+            raise HTTPException(status_code=404, detail=error_detail)
 
         with open(docs_path, "r", encoding="utf-8") as f:
             content = f.read()
@@ -48,8 +45,7 @@ async def get_api_documentation():
         raise
     except Exception as e:
         raise HTTPException(
-            status_code=500,
-            detail=f"Error reading API documentation: {str(e)}"
+            status_code=500, detail=f"Error reading API documentation: {str(e)}"
         )
 
 
@@ -63,10 +59,7 @@ async def get_pyproject():
         pyproject_path = project_root / "pyproject.toml"
 
         if not pyproject_path.exists():
-            raise HTTPException(
-                status_code=404,
-                detail="pyproject.toml file not found"
-            )
+            raise HTTPException(status_code=404, detail="pyproject.toml file not found")
 
         with open(pyproject_path, "r", encoding="utf-8") as f:
             content = f.read()
@@ -76,6 +69,5 @@ async def get_pyproject():
         raise
     except Exception as e:
         raise HTTPException(
-            status_code=500,
-            detail=f"Error reading pyproject.toml: {str(e)}"
+            status_code=500, detail=f"Error reading pyproject.toml: {str(e)}"
         )

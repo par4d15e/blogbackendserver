@@ -31,8 +31,7 @@ class UserCrud:
             return json.loads(cached_data)
 
         statement = (
-            select(User).options(selectinload(
-                User.avatar)).where(User.id == user_id)
+            select(User).options(selectinload(User.avatar)).where(User.id == user_id)
         )
         result = await self.db.execute(statement)
 
@@ -41,8 +40,7 @@ class UserCrud:
         if not user:
             raise HTTPException(
                 status_code=404,
-                detail=get_message(
-                    key="auth.common.userNotFound", lang=language),
+                detail=get_message(key="auth.common.userNotFound", lang=language),
             )
         response = {
             "user_id": user.id,
@@ -80,7 +78,7 @@ class UserCrud:
     async def get_my_avatar(self, user_id: int) -> Optional[Dict[str, Any]]:
         """Get current user's avatar by id."""
         statement = select(Media).where(
-            Media.user_id == user_id, Media.is_avatar == True
+            Media.user_id == user_id, Media.is_avatar
         )
         result = await self.db.execute(statement)
         media = result.scalar_one_or_none()
@@ -114,8 +112,7 @@ class UserCrud:
 
         # 验证分页参数
         try:
-            page, size = offset_paginator.validate_pagination_params(
-                page, size)
+            page, size = offset_paginator.validate_pagination_params(page, size)
         except ValueError:
             raise HTTPException(
                 status_code=400,
@@ -126,8 +123,7 @@ class UserCrud:
         if role != RoleType.admin:
             raise HTTPException(
                 status_code=403,
-                detail=get_message(
-                    key="common.insufficientPermissions", lang=language),
+                detail=get_message(key="common.insufficientPermissions", lang=language),
             )
 
         # 缓存键
@@ -154,20 +150,19 @@ class UserCrud:
         month_start = datetime(now.year, now.month, 1, tzinfo=timezone.utc)
         # 处理跨年的情况
         if now.month == 12:
-            next_month_start = datetime(
-                now.year + 1, 1, 1, tzinfo=timezone.utc)
+            next_month_start = datetime(now.year + 1, 1, 1, tzinfo=timezone.utc)
         else:
-            next_month_start = datetime(
-                now.year, now.month + 1, 1, tzinfo=timezone.utc)
+            next_month_start = datetime(now.year, now.month + 1, 1, tzinfo=timezone.utc)
         count_this_month = await self.db.execute(
             select(func.count(User.id)).where(
-                User.created_at.between(month_start, next_month_start))
+                User.created_at.between(month_start, next_month_start)
+            )
         )
         count_this_month = count_this_month.scalar_one_or_none()
 
         # 计算活跃用户数量
         count_active_users = await self.db.execute(
-            select(func.count(User.id)).where(User.is_active == True)
+            select(func.count(User.id)).where(User.is_active)
         )
         count_active_users = count_active_users.scalar_one_or_none()
 
@@ -213,8 +208,7 @@ class UserCrud:
         if role != RoleType.admin:
             raise HTTPException(
                 status_code=403,
-                detail=get_message(
-                    key="common.insufficientPermissions", lang=language),
+                detail=get_message(key="common.insufficientPermissions", lang=language),
             )
 
         if user_id == current_user_id:
@@ -223,8 +217,7 @@ class UserCrud:
             )
             raise HTTPException(
                 status_code=403,
-                detail=get_message(
-                    key="common.insufficientPermissions", lang=language),
+                detail=get_message(key="common.insufficientPermissions", lang=language),
             )
 
         # Ensure user exists
@@ -232,8 +225,7 @@ class UserCrud:
         if result.scalar_one_or_none() is None:
             raise HTTPException(
                 status_code=404,
-                detail=get_message(
-                    key="auth.common.userNotFound", lang=language),
+                detail=get_message(key="auth.common.userNotFound", lang=language),
             )
 
         # 删除用户所有媒体文件
@@ -258,23 +250,20 @@ class UserCrud:
         if role != RoleType.admin:
             raise HTTPException(
                 status_code=403,
-                detail=get_message(
-                    key="common.insufficientPermissions", lang=language),
+                detail=get_message(key="common.insufficientPermissions", lang=language),
             )
 
         if current_user_id == user_id:
             raise HTTPException(
                 status_code=403,
-                detail=get_message(
-                    key="common.insufficientPermissions", lang=language),
+                detail=get_message(key="common.insufficientPermissions", lang=language),
             )
 
         user = await self.auth_crud.get_user_by_id(user_id)
         if not user:
             raise HTTPException(
                 status_code=404,
-                detail=get_message(
-                    key="auth.common.userNotFound", lang=language),
+                detail=get_message(key="auth.common.userNotFound", lang=language),
             )
 
         user.is_active = is_active

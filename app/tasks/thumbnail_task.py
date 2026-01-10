@@ -13,7 +13,7 @@ logger = logger_manager.get_logger(__name__)
 
 
 def generate_image_thumbnail(
-    input_paths: Union[str, Path, List[Union[str, Path]]],
+    input_paths: Union[str, Path, List[str], List[Path], List[Union[str, Path]]],
     output_dir: Union[str, Path],
     width: int = 200,
     height: int = -1,
@@ -88,7 +88,7 @@ def generate_image_thumbnail(
 
 
 def generate_video_thumbnail(
-    input_paths: Union[str, Path, List[Union[str, Path]]],
+    input_paths: Union[str, Path, List[str], List[Path], List[Union[str, Path]]],
     output_dir: Union[str, Path],
     width: int = 320,
     height: int = -1,

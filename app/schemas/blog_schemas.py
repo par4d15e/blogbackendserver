@@ -11,35 +11,34 @@ class CreateBlogRequest(BaseModel):
         default="文章测试", description="Chinese Description"
     )
     chinese_content: Dict[str, Any] = Field(
-        default={"type": "doc", "content": []}, description="Chinese Content")
+        default={"type": "doc", "content": []}, description="Chinese Content"
+    )
     cover_id: int = Field(default=89, description="Cover ID")
     blog_tags: List[int] = Field(default=[9, 10, 11], description="Blog Tags")
 
-    @field_validator('chinese_content', mode='before')
+    @field_validator("chinese_content", mode="before")
     @classmethod
     def parse_chinese_content(cls, v):
         if isinstance(v, str):
             try:
                 return json.loads(v)
             except json.JSONDecodeError as e:
-                raise ValueError(
-                    f'chinese_content must be valid JSON: {str(e)}')
+                raise ValueError(f"chinese_content must be valid JSON: {str(e)}")
         elif v is None:
             return {"type": "doc", "content": []}
         return v
 
-    @field_validator('section_id', 'seo_id', 'cover_id', mode='before')
+    @field_validator("section_id", "seo_id", "cover_id", mode="before")
     @classmethod
     def parse_int_fields(cls, v):
         if v is None:
-            raise ValueError('Field cannot be null')
+            raise ValueError("Field cannot be null")
         try:
             return int(v)
         except (ValueError, TypeError):
-            raise ValueError(
-                f'Field must be a valid integer, got: {type(v).__name__}')
+            raise ValueError(f"Field must be a valid integer, got: {type(v).__name__}")
 
-    @field_validator('blog_tags', mode='before')
+    @field_validator("blog_tags", mode="before")
     @classmethod
     def parse_blog_tags(cls, v):
         if v is None:
@@ -55,7 +54,7 @@ class CreateBlogRequest(BaseModel):
                         # 跳过无效的值，不抛出错误
                         continue
             return valid_tags
-        raise ValueError('blog_tags must be a list')
+        raise ValueError("blog_tags must be a list")
 
 
 class UpdateBlogRequest(BaseModel):
@@ -67,18 +66,18 @@ class UpdateBlogRequest(BaseModel):
         default="文章测试", description="Chinese Description"
     )
     chinese_content: Dict[str, Any] = Field(
-        default={"type": "doc", "content": []}, description="Chinese Content")
+        default={"type": "doc", "content": []}, description="Chinese Content"
+    )
     blog_tags: List[int] = Field(default=[9, 10, 11], description="Blog Tags")
 
-    @field_validator('chinese_content', mode='before')
+    @field_validator("chinese_content", mode="before")
     @classmethod
     def parse_chinese_content(cls, v):
         if isinstance(v, str):
             try:
                 return json.loads(v)
             except json.JSONDecodeError as e:
-                raise ValueError(
-                    f'chinese_content must be valid JSON: {str(e)}')
+                raise ValueError(f"chinese_content must be valid JSON: {str(e)}")
         elif v is None:
             return {"type": "doc", "content": []}
         return v
@@ -105,9 +104,6 @@ class LikeBlogButtonRequest(BaseModel):
 
 class UpdateBlogStatusRequest(BaseModel):
     blog_id: int = Field(..., description="Blog ID")
-    is_published: Optional[bool] = Field(
-        default=None, description="Is Published")
-    is_archived: Optional[bool] = Field(
-        default=None, description="Is Archived")
-    is_featured: Optional[bool] = Field(
-        default=None, description="Is Featured")
+    is_published: Optional[bool] = Field(default=None, description="Is Published")
+    is_archived: Optional[bool] = Field(default=None, description="Is Archived")
+    is_featured: Optional[bool] = Field(default=None, description="Is Featured")

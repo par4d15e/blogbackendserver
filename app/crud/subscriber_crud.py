@@ -1,4 +1,3 @@
-from datetime import datetime, timezone
 from fastapi import Depends, HTTPException
 from sqlmodel import select, update
 from sqlalchemy import func
@@ -21,15 +20,10 @@ class SubscriberCrud:
         return result.scalar_one_or_none()
 
     async def get_subscriber_lists(
-        self,
-        page: int = 1,
-        size: int = 100
+        self, page: int = 1, size: int = 100
     ) -> Tuple[List[Subscriber], Dict[str, Any]]:
         items, pagination_metadata = await offset_paginator.get_paginated_result(
-            self.db,
-            Subscriber,
-            page=page,
-            size=size
+            self.db, Subscriber, page=page, size=size
         )
         return items, pagination_metadata
 
@@ -40,8 +34,7 @@ class SubscriberCrud:
         if existing_subscriber:
             if existing_subscriber.is_active:
                 raise HTTPException(
-                    status_code=400,
-                    detail="Email is already subscribed."
+                    status_code=400, detail="Email is already subscribed."
                 )
             else:
                 # 如果存在但未激活，重新激活订阅
@@ -50,9 +43,7 @@ class SubscriberCrud:
                     update(Subscriber)
                     .where(Subscriber.email == email)
                     .values(
-                        is_active=True,
-                        subscribed_at=func.now(),
-                        unsubscribed_at=None
+                        is_active=True, subscribed_at=func.now(), unsubscribed_at=None
                     )
                 )
                 await self.db.execute(stmt)
@@ -85,9 +76,7 @@ class SubscriberCrud:
                     update(Subscriber)
                     .where(Subscriber.email == email)
                     .values(
-                        is_active=True,
-                        subscribed_at=func.now(),
-                        unsubscribed_at=None
+                        is_active=True, subscribed_at=func.now(), unsubscribed_at=None
                     )
                 )
                 await self.db.execute(stmt)
@@ -107,25 +96,18 @@ class SubscriberCrud:
         existing_subscriber = await self.get_subscriber_by_email(email)
 
         if not existing_subscriber:
-            raise HTTPException(
-                status_code=404,
-                detail="Subscriber not found."
-            )
+            raise HTTPException(status_code=404, detail="Subscriber not found.")
 
         if not existing_subscriber.is_active:
             raise HTTPException(
-                status_code=400,
-                detail="Subscriber is already unsubscribed."
+                status_code=400, detail="Subscriber is already unsubscribed."
             )
 
         # 使用数据库的 CURRENT_TIMESTAMP 函数
         stmt = (
             update(Subscriber)
             .where(Subscriber.email == email)
-            .values(
-                is_active=False,
-                unsubscribed_at=func.now()
-            )
+            .values(is_active=False, unsubscribed_at=func.now())
         )
         await self.db.execute(stmt)
         await self.db.commit()

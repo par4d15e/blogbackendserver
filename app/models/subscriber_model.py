@@ -1,6 +1,6 @@
-from sqlmodel import SQLModel, Field, Column
+from sqlmodel import SQLModel, Field
 from typing import Optional
-from datetime import datetime, timezone
+from datetime import datetime
 from sqlalchemy import text
 from sqlalchemy.dialects.mysql import TIMESTAMP
 
@@ -27,4 +27,6 @@ class Subscriber(SQLModel, table=True):
     )  # 上次发送邮件时间
 
     def __str__(self):
-        return f"Subscriber(id={self.id}, email={self.email}, is_active={self.is_active})"
+        return (
+            f"Subscriber(id={self.id}, email={self.email}, is_active={self.is_active})"
+        )

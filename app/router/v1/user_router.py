@@ -121,8 +121,7 @@ async def get_user_lists_router(
 
     return SuccessResponse(
         message=get_message("user.getUserLists", language),
-        data=offset_paginator.create_response_data(
-            items, pagination_metadata),
+        data=offset_paginator.create_response_data(items, pagination_metadata),
     )
 
 

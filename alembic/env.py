@@ -1,5 +1,4 @@
 from sqlmodel import SQLModel
-from app.models import *
 from logging.config import fileConfig
 
 from sqlalchemy import engine_from_config
@@ -13,7 +12,8 @@ sqlalchemy_url = settings.database.DATABASE_URL
 
 # Convert async MySQL URL to sync for Alembic
 if sqlalchemy_url.startswith("mysql+aiomysql://"):
-    sqlalchemy_url = sqlalchemy_url.replace("mysql+aiomysql://", "mysql+pymysql://")
+    sqlalchemy_url = sqlalchemy_url.replace(
+        "mysql+aiomysql://", "mysql+pymysql://")
 elif sqlalchemy_url.startswith("mysql://"):
     # If it's a generic mysql:// URL, explicitly use pymysql
     sqlalchemy_url = sqlalchemy_url.replace("mysql://", "mysql+pymysql://")
@@ -80,7 +80,8 @@ def run_migrations_online() -> None:
     )
 
     with connectable.connect() as connection:
-        context.configure(connection=connection, target_metadata=target_metadata)
+        context.configure(connection=connection,
+                          target_metadata=target_metadata)
 
         with context.begin_transaction():
             context.run_migrations()

@@ -1,4 +1,4 @@
-from typing import Optional, List, Dict, Any
+from typing import Optional, List, Dict, Any, Tuple
 from fastapi import Depends, Request, HTTPException
 from app.core.logger import logger_manager
 from app.models.user_model import RoleType
@@ -38,7 +38,7 @@ class BlogService:
         chinese_content: dict,
         cover_id: int,
         blog_tags: List[int],
-    ) -> int:
+    ) -> str:
         return await self.blog_crud.create_blog(
             user_id=user_id,
             section_id=section_id,
@@ -61,8 +61,7 @@ class BlogService:
         chinese_description: str,
         chinese_content: dict,
         blog_tags: List[int] = [],
-
-    ) -> str:
+    ) -> Optional[str]:
         return await self.blog_crud.update_blog(
             language=language,
             user_id=user_id,
@@ -213,7 +212,9 @@ class BlogService:
             is_featured=is_featured,
         )
 
-    async def get_blog_navigation(self, blog_id: int, language: Language) -> Optional[Dict]:
+    async def get_blog_navigation(
+        self, blog_id: int, language: Language
+    ) -> Optional[Dict]:
         return await self.blog_crud.get_blog_navigation(
             blog_id=blog_id,
             language=language,
@@ -225,15 +226,19 @@ class BlogService:
             language=language,
         )
 
-    async def like_blog_button(self, request: Request, blog_id: int, language: Language) -> bool:
+    async def like_blog_button(
+        self, request: Request, blog_id: int, language: Language
+    ) -> bool:
         ip_address = client_info_utils.get_client_ip(request)
         return await self.blog_crud.like_blog_button(
             blog_id=blog_id,
-            language=language, ip_address=ip_address,
+            language=language,
+            ip_address=ip_address,
         )
 
-    async def delete_blog(self, blog_id: int, language: Language, role: RoleType) -> bool:
-
+    async def delete_blog(
+        self, blog_id: int, language: Language, role: RoleType
+    ) -> bool:
         if role != RoleType.admin:
             raise HTTPException(
                 status_code=403,
@@ -245,23 +250,14 @@ class BlogService:
         )
 
     async def get_saved_blog_lists(
-        self,
-        user_id: int,
-        language: Language,
-        page: int = 1,
-        size: int = 20
-    ) -> List[Dict[str, Any]]:
+        self, user_id: int, language: Language, page: int = 1, size: int = 20
+    ) -> Tuple[List[Dict[str, Any]], Dict[str, Any]]:
         return await self.blog_crud.get_saved_blog_lists(
-            user_id=user_id,
-            page=page,
-            size=size,
-            language=language
+            user_id=user_id, page=page, size=size, language=language
         )
 
     async def get_recent_populor_blog(self, language: Language) -> List[Dict[str, Any]]:
-        return await self.blog_crud.get_recent_populor_blog(
-            language=language
-        )
+        return await self.blog_crud.get_recent_populor_blog(language=language)
 
     async def get_blog_lists_by_tag_slug(
         self,

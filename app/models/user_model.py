@@ -1,10 +1,9 @@
 from enum import IntEnum
-from datetime import datetime, timezone
+from datetime import datetime
 from typing import TYPE_CHECKING, List, Optional
 from sqlalchemy import text
 from sqlalchemy.dialects.mysql import TIMESTAMP
 from sqlmodel import (
-    Column,
     Field,
     Index,
     Relationship,

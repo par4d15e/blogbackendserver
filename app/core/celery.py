@@ -18,11 +18,9 @@ def with_db_init(func):
         async def init_db():
             try:
                 await mysql_manager.initialize()
-                logger.debug(
-                    "Database initialized successfully for Celery task")
+                logger.debug("Database initialized successfully for Celery task")
             except Exception as e:
-                logger.error(
-                    f"Failed to initialize database for Celery task: {e}")
+                logger.error(f"Failed to initialize database for Celery task: {e}")
                 raise
 
         # 在Celery任务中运行异步初始化
@@ -117,12 +115,12 @@ celery_app.autodiscover_tasks(
 
 # Configure Celery Beat schedule for periodic tasks
 celery_app.conf.beat_schedule = {
-    'backup-database-daily': {
-        'task': 'backup_database_task',
-        'schedule': crontab(hour=3, minute=0),  # 每天凌晨 3 点执行
-        'args': (None, 30),  # (database_name=None, retention_days=30)
-        'options': {
-            'expires': 3600,  # 任务过期时间：1小时
-        }
+    "backup-database-daily": {
+        "task": "backup_database_task",
+        "schedule": crontab(hour=3, minute=0),  # 每天凌晨 3 点执行
+        "args": (None, 30),  # (database_name=None, retention_days=30)
+        "options": {
+            "expires": 3600,  # 任务过期时间：1小时
+        },
     }
 }

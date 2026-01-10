@@ -6,7 +6,7 @@ from sqlalchemy import exists
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import Optional, Dict, Any, Tuple, List
 from app.models.friend_model import Friend, Friend_List, FriendType
-from app.models.user_model import RoleType, User
+from app.models.user_model import RoleType
 from sqlalchemy.orm import lazyload, load_only
 from app.core.database.mysql import mysql_manager
 from app.core.database.redis import redis_manager
@@ -54,7 +54,7 @@ class FriendCrud:
     async def get_friend_details(
         self,
         language: Language,
-    ) -> Dict[str, any]:
+    ) -> Dict[str, Any]:
         # 获取缓存
         cache_key = f"friend_details:lang={language}"
         cache_result = await redis_manager.get_async(cache_key)
@@ -259,20 +259,16 @@ class FriendCrud:
         page: int = 1,
         size: int = 10,
     ) -> Tuple[List[Friend_List], Dict[str, Any]]:
-
         cach_key = f"friend_lists:offset_pagination:page={page}:size={size}"
         cached_data = await redis_manager.get_async(cach_key)
         if cached_data:
             cached_result = json.loads(cached_data)
-            items = [Friend_List(**item) for item in cached_result['items']]
-            pagination_metadata = cached_result['pagination_metadata']
+            items = [Friend_List(**item) for item in cached_result["items"]]
+            pagination_metadata = cached_result["pagination_metadata"]
             return items, pagination_metadata
 
         items, pagination_metadata = await offset_paginator.get_paginated_result(
-            self.db,
-            Friend_List,
-            page=page,
-            size=size
+            self.db, Friend_List, page=page, size=size
         )
 
         # 计算本月新增的友链数量
@@ -287,7 +283,8 @@ class FriendCrud:
 
         count_this_month = await self.db.execute(
             select(func.count(Friend_List.id)).where(
-                Friend_List.created_at.between(month_start, next_month_start))
+                Friend_List.created_at.between(month_start, next_month_start)
+            )
         )
         count_this_month = count_this_month.scalar_one_or_none()
         pagination_metadata["new_items_this_month"] = count_this_month
@@ -353,7 +350,7 @@ class FriendCrud:
                 )
                 notification_task.delay(
                     notification_type=NotificationType.FRIEND_REQUEST.value,
-                    message=message
+                    message=message,
                 )
                 self.logger.info(
                     f"友链请求通知已发送，用户: {user.username} ({user.email}), 友链分类: {friend.chinese_title}"
@@ -362,6 +359,8 @@ class FriendCrud:
             self.logger.error(
                 f"发送友链请求通知失败，user_id: {user_id}, friend_id: {friend_id}, 错误: {str(e)}"
             )
+
+        return True
 
     async def delete_single_friend(
         self,

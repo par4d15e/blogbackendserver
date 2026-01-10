@@ -1,5 +1,5 @@
 from enum import IntEnum
-from datetime import datetime, timezone
+from datetime import datetime
 from typing import TYPE_CHECKING, Optional, List
 from sqlalchemy import text, ForeignKey
 from sqlalchemy.dialects.mysql import TIMESTAMP
@@ -41,16 +41,12 @@ class Friend(SQLModel, table=True):
 
     id: Optional[int] = Field(default=None, primary_key=True)
     section_id: int = Field(
-        sa_column=Column(ForeignKey(
-            "sections.id", ondelete="CASCADE"), nullable=False)
+        sa_column=Column(ForeignKey("sections.id", ondelete="CASCADE"), nullable=False)
     )
-    chinese_title: str = Field(
-        nullable=False, max_length=100, unique=True)  # 优化长度
+    chinese_title: str = Field(nullable=False, max_length=100, unique=True)  # 优化长度
     english_title: Optional[str] = Field(default=None, max_length=100)  # 优化长度
-    chinese_description: Optional[str] = Field(
-        default=None, max_length=200)  # 优化长度
-    english_description: Optional[str] = Field(
-        default=None, max_length=200)  # 优化长度
+    chinese_description: Optional[str] = Field(default=None, max_length=200)  # 优化长度
+    english_description: Optional[str] = Field(default=None, max_length=200)  # 优化长度
     created_at: datetime = Field(
         nullable=False,
         sa_type=TIMESTAMP,
@@ -104,12 +100,10 @@ class Friend_List(SQLModel, table=True):
 
     id: Optional[int] = Field(default=None, primary_key=True)
     friend_id: int = Field(
-        sa_column=Column(ForeignKey(
-            "friends.id", ondelete="CASCADE"), nullable=False)
+        sa_column=Column(ForeignKey("friends.id", ondelete="CASCADE"), nullable=False)
     )
     user_id: int = Field(
-        sa_column=Column(ForeignKey(
-            "users.id", ondelete="CASCADE"), nullable=False)
+        sa_column=Column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     )
     type: FriendType = Field(nullable=False, default=FriendType.hidden)
     logo_url: str = Field(nullable=False, max_length=500)  # 优化长度
@@ -117,8 +111,7 @@ class Friend_List(SQLModel, table=True):
     chinese_title: str = Field(nullable=False, max_length=100)  # 优化长度
     english_title: Optional[str] = Field(default=None, max_length=100)  # 优化长度
     chinese_description: str = Field(nullable=False, max_length=200)  # 优化长度
-    english_description: Optional[str] = Field(
-        default=None, max_length=200)  # 优化长度
+    english_description: Optional[str] = Field(default=None, max_length=200)  # 优化长度
     created_at: datetime = Field(
         nullable=False,
         sa_type=TIMESTAMP,

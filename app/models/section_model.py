@@ -1,11 +1,10 @@
 from enum import IntEnum
-from datetime import datetime, timezone
+from datetime import datetime
 
 from typing import TYPE_CHECKING, List, Optional
 from sqlalchemy import text
 from sqlalchemy.dialects.mysql import TIMESTAMP
 from sqlmodel import (
-    Column,
     Field,
     Index,
     Relationship,
@@ -58,13 +57,10 @@ class Section(SQLModel, table=True):
     )
     type: SectionType = Field(nullable=False)
     slug: str = Field(nullable=False, max_length=100, unique=True)  # 优化长度
-    chinese_title: str = Field(
-        nullable=False, max_length=100, unique=True)  # 优化长度
+    chinese_title: str = Field(nullable=False, max_length=100, unique=True)  # 优化长度
     english_title: Optional[str] = Field(default=None, max_length=100)  # 优化长度
-    chinese_description: Optional[str] = Field(
-        default=None, max_length=200)  # 优化长度
-    english_description: Optional[str] = Field(
-        default=None, max_length=200)  # 优化长度
+    chinese_description: Optional[str] = Field(default=None, max_length=200)  # 优化长度
+    english_description: Optional[str] = Field(default=None, max_length=200)  # 优化长度
     is_active: bool = Field(default=True, nullable=False)
     parent_id: Optional[int] = Field(default=None, foreign_key="sections.id")
     created_at: datetime = Field(

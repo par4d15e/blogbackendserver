@@ -19,14 +19,14 @@ class ProjectRequestSchema(BaseModel):
     attachment_id: Optional[int] = Field(default=None, description="附件ID")
     price: float = Field(default=0.0, description="价格")
 
-    @field_validator('chinese_content', mode='before')
+    @field_validator("chinese_content", mode="before")
     @classmethod
     def parse_chinese_content(cls, v):
         if isinstance(v, str):
             try:
                 return json.loads(v)
             except json.JSONDecodeError:
-                raise ValueError('chinese_content must be valid JSON')
+                raise ValueError("chinese_content must be valid JSON")
         return v
 
 
@@ -42,4 +42,5 @@ class PublishOrUnpublishRequest(
     ProjectIDSchema,
 ):
     is_publish: bool = Field(
-        default=True, description="发布状态，True为发布，False为取消发布")
+        default=True, description="发布状态，True为发布，False为取消发布"
+    )

@@ -172,7 +172,8 @@ async def generate_access_token_router(
     )
     return SuccessResponse(
         message=get_message(
-            "auth.generateAccessToken.generateAccessTokenSuccess", language),
+            "auth.generateAccessToken.generateAccessTokenSuccess", language
+        ),
         data=result,
     )
 

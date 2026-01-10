@@ -1,5 +1,5 @@
 from enum import IntEnum
-from datetime import datetime, timezone
+from datetime import datetime
 from typing import TYPE_CHECKING, Optional
 from sqlalchemy import text, ForeignKey
 from sqlalchemy.dialects.mysql import TIMESTAMP
@@ -53,19 +53,16 @@ class Payment_Record(SQLModel, table=True):
 
     id: Optional[int] = Field(default=None, primary_key=True)
     user_id: Optional[int] = Field(
-        sa_column=Column(ForeignKey(
-            "users.id", ondelete="SET NULL"), nullable=True)
+        sa_column=Column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
     )
     project_id: Optional[int] = Field(
-        sa_column=Column(ForeignKey(
-            "projects.id", ondelete="RESTRICT"), nullable=True)
+        sa_column=Column(ForeignKey("projects.id", ondelete="RESTRICT"), nullable=True)
     )
     # 税费相关字段 - 存储支付时的快照
     tax_name: Optional[str] = Field(default=None, max_length=100)  # 税费名称
     tax_rate: Optional[float] = Field(default=None)  # 税费率
     tax_amount: Optional[float] = Field(default=None)  # 税费金额
-    order_number: str = Field(
-        nullable=False, max_length=64, unique=True)  # 优化长度
+    order_number: str = Field(nullable=False, max_length=64, unique=True)  # 优化长度
     payment_type: PaymentType = Field(nullable=False)
     amount: float = Field(nullable=False)
     payment_status: PaymentStatus = Field(nullable=False)

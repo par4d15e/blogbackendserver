@@ -13,7 +13,11 @@ class ProjectService:
         self.logger = logger_manager.get_logger(__name__)
 
     async def get_project_lists(
-        self, language: Language, page: int = 1, size: int = 20, published_only: bool = True
+        self,
+        language: Language,
+        page: int = 1,
+        size: int = 20,
+        published_only: bool = True,
     ) -> Tuple[List[Dict[str, Any]], Dict[str, Any]]:
         return await self.project_crud.get_project_lists(
             language=language, page=page, size=size, published_only=published_only
@@ -32,7 +36,7 @@ class ProjectService:
         role: RoleType,
         attachment_id: Optional[int],
         price: float = 0.0,
-    ) -> int:
+    ) -> str:
         if role != RoleType.admin:
             raise HTTPException(
                 status_code=403,
@@ -84,7 +88,11 @@ class ProjectService:
         )
 
     async def publish_Or_Unpublish_project(
-        self, language: Language, project_id: int, is_publish: bool = True, role: RoleType = RoleType.admin
+        self,
+        language: Language,
+        project_id: int,
+        is_publish: bool = True,
+        role: RoleType = RoleType.admin,
     ) -> bool:
         if role != RoleType.admin:
             raise HTTPException(
@@ -96,10 +104,17 @@ class ProjectService:
         )
 
     async def get_project_details(
-        self, language: Language, project_slug: str, user_id: Optional[int] = None, is_editor: Optional[bool] = False
+        self,
+        language: Language,
+        project_slug: str,
+        user_id: Optional[int] = None,
+        is_editor: Optional[bool] = False,
     ) -> Dict[str, Any]:
         return await self.project_crud.get_project_details(
-            language=language, project_slug=project_slug, user_id=user_id, is_editor=is_editor
+            language=language,
+            project_slug=project_slug,
+            user_id=user_id,
+            is_editor=is_editor,
         )
 
     async def get_project_details_seo(

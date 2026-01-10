@@ -1,4 +1,6 @@
+from typing import Optional, cast
 from sqlalchemy import Update
+from sqlalchemy.sql.elements import ColumnElement
 from app.core.logger import logger_manager
 from app.models.user_model import User
 from app.utils.client_info import client_info_utils
@@ -10,7 +12,7 @@ from app.core.celery import celery_app, with_db_init
     name="client_info_task", bind=True, max_retries=3, default_retry_delay=30
 )
 @with_db_init
-def client_info_task(self, user_id: int, request_headers: dict = None) -> None:
+def client_info_task(self, user_id: int, request_headers: Optional[dict] = None) -> None:
     """获取客户端IP地址并更新地理位置信息的Background任务"""
     logger = logger_manager.get_logger(__name__)
 
@@ -20,7 +22,8 @@ def client_info_task(self, user_id: int, request_headers: dict = None) -> None:
         # 从请求头中获取客户端IP地址
         ip_address = None
         if request_headers:
-            ip_address = client_info_utils.get_client_ip_from_headers(request_headers)
+            ip_address = client_info_utils.get_client_ip_from_headers(
+                request_headers)
 
         # 如果无法获取IP地址或为本地地址，使用默认IP
         if not ip_address or ip_address in ["localhost", "127.0.0.1", "::1"]:
@@ -58,7 +61,8 @@ def client_info_task(self, user_id: int, request_headers: dict = None) -> None:
                     )
 
                 # 执行数据库更新
-                stmt = Update(User).where(User.id == user_id).values(**update_values)
+                stmt = Update(User).where(
+                    cast(ColumnElement[bool], User.id == user_id)).values(**update_values)
                 result = session.execute(stmt)
 
                 if result.rowcount == 0:

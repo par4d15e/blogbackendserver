@@ -23,7 +23,7 @@ class SectionCrud:
         statement = (
             select(Section)
             .options(joinedload(Section.seo))
-            .where(Section.id == section_id, Section.is_active == True)
+            .where(Section.id == section_id, Section.is_active)
         )
         result = await self.db.execute(statement)
         return result.scalar_one_or_none()
@@ -32,7 +32,7 @@ class SectionCrud:
         statement = (
             select(Section)
             .options(joinedload(Section.seo))
-            .where(Section.slug == slug, Section.is_active == True)
+            .where(Section.slug == slug, Section.is_active)
         )
         result = await self.db.execute(statement)
         return result.scalar_one_or_none()
@@ -63,8 +63,8 @@ class SectionCrud:
                 tree.append(section_dict)
         return tree
 
-    async def get_section_lists(self, language: str) -> List[Dict[str, Any]]:
-        cache_key = f"section_lists_tree:{language}"
+    async def get_section_lists(self, language: Language) -> List[Dict[str, Any]]:
+        cache_key = f"section_lists_tree:{language.value}"
         cache_data = await redis_manager.get_async(cache_key)
 
         if cache_data:
@@ -73,7 +73,7 @@ class SectionCrud:
         # cache miss, fetch from database
         statement = (
             select(Section)
-            .where(Section.is_active == True)
+            .where(Section.is_active)
             .order_by(Section.parent_id, Section.id)
         )
         result = await self.db.execute(statement)
@@ -83,8 +83,7 @@ class SectionCrud:
             raise HTTPException(
                 status_code=404,
                 detail=get_message(
-                    key="section.common.sectionNotFound", lang=language
-                ),
+                    key="section.common.sectionNotFound", lang=language),
             )
 
         # 构建树形结构
@@ -148,8 +147,7 @@ class SectionCrud:
             raise HTTPException(
                 status_code=404,
                 detail=get_message(
-                    key="section.common.sectionNotFound", lang=language
-                ),
+                    key="section.common.sectionNotFound", lang=language),
             )
 
         response = {
@@ -190,8 +188,7 @@ class SectionCrud:
             raise HTTPException(
                 status_code=401,
                 detail=get_message(
-                    key="common.insufficientPermissions", lang=language
-                ),
+                    key="common.insufficientPermissions", lang=language),
             )
 
         # 检查是否有section
@@ -200,8 +197,7 @@ class SectionCrud:
             raise HTTPException(
                 status_code=404,
                 detail=get_message(
-                    key="section.common.sectionNotFound", lang=language
-                ),
+                    key="section.common.sectionNotFound", lang=language),
             )
 
         # 翻译section

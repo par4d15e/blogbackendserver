@@ -15,9 +15,9 @@ class ClientInfoUtils:
         # 优先检查 Cloudflare 的真实 IP header
         possible_headers = [
             "CF-Connecting-IP",  # Cloudflare 真实客户端IP (最优先)
-            "True-Client-IP",     # Cloudflare Enterprise
-            "X-Forwarded-For",    # 标准代理header,取第一个IP
-            "X-Real-IP",          # Nginx等代理
+            "True-Client-IP",  # Cloudflare Enterprise
+            "X-Forwarded-For",  # 标准代理header,取第一个IP
+            "X-Real-IP",  # Nginx等代理
             "X-Client-IP",
         ]
 
@@ -38,9 +38,9 @@ class ClientInfoUtils:
         # 优先检查 Cloudflare 的真实 IP header (使用小写key)
         possible_headers = [
             "cf-connecting-ip",  # Cloudflare 真实客户端IP (最优先)
-            "true-client-ip",     # Cloudflare Enterprise
-            "x-forwarded-for",    # 标准代理header,取第一个IP
-            "x-real-ip",          # Nginx等代理
+            "true-client-ip",  # Cloudflare Enterprise
+            "x-forwarded-for",  # 标准代理header,取第一个IP
+            "x-real-ip",  # Nginx等代理
             "x-client-ip",
         ]
 

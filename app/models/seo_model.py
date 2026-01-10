@@ -1,9 +1,8 @@
-from datetime import datetime, timezone
+from datetime import datetime
 from typing import Optional
 from sqlalchemy import text
 from sqlalchemy.dialects.mysql import TIMESTAMP
 from sqlmodel import (
-    Column,
     Field,
     Index,
     SQLModel,
@@ -26,17 +25,12 @@ class Seo(SQLModel, table=True):
     )
 
     id: Optional[int] = Field(default=None, primary_key=True)
-    chinese_title: str = Field(
-        nullable=False, max_length=100, unique=True)  # 优化长度
+    chinese_title: str = Field(nullable=False, max_length=100, unique=True)  # 优化长度
     english_title: Optional[str] = Field(default=None, max_length=100)  # 优化长度
-    chinese_description: Optional[str] = Field(
-        default=None, max_length=200)  # 优化长度
-    english_description: Optional[str] = Field(
-        default=None, max_length=200)  # 优化长度
-    chinese_keywords: Optional[str] = Field(
-        default=None, max_length=200)  # 优化长度
-    english_keywords: Optional[str] = Field(
-        default=None, max_length=200)  # 优化长度
+    chinese_description: Optional[str] = Field(default=None, max_length=200)  # 优化长度
+    english_description: Optional[str] = Field(default=None, max_length=200)  # 优化长度
+    chinese_keywords: Optional[str] = Field(default=None, max_length=200)  # 优化长度
+    english_keywords: Optional[str] = Field(default=None, max_length=200)  # 优化长度
     created_at: datetime = Field(
         nullable=False,
         sa_type=TIMESTAMP,

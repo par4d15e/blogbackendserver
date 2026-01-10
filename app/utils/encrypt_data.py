@@ -17,7 +17,8 @@ class AESJsonCipher:
         :param key: AES 密钥 (16/24/32 字节)
         """
         if len(key) not in (16, 24, 32):
-            raise ValueError("AES key must be either 16, 24, or 32 bytes long.")
+            raise ValueError(
+                "AES key must be either 16, 24, or 32 bytes long.")
         self.key = key
 
     def encrypt(self, data: Dict[str, Any]) -> str:
@@ -32,7 +33,7 @@ class AESJsonCipher:
         cipher = AES.new(self.key, AES.MODE_CBC)
         ct_bytes = cipher.encrypt(pad(compressed, AES.block_size))
 
-        encrypted_data = cipher.iv + ct_bytes
+        encrypted_data = bytes(cipher.iv) + ct_bytes
         return base64.b64encode(encrypted_data).decode("utf-8")
 
     def decrypt(self, token: str) -> Dict[str, Any]:

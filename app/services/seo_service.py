@@ -11,7 +11,7 @@ class SeoService:
 
     async def get_seo_lists(
         self,
-        language: str,
+        language: Language,
         page: int = 1,
         size: int = 20,
         role: Optional[RoleType] = None,

@@ -54,8 +54,7 @@ class SeoCrud:
         """
         # 验证分页参数
         try:
-            page, size = offset_paginator.validate_pagination_params(
-                page, size)
+            page, size = offset_paginator.validate_pagination_params(page, size)
         except ValueError:
             raise HTTPException(
                 status_code=400,
@@ -66,8 +65,7 @@ class SeoCrud:
         if role != RoleType.admin:
             raise HTTPException(
                 status_code=403,
-                detail=get_message(
-                    key="common.insufficientPermissions", lang=language),
+                detail=get_message(key="common.insufficientPermissions", lang=language),
             )
 
         # 缓存键
@@ -91,22 +89,22 @@ class SeoCrud:
         now = datetime.now(timezone.utc)
         month_start = datetime(now.year, now.month, 1, tzinfo=timezone.utc)
         if now.month == 12:
-            next_month_start = datetime(
-                now.year + 1, 1, 1, tzinfo=timezone.utc)
+            next_month_start = datetime(now.year + 1, 1, 1, tzinfo=timezone.utc)
         else:
-            next_month_start = datetime(
-                now.year, now.month + 1, 1, tzinfo=timezone.utc)
+            next_month_start = datetime(now.year, now.month + 1, 1, tzinfo=timezone.utc)
 
         count_this_month = await self.db.execute(
             select(func.count(Seo.id)).where(
-                Seo.created_at.between(month_start, next_month_start))
+                Seo.created_at.between(month_start, next_month_start)
+            )
         )
         count_this_month = count_this_month.scalar_one_or_none()
 
         # 计算本月更新的SEO数量
         count_updated = await self.db.execute(
             select(func.count(Seo.id)).where(
-                Seo.updated_at.between(month_start, next_month_start))
+                Seo.updated_at.between(month_start, next_month_start)
+            )
         )
         count_updated = count_updated.scalar_one_or_none()
 
@@ -145,16 +143,14 @@ class SeoCrud:
         if role != RoleType.admin:
             raise HTTPException(
                 status_code=403,
-                detail=get_message(
-                    key="common.insufficientPermissions", lang=language),
+                detail=get_message(key="common.insufficientPermissions", lang=language),
             )
 
         seo = await self._get_seo_by_chinese_title(chinese_title)
         if seo:
             raise HTTPException(
                 status_code=400,
-                detail=get_message(
-                    key="seo.createSeo.seoAlreadyExists", lang=language),
+                detail=get_message(key="seo.createSeo.seoAlreadyExists", lang=language),
             )
 
         english_title = await agent_utils.translate(text=chinese_title)
@@ -191,21 +187,18 @@ class SeoCrud:
         if role != RoleType.admin:
             raise HTTPException(
                 status_code=403,
-                detail=get_message(
-                    key="common.insufficientPermissions", lang=language),
+                detail=get_message(key="common.insufficientPermissions", lang=language),
             )
 
         # 获取要更新的SEO记录
-        seo_statement = select(Seo).options(
-            lazyload("*")).where(Seo.id == seo_id)
+        seo_statement = select(Seo).options(lazyload("*")).where(Seo.id == seo_id)
         seo_result = await self.db.execute(seo_statement)
         seo = seo_result.scalar_one_or_none()
 
         if not seo:
             raise HTTPException(
                 status_code=404,
-                detail=get_message(
-                    key="seo.common.seoNotFound", lang=language),
+                detail=get_message(key="seo.common.seoNotFound", lang=language),
             )
 
         # 检查是否存在相同的chinese_title（排除当前记录）
@@ -220,8 +213,7 @@ class SeoCrud:
         if existing_seo:
             raise HTTPException(
                 status_code=400,
-                detail=get_message(
-                    key="seo.updateSeo.seoAlreadyExists", lang=language),
+                detail=get_message(key="seo.updateSeo.seoAlreadyExists", lang=language),
             )
 
         # 更新SEO数据
@@ -268,8 +260,7 @@ class SeoCrud:
         if role == RoleType.user:
             raise HTTPException(
                 status_code=403,
-                detail=get_message(
-                    key="common.insufficientPermissions", lang=language),
+                detail=get_message(key="common.insufficientPermissions", lang=language),
             )
 
         seo = await self._get_seo_by_id(seo_id)
@@ -277,8 +268,7 @@ class SeoCrud:
         if not seo:
             raise HTTPException(
                 status_code=400,
-                detail=get_message(
-                    key="seo.common.seoNotFound", lang=language),
+                detail=get_message(key="seo.common.seoNotFound", lang=language),
             )
 
         await self.db.execute(delete(Seo).where(Seo.id == seo_id))

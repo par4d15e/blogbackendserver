@@ -94,8 +94,7 @@ class OffsetPaginator:
         """
         page, size = self.validate_pagination_params(page, size)
 
-        total_pages = (total_count + size -
-                       1) // size if total_count > 0 else 0
+        total_pages = (total_count + size - 1) // size if total_count > 0 else 0
 
         return {
             "current_page": page,
@@ -150,8 +149,7 @@ class OffsetPaginator:
             for field, value in filters.items():
                 if hasattr(model_class, field) and value is not None:
                     if isinstance(value, (list, tuple)):
-                        stmt = stmt.where(
-                            getattr(model_class, field).in_(value))
+                        stmt = stmt.where(getattr(model_class, field).in_(value))
                     else:
                         stmt = stmt.where(getattr(model_class, field) == value)
 
@@ -192,8 +190,7 @@ class OffsetPaginator:
         items = result.scalars().all()
 
         # Create pagination metadata
-        pagination_metadata = self.create_pagination_metadata(
-            total_count, page, size)
+        pagination_metadata = self.create_pagination_metadata(total_count, page, size)
 
         return items, pagination_metadata
 
@@ -246,8 +243,7 @@ class OffsetPaginator:
         items = result.all()  # Use .all() instead of .scalars().all() for JOIN results
 
         # Create pagination metadata
-        pagination_metadata = self.create_pagination_metadata(
-            total_count, page, size)
+        pagination_metadata = self.create_pagination_metadata(total_count, page, size)
 
         return items, pagination_metadata
 

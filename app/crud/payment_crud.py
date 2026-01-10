@@ -58,7 +58,7 @@ class PaymentCrud:
                 joinedload(Project.project_monetization), joinedload(
                     Project.section)
             )
-            .where(Project.id == project_id, Project.is_published == True)
+            .where(Project.id == project_id, Project.is_published)
         )
         project = result.unique().scalar_one_or_none()
 
@@ -100,7 +100,7 @@ class PaymentCrud:
         )
 
         result = await self.db.execute(select(exists_query))
-        return result.scalar()
+        return bool(result.scalar())
 
     async def _get_user_payment_record(
         self,
@@ -346,7 +346,13 @@ class PaymentCrud:
                     "project_id": payment_record.project.id
                     if payment_record.project
                     else None,
-                    "project_title": payment_record.project.chinese_title if role == RoleType.admin else (payment_record.project.english_title if language == Language.EN_US else payment_record.project.chinese_title),
+                    "project_title": payment_record.project.chinese_title
+                    if role == RoleType.admin
+                    else (
+                        payment_record.project.english_title
+                        if language == Language.EN_US
+                        else payment_record.project.chinese_title
+                    ),
                     "project_slug": payment_record.project.slug,
                 }
                 if payment_record.project
@@ -361,11 +367,21 @@ class PaymentCrud:
         # Add user information to each item if user_id filter is provided
         if role == RoleType.admin:
             for i, payment_record in enumerate(payment_records):
-                items[i]["user"] = {
-                    "user_id": payment_record.user.id if payment_record.user else None,
-                    "username": payment_record.user.username if payment_record.user else None,
-                    "email": payment_record.user.email if payment_record.user else None,
-                } if payment_record.user else None
+                items[i]["user"] = (
+                    {
+                        "user_id": payment_record.user.id
+                        if payment_record.user
+                        else None,
+                        "username": payment_record.user.username
+                        if payment_record.user
+                        else None,
+                        "email": payment_record.user.email
+                        if payment_record.user
+                        else None,
+                    }
+                    if payment_record.user
+                    else None
+                )
 
         # 缓存结果
         cache_payload = {"items": items, "pagination": pagination_metadata}

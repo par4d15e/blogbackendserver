@@ -45,10 +45,7 @@ class ProjectCrud:
         self.logger = logger_manager.get_logger(__name__)
 
     async def _get_tax(self) -> Optional[int]:
-        statement = select(Tax.id).where(
-            Tax.tax_name == "GST",
-            Tax.is_active == True
-        )
+        statement = select(Tax.id).where(Tax.tax_name == "GST", Tax.is_active)
         result = await self.db.execute(statement)
         tax_id = result.scalar_one_or_none()
         if tax_id:
@@ -74,24 +71,34 @@ class ProjectCrud:
         return result.scalar_one_or_none()
 
     async def get_project_by_slug(self, slug: str) -> Optional[Project]:
-        statement = select(Project).options(
-            joinedload(Project.cover),
-            joinedload(Project.project_attachments),
-            joinedload(Project.project_monetization).joinedload(
-                Project_Monetization.tax
-            ),
-        ).where(Project.slug == slug)
+        statement = (
+            select(Project)
+            .options(
+                joinedload(Project.cover),
+                joinedload(Project.project_attachments),
+                joinedload(Project.project_monetization).joinedload(
+                    Project_Monetization.tax
+                ),
+            )
+            .where(Project.slug == slug)
+        )
         result = await self.db.execute(statement)
         return result.scalar_one_or_none()
 
     async def _get_project_by_chinese_title(self, chinese_title: str) -> bool:
-        statement = select(exists(select(Project.id)).where(
-            Project.chinese_title == chinese_title))
+        statement = select(
+            exists(select(Project.id)).where(
+                Project.chinese_title == chinese_title)
+        )
         result = await self.db.execute(statement)
         return bool(result.scalar_one())
 
     async def get_project_lists(
-        self, language: Language, page: int = 1, size: int = 20, published_only: bool = True
+        self,
+        language: Language,
+        page: int = 1,
+        size: int = 20,
+        published_only: bool = True,
     ) -> Tuple[List[Dict[str, Any]], Dict[str, Any]]:
         """
         Get project lists with traditional pagination
@@ -141,18 +148,21 @@ class ProjectCrud:
                     now.year + 1, 1, 1, tzinfo=timezone.utc)
             else:
                 next_month_start = datetime(
-                    now.year, now.month + 1, 1, tzinfo=timezone.utc)
+                    now.year, now.month + 1, 1, tzinfo=timezone.utc
+                )
 
             count_this_month = await self.db.execute(
                 select(func.count(Project.id)).where(
-                    Project.created_at.between(month_start, next_month_start))
+                    Project.created_at.between(month_start, next_month_start)
+                )
             )
             count_this_month = count_this_month.scalar_one_or_none()
 
             # 计算更新的项目数量
             count_updated = await self.db.execute(
                 select(func.count(Project.id)).where(
-                    Project.updated_at.between(month_start, next_month_start))
+                    Project.updated_at.between(month_start, next_month_start)
+                )
             )
             count_updated = count_updated.scalar_one_or_none()
 
@@ -163,7 +173,6 @@ class ProjectCrud:
             {
                 "project_id": project.id,
                 "project_slug": project.slug,
-
                 "cover_url": project.cover.thumbnail_filepath_url
                 if project.cover
                 else None,
@@ -177,24 +186,30 @@ class ProjectCrud:
 
         if published_only is True:
             for i, project in enumerate(items):
-                response_items[i].update({
-                    "project_type": convert_project_type(project.type.name) if language == Language.ZH_CN else project.type.name.capitalize(),
-                    "project_name": project.chinese_title.capitalize()
-                    if language == Language.ZH_CN
-                    else project.english_title.capitalize(),
-                    "project_description": project.chinese_description.capitalize()
-                    if language == Language.ZH_CN
-                    else project.english_description.capitalize(),
-                })
+                response_items[i].update(
+                    {
+                        "project_type": convert_project_type(project.type.name)
+                        if language == Language.ZH_CN
+                        else project.type.name.capitalize(),
+                        "project_name": project.chinese_title.capitalize()
+                        if language == Language.ZH_CN
+                        else project.english_title.capitalize(),
+                        "project_description": project.chinese_description.capitalize()
+                        if language == Language.ZH_CN
+                        else project.english_description.capitalize(),
+                    }
+                )
 
         else:
             for i, project in enumerate(items):
-                response_items[i].update({
-                    "project_type": convert_project_type(project.type.name),
-                    "is_published": project.is_published,
-                    "project_name": project.chinese_title,
-                    "project_description": project.chinese_description,
-                })
+                response_items[i].update(
+                    {
+                        "project_type": convert_project_type(project.type.name),
+                        "is_published": project.is_published,
+                        "project_name": project.chinese_title,
+                        "project_description": project.chinese_description,
+                    }
+                )
 
         # Cache result
         cache_data = offset_paginator.create_response_data(
@@ -232,6 +247,7 @@ class ProjectCrud:
         slug = slugify(english_title, max_length=250)  # 限制在250字符以内，留一些缓冲
 
         import json
+
         content_str = json.dumps(
             chinese_content, sort_keys=True, ensure_ascii=False)
         content_hash = hashlib.sha256(content_str.encode()).hexdigest()
@@ -280,7 +296,10 @@ class ProjectCrud:
 
         # project celery task 来处理English content 的处理
         large_content_translation_task.delay(
-            content=chinese_content, content_type=LargeContentTranslationType.PROJECT, content_id=new_project_id)
+            content=chinese_content,
+            content_type=LargeContentTranslationType.PROJECT,
+            content_id=new_project_id,
+        )
 
         # 清理缓存
         await redis_manager.delete_pattern_async("project_lists:*")
@@ -312,24 +331,30 @@ class ProjectCrud:
         if chinese_title and chinese_title != existing_project.chinese_title:
             english_title = await agent_utils.translate(text=chinese_title)
             # 生成slug并限制长度
-            slug = slugify(english_title, max_length=250)  # 限制在250字符以内，留一些缓冲
+            slug = slugify(
+                english_title, max_length=250
+            )  # 限制在250字符以内，留一些缓冲
         else:
             english_title = existing_project.english_title
             slug = existing_project.slug
 
-        if chinese_description and chinese_description != existing_project.chinese_description:
+        if (
+            chinese_description
+            and chinese_description != existing_project.chinese_description
+        ):
             english_description = await agent_utils.translate(text=chinese_description)
         else:
             english_description = existing_project.english_description
 
         # 计算content_hash
         import json
+
         content_str = json.dumps(
             chinese_content, sort_keys=True, ensure_ascii=False)
         content_hash = hashlib.sha256(content_str.encode()).hexdigest()
 
         # update project
-        result = await self.db.execute(
+        await self.db.execute(
             update(Project)
             .where(Project.id == existing_project.id)
             .values(
@@ -387,7 +412,10 @@ class ProjectCrud:
         # project celery task 来处理English content 的处理
         if existing_project.content_hash != content_hash:
             large_content_translation_task.delay(
-                content=chinese_content, content_type=LargeContentTranslationType.PROJECT, content_id=existing_project.id)
+                content=chinese_content,
+                content_type=LargeContentTranslationType.PROJECT,
+                content_id=existing_project.id,
+            )
 
         # 清理缓存
         await redis_manager.delete_pattern_async("project_lists:*")
@@ -416,16 +444,20 @@ class ProjectCrud:
 
         # 清理缓存
         await redis_manager.delete_pattern_async("project_lists:*")
-        await redis_manager.delete_pattern_async(f"project_details:lang={language}:project_id={project_id}:*")
+        await redis_manager.delete_pattern_async(
+            f"project_details:lang={language}:project_id={project_id}:*"
+        )
 
         return True
 
     async def get_project_details(
-        self, language: Language, project_slug: str, user_id: Optional[int] = None, is_editor: Optional[bool] = False
+        self,
+        language: Language,
+        project_slug: str,
+        user_id: Optional[int] = None,
+        is_editor: Optional[bool] = False,
     ) -> Dict[str, Any]:
-        cache_key = (
-            f"project_details:lang={language}:project_slug={project_slug}:user_id={user_id}:is_editor={is_editor}"
-        )
+        cache_key = f"project_details:lang={language}:project_slug={project_slug}:user_id={user_id}:is_editor={is_editor}"
         cache_result = await redis_manager.get_async(cache_key)
         if cache_result:
             return json.loads(cache_result)
@@ -534,7 +566,7 @@ class ProjectCrud:
         return response
 
     async def get_project_details_seo(
-        self, language: Language, project_slug: int
+        self, language: Language, project_slug: str
     ) -> Dict[str, Any]:
         cache_key = f"project_seo:lang={language}:project_slug={project_slug}"
         cache_result = await redis_manager.get_async(cache_key)

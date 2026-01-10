@@ -50,7 +50,7 @@ class DatabaseConnectionManager:
         exc_type: Optional[type],
         exc_value: Optional[Exception],
         traceback: Optional[Any],
-    ) -> None:
+    ) -> bool:
         """退出上下文管理器"""
         if exc_type is not None:
             logger.error(

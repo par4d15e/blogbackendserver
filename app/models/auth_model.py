@@ -1,5 +1,5 @@
 from enum import IntEnum
-from datetime import datetime, timezone
+from datetime import datetime
 from typing import Optional
 from sqlalchemy import text, ForeignKey
 from sqlalchemy.dialects.mysql import TIMESTAMP

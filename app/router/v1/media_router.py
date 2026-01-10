@@ -181,8 +181,7 @@ async def download_router(
             path=local_file_path,
             filename=file_name,
             media_type="application/octet-stream",
-            headers={
-                "Content-Disposition": f"attachment; filename=\"{file_name}\""},
+            headers={"Content-Disposition": f'attachment; filename="{file_name}"'},
         )
 
     except HTTPException:

@@ -65,7 +65,7 @@ seo_data = [
         "english_description": "A blogroll of inspiring sites and creators worth visiting.",
         "chinese_keywords": "友链, 友情链接, 博客推荐, 创作者, 网站收藏",
         "english_keywords": "Blogroll, Links, Bloggers, Creators, Recommended Sites",
-    }
+    },
 ]
 
 tag_data = [
@@ -225,7 +225,7 @@ media_data = [
         "thumbnail_filepath_url": f"{settings.domain.DOMAIN_URL}/static/image/default_avatar.jpg",
         "watermark_filepath_url": f"{settings.domain.DOMAIN_URL}/static/image/default_avatar.jpg",
         "file_size": 1000,
-    }
+    },
 ]
 
 
@@ -245,7 +245,6 @@ section_data = [
         "english_description": None,
         "is_active": True,
         "parent_id": None,
-
     },
     {
         "seo_id": 1,
@@ -257,7 +256,6 @@ section_data = [
         "english_description": "Notes on coding, ideas, and problem-solving in daily development.",
         "is_active": True,
         "parent_id": 1,
-
     },
     {
         "seo_id": 2,
@@ -269,7 +267,6 @@ section_data = [
         "english_description": "A daily journal of life, reflections, and small inspirations.",
         "is_active": True,
         "parent_id": 1,
-
     },
     {
         "seo_id": 3,
@@ -314,7 +311,7 @@ section_data = [
         "english_description": "A blogroll of inspiring sites and creators worth visiting.",
         "is_active": True,
         "parent_id": None,
-    }
+    },
 ]
 
 board_data = [
@@ -390,7 +387,7 @@ async def check_data_exists() -> bool:
         "sections",
         "boards",
         "friends",
-        "subscribers"
+        "subscribers",
     ]
 
     try:
@@ -401,21 +398,25 @@ async def check_data_exists() -> bool:
                 result = db.execute(text(f"SELECT COUNT(*) FROM {key_table}"))
                 count = result.scalar()
 
-                if count > 0:
+                if count is not None and count > 0:
                     logger.info(
-                        f"Key table '{key_table}' has {count} records, initial data already exists")
+                        f"Key table '{key_table}' has {count} records, initial data already exists"
+                    )
                     return True
 
                 logger.info(
-                    f"Key table '{key_table}' is empty, checking other tables...")
+                    f"Key table '{key_table}' is empty, checking other tables..."
+                )
             except Exception as e:
                 # 如果关键表不存在，说明数据库可能未迁移
                 logger.error(
                     f"Key table '{key_table}' does not exist. "
-                    f"Please run database migrations first. Error: {e}")
+                    f"Please run database migrations first. Error: {e}"
+                )
                 raise Exception(
                     f"Database table '{key_table}' does not exist. "
-                    "Please run database migrations before inserting initial data.")
+                    "Please run database migrations before inserting initial data."
+                )
 
             # 检查其他表是否存在（但不阻止插入，只用于日志记录）
             missing_tables = []
@@ -423,18 +424,21 @@ async def check_data_exists() -> bool:
                 try:
                     result = db.execute(text(f"SELECT COUNT(*) FROM {table}"))
                     count = result.scalar()
-                    if count > 0:
+                    if count is not None and count > 0:
                         logger.info(
-                            f"Table '{table}' has {count} records (non-blocking)")
+                            f"Table '{table}' has {count} records (non-blocking)"
+                        )
                 except Exception as e:
                     missing_tables.append(table)
                     logger.warning(
-                        f"Table '{table}' does not exist or error checking: {e}")
+                        f"Table '{table}' does not exist or error checking: {e}"
+                    )
 
             if missing_tables:
                 logger.warning(
                     f"Some tables are missing: {missing_tables}. "
-                    "This may indicate incomplete database migration.")
+                    "This may indicate incomplete database migration."
+                )
 
             # 关键表为空，允许插入
             logger.info("Key table is empty, ready to insert initial data")
@@ -545,7 +549,8 @@ async def insert_initial_data():
             skipped_tables.append("sections (table not found)")
         else:
             logger.info(
-                f"⏭️  Table 'sections' has {count} records, skipping Section data")
+                f"⏭️  Table 'sections' has {count} records, skipping Section data"
+            )
             skipped_tables.append(f"sections ({count} records)")
 
         # 插入 Board 数据
@@ -594,11 +599,13 @@ async def insert_initial_data():
             logger.info("✅ Inserted Subscriber data")
         elif count == -1:
             logger.warning(
-                "⏭️  Table 'subscribers' does not exist, skipping Subscriber data")
+                "⏭️  Table 'subscribers' does not exist, skipping Subscriber data"
+            )
             skipped_tables.append("subscribers (table not found)")
         else:
             logger.info(
-                f"⏭️  Table 'subscribers' has {count} records, skipping Subscriber data")
+                f"⏭️  Table 'subscribers' has {count} records, skipping Subscriber data"
+            )
             skipped_tables.append(f"subscribers ({count} records)")
 
         # 插入 Tag 数据
@@ -622,7 +629,8 @@ async def insert_initial_data():
         # 总结
         if inserted_tables:
             logger.info(
-                f"✅ Successfully inserted data into: {', '.join(inserted_tables)}")
+                f"✅ Successfully inserted data into: {', '.join(inserted_tables)}"
+            )
         if skipped_tables:
             logger.info(f"⏭️  Skipped tables: {', '.join(skipped_tables)}")
 
@@ -635,6 +643,7 @@ async def insert_initial_data():
         raise
     finally:
         db.close()
+
 
 if __name__ == "__main__":
     asyncio.run(insert_initial_data())

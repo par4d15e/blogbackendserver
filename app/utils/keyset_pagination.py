@@ -1,6 +1,6 @@
 import base64
 from datetime import datetime
-from typing import Optional, Tuple, Any, List, Dict
+from typing import Optional, Tuple, Any, List, Dict, cast
 from sqlmodel import and_, or_
 
 
@@ -143,7 +143,8 @@ class KeysetPaginator:
 
         # 如果 prev_cursor 为 None，从响应中移除该字段以保持简洁
         if prev_cursor is None:
-            response["pagination"].pop("prev_cursor")
+            cast(Dict[str, Any], response["pagination"]).pop(
+                "prev_cursor", None)
 
         return response
 

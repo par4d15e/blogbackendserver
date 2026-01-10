@@ -1,4 +1,5 @@
 import asyncio
+from typing import Optional
 from sqlmodel import select
 from app.schemas.common import NotificationType
 from app.core.logger import logger_manager
@@ -9,14 +10,19 @@ from app.models.user_model import User, RoleType
 from app.core.database.mysql import mysql_manager
 
 
-@celery_app.task(name="notification_task", bind=True, max_retries=3, default_retry_delay=30)
+@celery_app.task(
+    name="notification_task", bind=True, max_retries=3, default_retry_delay=30
+)
 @with_db_init
-def notification_task(self, notification_type: str | NotificationType, message: str) -> None:
+def notification_task(
+    self, notification_type: str | NotificationType, message: str
+) -> Optional[bool]:
     """Notification task"""
     try:
         logger = logger_manager.get_logger(__name__)
         logger.info(
-            f"Notification task - notification_type: {notification_type}, type: {type(notification_type)}")
+            f"Notification task - notification_type: {notification_type}, type: {type(notification_type)}"
+        )
 
         # 处理 Enum 对象或字符串值
         if isinstance(notification_type, NotificationType):
@@ -33,8 +39,9 @@ def notification_task(self, notification_type: str | NotificationType, message: 
 
         # 获取role为admin的用户email
         with mysql_manager.get_sync_db() as session:
-            admin_email = session.execute(select(User.email).where(
-                User.role == RoleType.admin)).first()
+            admin_email = session.execute(
+                select(User.email).where(User.role == RoleType.admin)
+            ).first()
 
             if not admin_email:
                 logger.warning("No admin user found")

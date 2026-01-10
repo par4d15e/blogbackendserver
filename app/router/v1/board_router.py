@@ -61,7 +61,9 @@ async def create_board_comment_router(
         language=language,
     )
     return SuccessResponse(
-        message=get_message("board.createBoardComment.createBoardCommentSuccess", language),
+        message=get_message(
+            "board.createBoardComment.createBoardCommentSuccess", language
+        ),
         data=result,
     )
 

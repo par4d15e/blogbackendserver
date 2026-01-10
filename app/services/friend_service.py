@@ -55,10 +55,7 @@ class FriendService:
         """获取友链列表（分页）"""
 
         if role != RoleType.admin:
-            raise HTTPException(
-                status_code=403,
-                detail="你没有权限访问这个接口"
-            )
+            raise HTTPException(status_code=403, detail="你没有权限访问这个接口")
         return await self.friend_crud.get_friend_lists_by_offset_pagination(
             page=page, size=size
         )

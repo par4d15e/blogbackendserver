@@ -1,3 +1,4 @@
+from typing import Optional, cast
 from redis.asyncio import Redis as AsyncRedis
 from redis.asyncio import from_url as async_from_url
 from redis import Redis as SyncRedis
@@ -11,8 +12,8 @@ class RedisManager:
 
     def __init__(self):
         self.logger = logger_manager.get_logger(__name__)
-        self.async_client: AsyncRedis | None = None
-        self.sync_client: SyncRedis | None = None
+        self.async_client: Optional[AsyncRedis] = None
+        self.sync_client: Optional[SyncRedis] = None
         self.config = settings.redis
 
     async def initialize_async(self) -> None:
@@ -62,13 +63,16 @@ class RedisManager:
     async def get_async_client(self) -> AsyncRedis:
         if not self.async_client:
             await self.initialize_async()
+        # 此时 self.async_client 不为 None
+        assert self.async_client is not None
         return self.async_client
 
-    async def get_async(self, key: str) -> str | None:
+    async def get_async(self, key: str) -> Optional[str]:
         client = await self.get_async_client()
-        return await client.get(key)
+        result = await client.get(key)
+        return result.decode() if isinstance(result, bytes) else result
 
-    async def set_async(self, key: str, value: str, ex: int = None) -> bool:
+    async def set_async(self, key: str, value: str, ex: Optional[int] = None) -> bool:
         client = await self.get_async_client()
         ex = ex or self.config.REDIS_DEFAULT_TTL
         return await client.set(key, value, ex=ex)
@@ -86,10 +90,12 @@ class RedisManager:
         try:
             client = await self.get_async_client()
             await client.ping()
-            self.logger.info("✅ Redis async client connection test successful.")
+            self.logger.info(
+                "✅ Redis async client connection test successful.")
             return True
         except Exception:
-            self.logger.exception("❌ Redis async client connection test failed.")
+            self.logger.exception(
+                "❌ Redis async client connection test failed.")
             raise
 
     # -------------------------------
@@ -99,22 +105,32 @@ class RedisManager:
     def get_sync_client(self) -> SyncRedis:
         if not self.sync_client:
             self.initialize_sync()
+        # 此时 self.sync_client 不为 None
+        assert self.sync_client is not None
         return self.sync_client
 
-    def get_sync(self, key: str) -> str | None:
-        return self.get_sync_client().get(key)
+    def get_sync(self, key: str) -> Optional[str]:
+        result = self.get_sync_client().get(key)
+        if result is None:
+            return None
+        return result.decode() if isinstance(result, bytes) else cast(str, result)
 
-    def set_sync(self, key: str, value: str, ex: int = None) -> bool:
+    def set_sync(self, key: str, value: str, ex: Optional[int] = None) -> bool:
         ex = ex or self.config.REDIS_DEFAULT_TTL
-        return self.get_sync_client().set(key, value, ex=ex)
+        result = self.get_sync_client().set(key, value, ex=ex)
+        return cast(bool, result)
 
     def delete_sync(self, *keys: str) -> int:
-        return self.get_sync_client().delete(*keys)
+        result = self.get_sync_client().delete(*keys)
+        return cast(int, result)
 
     def delete_pattern_sync(self, pattern: str) -> int:
         client = self.get_sync_client()
         keys = client.keys(pattern)
-        return client.delete(*keys) if keys else 0
+        if not keys:
+            return 0
+        result = client.delete(*keys)
+        return cast(int, result)
 
     def sync_test_connection(self) -> bool:
         try:
@@ -123,7 +139,8 @@ class RedisManager:
             self.logger.info("✅ Redis sync client connection test successful.")
             return True
         except Exception:
-            self.logger.exception("❌ Redis sync client connection test failed.")
+            self.logger.exception(
+                "❌ Redis sync client connection test failed.")
             raise
 
     # -------------------------------

@@ -1,12 +1,15 @@
 import os
+from contextlib import asynccontextmanager
+from typing import Any, cast
 import uvicorn
 from fastapi import FastAPI, HTTPException, Request
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, FileResponse
 from fastapi.openapi.utils import get_openapi
+from fastapi.openapi.docs import get_swagger_ui_html, get_redoc_html
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.sessions import SessionMiddleware
+from starlette.middleware import Middleware
 from fastapi.staticfiles import StaticFiles
-from fastapi.openapi.docs import get_swagger_ui_html
 
 
 from app.core.i18n.i18n import get_message
@@ -28,7 +31,7 @@ from app.router.v1 import (
     payment_router,
     project_router,
     analytic_router,
-    subscriber_router
+    subscriber_router,
 )
 
 
@@ -40,7 +43,45 @@ logger_manager.setup()
 logger = logger_manager.get_logger(__name__)
 
 
+# CORS中间件配置
+allow_origins = [
+    x.strip() for x in settings.cors.CORS_ALLOWED_ORIGINS.split(",") if x.strip()
+]
+allow_methods = [
+    x.strip() for x in settings.cors.CORS_ALLOW_METHODS.split(",") if x.strip()
+]
+allow_headers = [
+    x.strip() for x in settings.cors.CORS_ALLOW_HEADERS.split(",") if x.strip()
+]
+allow_credentials = settings.cors.CORS_ALLOW_CREDENTIALS
+expose_headers = [
+    x.strip() for x in settings.cors.CORS_EXPOSE_HEADERS.split(",") if x.strip()
+]
+
+# Session中间件配置
+session_secret_key = settings.csrf.CSRF_SECRET_KEY.get_secret_value()
+
+# 中间件列表（使用 Middleware 类实现类型安全）
+middleware = [
+    Middleware(
+        cast(Any, SessionMiddleware),
+        secret_key=session_secret_key,
+        https_only=True,
+        same_site="lax",
+    ),
+    Middleware(
+        cast(Any, CORSMiddleware),
+        allow_origins=allow_origins,
+        allow_methods=allow_methods,
+        allow_headers=allow_headers,
+        allow_credentials=allow_credentials,
+        expose_headers=expose_headers,
+    ),
+]
+
+
 # 创建生命周期
+@asynccontextmanager
 async def lifespan(_app: FastAPI):
     logger.info("🚩 Starting the application...")
     logger.info(f"🚧 You are Working in {os.getenv('ENV')} Environment")
@@ -70,7 +111,10 @@ async def lifespan(_app: FastAPI):
 # 创建FastAPI实例
 app = FastAPI(
     lifespan=lifespan,
-    title=settings.app.APP_NAME
+    title=settings.app.APP_NAME,
+    middleware=middleware,
+    docs_url=None,  # 禁用默认 docs，使用自定义
+    redoc_url=None,  # 禁用默认 redoc，使用自定义
 )
 
 
@@ -106,39 +150,43 @@ async def general_exception_handler(_request: Request, exc: Exception):
     )
 
 
-# CORS中间件
-# 处理逗号分隔的源列表
-allow_origins = [x.strip()
-                 for x in settings.cors.CORS_ALLOWED_ORIGINS.split(',') if x.strip()]
-allow_methods = [x.strip()
-                 for x in settings.cors.CORS_ALLOW_METHODS.split(',') if x.strip()]
-allow_headers = [x.strip()
-                 for x in settings.cors.CORS_ALLOW_HEADERS.split(',') if x.strip()]
-allow_credentials = settings.cors.CORS_ALLOW_CREDENTIALS
-expose_headers = [x.strip()
-                  for x in settings.cors.CORS_EXPOSE_HEADERS.split(',') if x.strip()]
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=allow_origins,
-    allow_methods=allow_methods,
-    allow_headers=allow_headers,
-    allow_credentials=allow_credentials,
-    expose_headers=expose_headers,
-)
-
-
-# Session中间件
-session_secret_key = settings.csrf.CSRF_SECRET_KEY.get_secret_value()
-app.add_middleware(
-    SessionMiddleware,
-    secret_key=session_secret_key,
-    https_only=True,
-    same_site="lax",
-)
-
-
 # 静态文件
 app.mount("/static", StaticFiles(directory="static"), name="static")
+
+
+# 根路径健康检查
+@app.get("/", tags=["Health"])
+async def root():
+    return {"status": "ok", "message": "Heyxiaoli Backend Server is running"}
+
+
+# Favicon 处理
+@app.get("/favicon.ico", include_in_schema=False)
+async def favicon():
+    favicon_path = "static/image/favicon.ico"
+    if os.path.exists(favicon_path):
+        return FileResponse(favicon_path, media_type="image/x-icon")
+    return JSONResponse(content={}, status_code=204)
+
+
+# 自定义 Swagger UI（使用自定义 favicon）
+@app.get("/docs", include_in_schema=False)
+async def custom_swagger_ui_html():
+    return get_swagger_ui_html(
+        openapi_url="/openapi.json",
+        title=f"{settings.app.APP_NAME} - Swagger UI",
+        swagger_favicon_url="/static/image/favicon.ico?v=2",
+    )
+
+
+# 自定义 ReDoc（使用自定义 favicon）
+@app.get("/redoc", include_in_schema=False)
+async def custom_redoc_html():
+    return get_redoc_html(
+        openapi_url="/openapi.json",
+        title=f"{settings.app.APP_NAME} - ReDoc",
+        redoc_favicon_url="/static/image/favicon.ico?v=2",
+    )
 
 
 # 注册路由
@@ -158,21 +206,61 @@ app.include_router(analytic_router.router, prefix="/api/v1")
 app.include_router(subscriber_router.router, prefix="/api/v1")
 
 
-# OPEN API 文档
-def custom_openapi():
-    if app.openapi_schema:
-        return app.openapi_schema
+# OpenAPI 文档配置
+def custom_openapi(self: FastAPI) -> dict[str, Any]:
+    if self.openapi_schema:
+        return self.openapi_schema
+    
     openapi_schema = get_openapi(
         title=settings.app.APP_NAME,
         version=settings.app.APP_VERSION,
         description=settings.app.APP_DESCRIPTION,
-        routes=app.routes,
+        routes=self.routes,
     )
-    app.openapi_schema = openapi_schema
-    return app.openapi_schema
+    
+    # 添加 Logo
+    openapi_schema["info"]["x-logo"] = {
+        "url": "/static/image/logo.png",
+        "altText": settings.app.APP_NAME,
+    }
+    
+    # 添加联系信息
+    openapi_schema["info"]["contact"] = {
+        "name": "API Support",
+        "url": "https://heyxiaoli.com",
+        "email": "ln729500172@gmail.com",
+    }
+    
+    # 添加许可证信息
+    openapi_schema["info"]["license"] = {
+        "name": "MIT",
+        "url": "https://github.com/ning3739/blogbackendserver?tab=MIT-1-ov-file",
+    }
+    
+    # 自定义标签描述和排序（名称必须与路由中定义的完全匹配）
+    openapi_schema["tags"] = [
+        {"name": "Health", "description": "Health check endpoints"},
+        {"name": "Documentation", "description": "API documentation endpoints"},
+        {"name": "Authentication", "description": "User authentication and authorization"},
+        {"name": "User", "description": "User profile and account management"},
+        {"name": "Blog", "description": "Blog post CRUD operations"},
+        {"name": "Section", "description": "Blog sections and categories"},
+        {"name": "Tag", "description": "Tag management for blog posts"},
+        {"name": "Media", "description": "Media file upload and management"},
+        {"name": "Board", "description": "Message board operations"},
+        {"name": "Friend", "description": "Friend links management"},
+        {"name": "Project", "description": "Project portfolio showcase"},
+        {"name": "Payment", "description": "Stripe payment processing"},
+        {"name": "Seo", "description": "SEO metadata configuration"},
+        {"name": "Analytic", "description": "Analytics and statistics data"},
+        {"name": "Subscriber", "description": "Newsletter subscriber management"},
+    ]
+    
+    self.openapi_schema = openapi_schema
+    return self.openapi_schema
 
 
-app.openapi = custom_openapi
+object.__setattr__(app, "openapi", custom_openapi.__get__(app, type(app)))
 
 
 # 启动FastAPI应用

@@ -29,19 +29,19 @@ def _parse_database_url(database_url: str) -> dict:
         parsed = urlparse(database_url)
 
         # 处理 mysql:// 或 mysql+pymysql:// 等格式
-        if parsed.scheme.startswith('mysql'):
-            host = parsed.hostname or 'localhost'
+        if parsed.scheme.startswith("mysql"):
+            host = parsed.hostname or "localhost"
             port = parsed.port or 3306
-            user = parsed.username or 'root'
-            password = parsed.password or ''
-            database = parsed.path.lstrip('/') if parsed.path else 'blog'
+            user = parsed.username or "root"
+            password = parsed.password or ""
+            database = parsed.path.lstrip("/") if parsed.path else "blog"
 
             return {
-                'host': host,
-                'port': port,
-                'user': user,
-                'password': password,
-                'database': database
+                "host": host,
+                "port": port,
+                "user": user,
+                "password": password,
+                "database": database,
             }
         else:
             raise ValueError(f"不支持的数据库类型: {parsed.scheme}")
@@ -64,34 +64,30 @@ def _dump_database(db_config: dict, output_file: Path) -> bool:
     try:
         # 构建 mysqldump 命令
         cmd = [
-            'mysqldump',
+            "mysqldump",
             f"--host={db_config['host']}",
             f"--port={db_config['port']}",
             f"--user={db_config['user']}",
-            '--single-transaction',  # 保证数据一致性
-            '--routines',  # 包含存储过程和函数
-            '--triggers',  # 包含触发器
-            '--events',  # 包含事件
-            '--quick',  # 快速模式
-            '--lock-tables=false',  # 不锁定表
-            db_config['database']
+            "--single-transaction",  # 保证数据一致性
+            "--routines",  # 包含存储过程和函数
+            "--triggers",  # 包含触发器
+            "--events",  # 包含事件
+            "--quick",  # 快速模式
+            "--lock-tables=false",  # 不锁定表
+            db_config["database"],
         ]
 
         # 设置密码环境变量（更安全）
         env = os.environ.copy()
-        if db_config['password']:
-            env['MYSQL_PWD'] = db_config['password']
+        if db_config["password"]:
+            env["MYSQL_PWD"] = db_config["password"]
 
         logger.info(f"开始导出数据库: {db_config['database']}")
 
         # 执行 mysqldump
-        with open(output_file, 'wb') as f:
-            result = subprocess.run(
-                cmd,
-                stdout=f,
-                stderr=subprocess.PIPE,
-                env=env,
-                check=True
+        with open(output_file, "wb") as f:
+            subprocess.run(
+                cmd, stdout=f, stderr=subprocess.PIPE, env=env, check=True
             )
 
         # 检查文件大小
@@ -127,8 +123,8 @@ def _compress_file(input_file: Path, output_file: Path) -> bool:
     try:
         logger.info(f"开始压缩文件: {input_file.name}")
 
-        with open(input_file, 'rb') as f_in:
-            with gzip.open(output_file, 'wb', compresslevel=6) as f_out:
+        with open(input_file, "rb") as f_in:
+            with gzip.open(output_file, "wb", compresslevel=6) as f_out:
                 f_out.writelines(f_in)
 
         original_size = input_file.stat().st_size
@@ -168,28 +164,30 @@ def _upload_to_s3(local_file: Path, s3_key: str) -> bool:
 
     try:
         logger.info(f"准备上传文件到 S3: {local_file} -> {s3_key}")
-        logger.info(f"AWS配置检查:")
+        logger.info("AWS配置检查:")
         logger.info(f"  - Bucket: {settings.aws.AWS_BUCKET_NAME}")
         logger.info(f"  - Region: {settings.aws.AWS_REGION}")
-        logger.info(f"  - Access Key配置: {'是' if settings.aws.AWS_ACCESS_KEY_ID else '否'}")
-        
+        logger.info(
+            f"  - Access Key配置: {'是' if settings.aws.AWS_ACCESS_KEY_ID else '否'}"
+        )
+
         with create_s3_bucket() as s3_bucket:
-            logger.info(
-                f"S3 bucket 连接成功，bucket: {settings.aws.AWS_BUCKET_NAME}")
+            logger.info(f"S3 bucket 连接成功，bucket: {settings.aws.AWS_BUCKET_NAME}")
 
             # 上传文件到S3
             upload_success = s3_bucket.upload_files(
                 file_paths=str(local_file),
                 s3_keys=s3_key,
                 metadata_list={
-                    'backup_type': 'database',
-                    'backup_date': datetime.now().isoformat(),
+                    "backup_type": "database",
+                    "backup_date": datetime.now().isoformat(),
                 },
-                verify=True  # 启用验证以确保上传成功
+                verify=True,  # 启用验证以确保上传成功
             )
 
             logger.info(
-                f"upload_files 调用完成，返回值: {upload_success} (类型: {type(upload_success)})")
+                f"upload_files 调用完成，返回值: {upload_success} (类型: {type(upload_success)})"
+            )
 
             # 判断上传是否成功
             # upload_files 返回 bool (单文件) 或 Dict[str, bool] (多文件)
@@ -216,7 +214,7 @@ def _upload_to_s3(local_file: Path, s3_key: str) -> bool:
     except Exception as e:
         logger.error(
             f"上传到 S3 失败: {s3_key}, 文件: {local_file}, 大小: {file_size} bytes, 错误: {e}",
-            exc_info=True
+            exc_info=True,
         )
         return False
 
@@ -234,16 +232,20 @@ def _list_backup_files(s3_bucket, prefix: str) -> List[dict]:
     """
     try:
         files = []
-        paginator = s3_bucket.s3_client.get_paginator('list_objects_v2')
+        paginator = s3_bucket.s3_client.get_paginator("list_objects_v2")
 
-        for page in paginator.paginate(Bucket=settings.aws.AWS_BUCKET_NAME, Prefix=prefix):
-            if 'Contents' in page:
-                for obj in page['Contents']:
-                    files.append({
-                        'Key': obj['Key'],
-                        'LastModified': obj['LastModified'],
-                        'Size': obj.get('Size', 0)
-                    })
+        for page in paginator.paginate(
+            Bucket=settings.aws.AWS_BUCKET_NAME, Prefix=prefix
+        ):
+            if "Contents" in page:
+                for obj in page["Contents"]:
+                    files.append(
+                        {
+                            "Key": obj["Key"],
+                            "LastModified": obj["LastModified"],
+                            "Size": obj.get("Size", 0),
+                        }
+                    )
 
         return files
     except ClientError as e:
@@ -272,7 +274,7 @@ def _cleanup_old_backups(database_name: str, retention_days: int) -> None:
 
         with create_s3_bucket() as s3_bucket:
             # 列出所有备份文件
-            prefix = f"backups/database/"
+            prefix = "backups/database/"
             backup_files = _list_backup_files(s3_bucket, prefix)
 
             if not backup_files:
@@ -282,8 +284,8 @@ def _cleanup_old_backups(database_name: str, retention_days: int) -> None:
             # 筛选需要删除的文件（根据数据库名称和日期）
             files_to_delete = []
             for file_info in backup_files:
-                key = file_info['Key']
-                last_modified = file_info['LastModified']
+                key = file_info["Key"]
+                last_modified = file_info["LastModified"]
 
                 # 检查是否匹配数据库名称
                 if database_name and database_name not in key:
@@ -297,7 +299,8 @@ def _cleanup_old_backups(database_name: str, retention_days: int) -> None:
                     # 如果是字符串或其他格式，尝试解析
                     try:
                         file_date = datetime.fromisoformat(
-                            str(last_modified).replace('Z', '+00:00'))
+                            str(last_modified).replace("Z", "+00:00")
+                        )
                     except (ValueError, AttributeError):
                         logger.warning(f"无法解析文件日期: {key}, 跳过")
                         continue
@@ -305,8 +308,7 @@ def _cleanup_old_backups(database_name: str, retention_days: int) -> None:
                 # 转换为本地时区（UTC）进行比较
                 if file_date.tzinfo:
                     # 转换为 UTC 时区，然后移除时区信息以便比较
-                    file_date = file_date.astimezone(
-                        timezone.utc).replace(tzinfo=None)
+                    file_date = file_date.astimezone(timezone.utc).replace(tzinfo=None)
 
                 if file_date < cutoff_date:
                     files_to_delete.append(key)
@@ -319,14 +321,14 @@ def _cleanup_old_backups(database_name: str, retention_days: int) -> None:
 
             # 批量删除
             deletion_results = s3_bucket.delete_files(
-                s3_keys=files_to_delete,
-                max_workers=5
+                s3_keys=files_to_delete, max_workers=5
             )
 
             # 统计删除结果
             if isinstance(deletion_results, dict):
                 success_count = sum(
-                    1 for success in deletion_results.values() if success)
+                    1 for success in deletion_results.values() if success
+                )
                 failed_count = len(deletion_results) - success_count
                 logger.info(
                     f"清理完成: 成功删除 {success_count} 个文件，"
@@ -349,9 +351,7 @@ def _cleanup_old_backups(database_name: str, retention_days: int) -> None:
 )
 @with_db_init
 def backup_database_task(
-    self,
-    database_name: Optional[str] = None,
-    retention_days: int = 30
+    self, database_name: Optional[str] = None, retention_days: int = 30
 ) -> dict:
     """
     备份数据库到 S3
@@ -372,17 +372,17 @@ def backup_database_task(
         db_config = _parse_database_url(database_url)
 
         if database_name:
-            db_config['database'] = database_name
+            db_config["database"] = database_name
 
         logger.info(f"开始备份数据库: {db_config['database']}")
 
         # 2. 创建临时目录
-        temp_dir = Path('/tmp/backups')
+        temp_dir = Path("/tmp/backups")
         temp_dir.mkdir(parents=True, exist_ok=True)
 
         # 3. 生成文件名
-        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-        db_name = db_config['database']
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        db_name = db_config["database"]
         sql_file = temp_dir / f"{db_name}_backup_{timestamp}.sql"
         gz_file = temp_dir / f"{db_name}_backup_{timestamp}.sql.gz"
 
@@ -395,7 +395,7 @@ def backup_database_task(
             raise Exception("文件压缩失败")
 
         # 6. 上传到 S3
-        date_path = datetime.now().strftime('%Y/%m/%d')
+        date_path = datetime.now().strftime("%Y/%m/%d")
         s3_key = f"backups/database/{date_path}/{db_name}_backup_{timestamp}.sql.gz"
 
         # 检查压缩文件是否存在
@@ -404,11 +404,14 @@ def backup_database_task(
 
         gz_file_size = gz_file.stat().st_size
         logger.info(
-            f"准备上传文件: {gz_file} (大小: {gz_file_size / 1024 / 1024:.2f} MB)")
+            f"准备上传文件: {gz_file} (大小: {gz_file_size / 1024 / 1024:.2f} MB)"
+        )
 
         if not _upload_to_s3(gz_file, s3_key):
             # 记录更详细的错误信息
-            error_msg = f"上传到 S3 失败: {s3_key}, 文件: {gz_file}, 大小: {gz_file_size} bytes"
+            error_msg = (
+                f"上传到 S3 失败: {s3_key}, 文件: {gz_file}, 大小: {gz_file_size} bytes"
+            )
             logger.error(error_msg)
             raise Exception(error_msg)
 
@@ -425,12 +428,12 @@ def backup_database_task(
                 logger.warning(f"清理旧备份文件失败: {cleanup_error}")
 
         result = {
-            'success': True,
-            'database': db_name,
-            's3_key': s3_key,
-            'timestamp': timestamp,
-            'retention_days': retention_days,
-            'message': '备份成功'
+            "success": True,
+            "database": db_name,
+            "s3_key": s3_key,
+            "timestamp": timestamp,
+            "retention_days": retention_days,
+            "message": "备份成功",
         }
 
         logger.info(f"✅ 备份完成: {s3_key}")
@@ -454,8 +457,8 @@ def backup_database_task(
 
         # 超过重试次数，返回失败结果
         return {
-            'success': False,
-            'database': database_name or 'unknown',
-            'error': str(e),
-            'message': '备份失败'
+            "success": False,
+            "database": database_name or "unknown",
+            "error": str(e),
+            "message": "备份失败",
         }

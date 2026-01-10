@@ -2,6 +2,7 @@ from typing import Dict, Any, List, Optional, Tuple
 from fastapi import Depends
 from app.crud.user_crud import UserCrud, get_user_crud
 from app.core.i18n.i18n import Language
+from app.models.user_model import RoleType
 
 
 class UserService:
@@ -31,7 +32,7 @@ class UserService:
         language: Language,
         page: int = 1,
         size: int = 20,
-        role: Optional[int] = None,
+        role: Optional[RoleType] = None,
     ) -> Tuple[List[Dict[str, Any]], Dict[str, Any]]:
         """Get all users with traditional pagination"""
         items, pagination_metadata = await self.user_crud.get_user_lists(
@@ -40,7 +41,7 @@ class UserService:
         return items, pagination_metadata
 
     async def delete_user(
-        self, user_id: int, role: int, current_user_id: int, language: Language
+        self, user_id: int, role: RoleType, current_user_id: int, language: Language
     ) -> bool:
         """Delete user by id"""
         await self.user_crud.delete_user(
@@ -56,7 +57,7 @@ class UserService:
         user_id: int,
         is_active: bool,
         current_user_id: int,
-        role: int,
+        role: RoleType,
         language: Language,
     ) -> bool:
         """Enable or disable user by id"""

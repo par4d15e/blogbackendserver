@@ -1,5 +1,5 @@
 from enum import IntEnum
-from datetime import datetime, timezone
+from datetime import datetime
 from typing import TYPE_CHECKING, Optional, List
 from sqlalchemy import text, ForeignKey
 from sqlalchemy.dialects.mysql import TIMESTAMP
@@ -48,8 +48,7 @@ class Media(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     uuid: str = Field(nullable=False, max_length=36, unique=True)
     user_id: int = Field(
-        sa_column=Column(ForeignKey(
-            "users.id", ondelete="CASCADE"), nullable=False)
+        sa_column=Column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     )
     type: MediaType = Field(nullable=False)
     is_avatar: bool = Field(

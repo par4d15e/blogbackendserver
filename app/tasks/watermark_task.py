@@ -2,7 +2,7 @@ import os
 import subprocess
 import tempfile
 from pathlib import Path
-from typing import Union, List
+from typing import Union, List, Optional
 from app.core.celery import celery_app, with_db_init
 from app.core.logger import logger_manager
 from app.utils.s3_bucket import create_s3_bucket
@@ -13,7 +13,7 @@ logger = logger_manager.get_logger(__name__)
 
 
 def generate_image_watermark(
-    input_paths: Union[str, Path, List[Union[str, Path]]],
+    input_paths: Union[str, Path, List[str], List[Path], List[Union[str, Path]]],
     output_dir: Union[str, Path],
     text: str,
     font_size: int = 36,
@@ -126,8 +126,10 @@ def generate_image_watermark(
             pass
 
         # 转义文本中的特殊字符
-        escaped_text = input_text.replace("\\", "\\\\").replace(
-            ":", "\\:").replace("'", "\\'")
+        escaped_text = (
+            input_text.replace("\\", "\\\\").replace(
+                ":", "\\:").replace("'", "\\'")
+        )
 
         # 简化 filter：直接在右上角添加水印文字
         filter_complex = (
@@ -166,14 +168,14 @@ def generate_image_watermark(
 
 
 def generate_video_watermark(
-    input_paths: Union[str, Path, List[Union[str, Path]]],
+    input_paths: Union[str, Path, List[str], List[Path], List[Union[str, Path]]],
     output_dir: Union[str, Path],
     text: str,
     font_size: int = 60,
     font_color: str = "white",
     opacity: float = 0.15,
     start_time: float = 0.0,
-    duration: float = None,
+    duration: Optional[float] = None,
 ):
     """
     为视频添加文字水印并转换为 MP4，支持单个视频或视频列表。
@@ -315,8 +317,10 @@ def generate_video_watermark(
         # 使用 drawtext 直接在右上角绘制，无需复杂的 overlay
         # 简化 filter：直接缩放并添加右上角水印，无需旋转和平铺
         # 转义文本中的特殊字符，避免 ffmpeg 命令解析错误
-        escaped_text = input_text.replace("\\", "\\\\").replace(
-            ":", "\\:").replace("'", "\\'")
+        escaped_text = (
+            input_text.replace("\\", "\\\\").replace(
+                ":", "\\:").replace("'", "\\'")
+        )
         filter_complex = (
             f"[0:v]{scale_expr},"
             f"scale=trunc(iw/2)*2:trunc(ih/2)*2:flags=fast_bilinear,"
@@ -494,7 +498,7 @@ def generate_video_watermark_task(
     font_color: str = "white",
     opacity: float = 0.15,
     start_time: float = 0.0,
-    duration: float = None,
+    duration: Optional[float] = None,
 ) -> None:
     try:
         # 确保输入为本地文件

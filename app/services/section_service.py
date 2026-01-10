@@ -10,11 +10,11 @@ class SectionService:
         self.section_crud = section_crud
         self.logger = logger_manager.get_logger(__name__)
 
-    async def get_section_lists(self, language: str) -> List[Dict[str, Any]]:
+    async def get_section_lists(self, language: Language) -> List[Dict[str, Any]]:
         return await self.section_crud.get_section_lists(language=language)
 
     async def get_section_seo_by_slug(
-        self, slug: str, language: str
+        self, slug: str, language: Language
     ) -> Optional[Dict[str, Any]]:
         return await self.section_crud.get_section_seo_by_slug(
             slug=slug, language=language
@@ -34,7 +34,7 @@ class SectionService:
         chinese_title: str,
         chinese_description: str,
         role: str,
-        language: str,
+        language: Language,
         is_active: Optional[bool] = True,
     ) -> bool:
         return await self.section_crud.update_section(

@@ -28,14 +28,11 @@ class MediaCrud:
             Media.id == media_id,
         ]
         if user_id:
-            filter_conditions.append(Media.user_id == user_id,
-                                     )
+            filter_conditions.append(
+                Media.user_id == user_id,
+            )
 
-        statement = (
-            select(Media)
-            .options(lazyload("*"))
-            .where(*filter_conditions)
-        )
+        statement = select(Media).options(lazyload("*")).where(*filter_conditions)
         result = await self.db.execute(statement)
         return result.scalar_one_or_none()
 
@@ -49,8 +46,7 @@ class MediaCrud:
     ) -> Tuple[List[Dict[str, Any]], Dict[str, Any]]:
         # 验证分页参数
         try:
-            page, size = offset_paginator.validate_pagination_params(
-                page, size)
+            page, size = offset_paginator.validate_pagination_params(page, size)
         except ValueError:
             raise HTTPException(
                 status_code=400,
@@ -66,8 +62,8 @@ class MediaCrud:
         # 构建查询条件
         where_conditions = [
             Media.user_id == user_id,
-            Media.is_avatar == False,
-            Media.is_content_audio == False,
+            not Media.is_avatar,
+            not Media.is_content_audio,
         ]
 
         # 只有当media_type不为None时才添加类型过滤条件
@@ -75,11 +71,7 @@ class MediaCrud:
             where_conditions.append(Media.type == media_type)
 
         # 构建查询语句 - 过滤掉头像文件
-        base_stmt = (
-            select(Media)
-            .options(lazyload("*"))
-            .where(*where_conditions)
-        )
+        base_stmt = select(Media).options(lazyload("*")).where(*where_conditions)
 
         # 构建计数语句
         count_stmt = select(func.count(Media.id)).where(*where_conditions)
@@ -94,13 +86,11 @@ class MediaCrud:
         if total_count == 0:
             raise HTTPException(
                 status_code=404,
-                detail=get_message(
-                    key="media.common.mediaNotFound", lang=language),
+                detail=get_message(key="media.common.mediaNotFound", lang=language),
             )
 
         # 应用排序和分页
-        base_stmt = base_stmt.order_by(
-            Media.created_at.desc(), Media.id.desc())
+        base_stmt = base_stmt.order_by(Media.created_at.desc(), Media.id.desc())
         base_stmt = offset_paginator.apply_pagination(base_stmt, page, size)
 
         # 执行查询
@@ -117,21 +107,19 @@ class MediaCrud:
         current_year = datetime.now().year
 
         # 查询用户所有媒体文件中本月新增的数量
-        this_month_count_stmt = (
-            select(func.count(Media.id))
-            .where(
-                Media.user_id == user_id,
-                Media.is_avatar == False,
-                Media.is_content_audio == False,
-                func.extract('year', Media.created_at) == current_year,
-                func.extract('month', Media.created_at) == current_month,
-            )
+        this_month_count_stmt = select(func.count(Media.id)).where(
+            Media.user_id == user_id,
+            not Media.is_avatar,
+            not Media.is_content_audio,
+            func.extract("year", Media.created_at) == current_year,
+            func.extract("month", Media.created_at) == current_month,
         )
 
         # 只有当media_type不为None时才添加类型过滤条件
         if media_type is not None:
             this_month_count_stmt = this_month_count_stmt.where(
-                Media.type == media_type)
+                Media.type == media_type
+            )
 
         this_month_count_result = await self.db.execute(this_month_count_stmt)
         this_month_count = this_month_count_result.scalar() or 0
@@ -185,16 +173,15 @@ class MediaCrud:
         if not original_filepath_url:
             raise HTTPException(
                 status_code=404,
-                detail=get_message(
-                    key="media.common.mediaNotFound", lang=language),
+                detail=get_message(key="media.common.mediaNotFound", lang=language),
             )
 
-        if is_avatar == True:
+        if is_avatar:
             # 删除掉旧的avatar
             await self.db.execute(
                 delete(Media).where(
                     Media.user_id == user_id,
-                    Media.is_avatar == True,
+                    Media.is_avatar,
                 )
             )
 
@@ -231,8 +218,7 @@ class MediaCrud:
         if not media:
             raise HTTPException(
                 status_code=404,
-                detail=get_message(
-                    key="media.common.mediaNotFound", lang=language),
+                detail=get_message(key="media.common.mediaNotFound", lang=language),
             )
 
         # 删除数据库中的记录
@@ -245,9 +231,7 @@ class MediaCrud:
 
         return True
 
-    async def download_media_from_s3(
-        self, media_id: int, language: Language
-    ):
+    async def download_media_from_s3(self, media_id: int, language: Language):
         """
         获取媒体文件下载URL
         简化参数，只使用media_id
@@ -257,8 +241,7 @@ class MediaCrud:
         if not media:
             raise HTTPException(
                 status_code=404,
-                detail=get_message(
-                    key="media.common.mediaNotFound", lang=language),
+                detail=get_message(key="media.common.mediaNotFound", lang=language),
             )
 
         # 原文件url

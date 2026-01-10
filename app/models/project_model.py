@@ -1,5 +1,5 @@
 from enum import IntEnum
-from datetime import datetime, timezone
+from datetime import datetime
 from typing import TYPE_CHECKING, Optional, List, Dict, Any
 from sqlalchemy import text, JSON, ForeignKey
 from sqlalchemy.dialects.mysql import TIMESTAMP
@@ -44,31 +44,25 @@ class Project(SQLModel, table=True):
     type: ProjectType = Field(nullable=False, default=ProjectType.web)
     section_id: Optional[int] = Field(
         default=None,
-        sa_column=Column(ForeignKey(
-            "sections.id", ondelete="SET NULL"), nullable=True),
+        sa_column=Column(ForeignKey("sections.id", ondelete="SET NULL"), nullable=True),
     )
     seo_id: Optional[int] = Field(
         default=None,
-        sa_column=Column(
-            ForeignKey("seo.id", ondelete="SET NULL"), nullable=True
-        ),
+        sa_column=Column(ForeignKey("seo.id", ondelete="SET NULL"), nullable=True),
     )
     cover_id: Optional[int] = Field(
         default=None,
-        sa_column=Column(ForeignKey(
-            "media.id", ondelete="SET NULL"), nullable=True),
+        sa_column=Column(ForeignKey("media.id", ondelete="SET NULL"), nullable=True),
     )
     is_published: bool = Field(nullable=False)
     chinese_title: str = Field(max_length=200, nullable=True, unique=True)
-    english_title: Optional[str] = Field(
-        default=None, max_length=200, nullable=True)
+    english_title: Optional[str] = Field(default=None, max_length=200, nullable=True)
     slug: str = Field(max_length=300, nullable=False, unique=True)
     chinese_description: str = Field(max_length=300, nullable=False)
     english_description: Optional[str] = Field(
         default=None, max_length=300, nullable=True
     )
-    chinese_content: Dict[str, Any] = Field(
-        sa_column=Column(JSON, nullable=False))
+    chinese_content: Dict[str, Any] = Field(sa_column=Column(JSON, nullable=False))
     english_content: Optional[Dict[str, Any]] = Field(
         default=None, sa_column=Column(JSON, nullable=True)
     )
@@ -138,12 +132,10 @@ class Project_Attachment(SQLModel, table=True):
 
     id: Optional[int] = Field(default=None, primary_key=True)
     project_id: int = Field(
-        sa_column=Column(ForeignKey(
-            "projects.id", ondelete="CASCADE"), nullable=False)
+        sa_column=Column(ForeignKey("projects.id", ondelete="CASCADE"), nullable=False)
     )
     attachment_id: int = Field(
-        sa_column=Column(ForeignKey(
-            "media.id", ondelete="CASCADE"), nullable=False)
+        sa_column=Column(ForeignKey("media.id", ondelete="CASCADE"), nullable=False)
     )
     created_at: datetime = Field(
         nullable=False,
@@ -181,13 +173,11 @@ class Project_Monetization(SQLModel, table=True):
 
     id: Optional[int] = Field(default=None, primary_key=True)
     project_id: int = Field(
-        sa_column=Column(ForeignKey(
-            "projects.id", ondelete="CASCADE"), nullable=False)
+        sa_column=Column(ForeignKey("projects.id", ondelete="CASCADE"), nullable=False)
     )
     tax_id: Optional[int] = Field(
         default=None,
-        sa_column=Column(ForeignKey(
-            "taxes.id", ondelete="SET NULL"), nullable=True),
+        sa_column=Column(ForeignKey("taxes.id", ondelete="SET NULL"), nullable=True),
     )
     price: float = Field(nullable=False, default=0.0)
     created_at: datetime = Field(

@@ -28,5 +28,4 @@ class CelerySettings(EnvBaseSettings):
         default=3, description="Maximum number of retries for a task"
     )
     CELERY_TIMEZONE: str = Field(default="UTC", description="Celery timezone")
-    CELERY_ENABLE_UTC: bool = Field(
-        default=True, description="Enable UTC for Celery")
+    CELERY_ENABLE_UTC: bool = Field(default=True, description="Enable UTC for Celery")

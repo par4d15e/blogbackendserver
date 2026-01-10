@@ -2,15 +2,14 @@ import re
 import subprocess
 import tempfile
 from pathlib import Path
-from typing import Dict, Literal
+from typing import Any, Dict, Union, cast
 from fastapi import HTTPException
 from dashscope import Generation
 import azure.cognitiveservices.speech as speechsdk
 from app.core.logger import logger_manager
 
 from app.core.config.settings import settings
-
-Language = Literal["zh", "en"]
+from app.core.i18n.i18n import Language
 
 
 class AgentUtils:
@@ -46,14 +45,14 @@ class AgentUtils:
         # \s 匹配所有空白字符，包括空格、制表符、换行符等
         # 但保留换行符，只处理水平空白
         text = re.sub(
-            r'[\t\u00A0\u1680\u2000-\u200B\u202F\u205F\u3000]+', ' ', text)
+            r"[\t\u00A0\u1680\u2000-\u200B\u202F\u205F\u3000]+", " ", text)
 
         # 2. 将多个连续的标准空格替换为单个空格
-        text = re.sub(r' {2,}', ' ', text)
+        text = re.sub(r" {2,}", " ", text)
 
         # 3. 确保标点符号前没有空格，后面有空格（除了句末）
-        text = re.sub(r'\s+([,.!?;:])', r'\1', text)
-        text = re.sub(r'([,.!?;:])(?!\s|$)', r'\1 ', text)
+        text = re.sub(r"\s+([,.!?;:])", r"\1", text)
+        text = re.sub(r"([,.!?;:])(?!\s|$)", r"\1 ", text)
 
         # 4. 移除行首行尾的空格
         text = text.strip()
@@ -86,17 +85,20 @@ class AgentUtils:
     def synthesize(
         self,
         text: str,
-        language: Language = "zh",
+        language: Language = Language.ZH_CN,
     ) -> Dict[str, str]:
         try:
             # 配置 Azure Speech SDK
             speech_config = speechsdk.SpeechConfig(
-                subscription=self.tts_api_key,
-                region=self.tts_region
+                subscription=self.tts_api_key, region=self.tts_region
             )
 
-            # 根据语言设置语音
-            voice_name = "zh-CN-XiaoxiaoNeural" if language == "zh" else "en-US-AvaMultilingualNeural"
+            # 根据语言设置语音（使用枚举值进行比较）
+            voice_name = (
+                "zh-CN-XiaoxiaoNeural"
+                if language == Language.ZH_CN or language.value == "zh"
+                else "en-US-AvaMultilingualNeural"
+            )
             speech_config.speech_synthesis_voice_name = voice_name
 
             # 设置输出格式为 MP3
@@ -106,8 +108,7 @@ class AgentUtils:
 
             # 创建语音合成器（不需要音频输出配置，直接获取音频数据）
             synthesizer = speechsdk.SpeechSynthesizer(
-                speech_config=speech_config
-            )
+                speech_config=speech_config)
 
             # 执行语音合成
             result = synthesizer.speak_text_async(text).get()
@@ -119,7 +120,8 @@ class AgentUtils:
             elif result.reason == speechsdk.ResultReason.Canceled:
                 cancellation_details = result.cancellation_details
                 raise Exception(
-                    f"Speech synthesis canceled: {cancellation_details.reason}")
+                    f"Speech synthesis canceled: {cancellation_details.reason}"
+                )
             else:
                 raise Exception(
                     f"Speech synthesis failed with reason: {result.reason}")
@@ -136,13 +138,15 @@ class AgentUtils:
                 mp3_path = mp3_temp.name
         except Exception as exc:
             raise HTTPException(
-                status_code=400, detail=f"Failed to save audio data: {exc}")
+                status_code=400, detail=f"Failed to save audio data: {exc}"
+            )
 
         # ====== 使用 FFmpeg 直接转换 MP3 到 Opus ======
         try:
             # 1. MP3文件已经创建好了，使用现有的 mp3_path
-            # 2. 创建Opus临时文件路径（注意：NamedTemporaryFile在Windows上无法二次打开）
-            opus_path = tempfile.mktemp(suffix=".opus")
+            # 2. 创建Opus临时文件路径（使用 NamedTemporaryFile(delete=False) 替代 mktemp）
+            with tempfile.NamedTemporaryFile(suffix=".opus", delete=False) as opus_temp:
+                opus_path = opus_temp.name
 
             # 3. 调用FFmpeg进行转换
             ffmpeg_cmd = [
@@ -194,12 +198,12 @@ class AgentUtils:
             if "mp3_path" in locals():
                 try:
                     Path(mp3_path).unlink(missing_ok=True)
-                except:
+                except OSError:
                     pass
             if "opus_path" in locals() and Path(opus_path).exists():
                 try:
                     Path(opus_path).unlink(missing_ok=True)
-                except:
+                except OSError:
                     pass
 
             raise HTTPException(
@@ -249,10 +253,10 @@ class AgentUtils:
             response = Generation.call(
                 model=self.translation_model,
                 api_key=self.api_key,
-                messages=[
+                messages=cast(Any, [
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": text},
-                ],
+                ]),
                 max_tokens=self.translation_max_tokens,
                 temperature=self.translation_temperature,
                 top_p=self.translation_top_p,
@@ -273,8 +277,8 @@ class AgentUtils:
             # 提取翻译结果
             try:
                 if hasattr(response, "output") and hasattr(response.output, "choices"):
-                    translated_text = response.output.choices[0].message.content.strip(
-                    )
+                    choices = cast(Any, response.output.choices)
+                    translated_text = choices[0].message.content.strip()
                     if not translated_text:
                         raise ValueError("Empty translation result")
 
@@ -339,16 +343,18 @@ class AgentUtils:
             6. Keep the [SEGMENT_SEP] separator EXACTLY as is in your output
             """
 
-            user_prompt = f"Translate the following Chinese segments to English:\n\n{batch_text}"
+            user_prompt = (
+                f"Translate the following Chinese segments to English:\n\n{batch_text}"
+            )
 
             # 调用Qwen API进行批量翻译
             response = Generation.call(
                 model=self.translation_model,
                 api_key=self.api_key,
-                messages=[
+                messages=cast(Any, [
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_prompt},
-                ],
+                ]),
                 max_tokens=self.translation_max_tokens * 2,  # 批量翻译需要更多tokens
                 temperature=self.translation_temperature,
                 top_p=self.translation_top_p,
@@ -369,8 +375,8 @@ class AgentUtils:
             # 提取翻译结果
             try:
                 if hasattr(response, "output") and hasattr(response.output, "choices"):
-                    translated_text = response.output.choices[0].message.content.strip(
-                    )
+                    choices = cast(Any, response.output.choices)
+                    translated_text = choices[0].message.content.strip()
                     if not translated_text:
                         raise ValueError("Empty translation result")
 
@@ -384,14 +390,17 @@ class AgentUtils:
                     # 验证段落数量是否匹配
                     if len(translated_segments) != len(non_empty_segments):
                         self.logger.warning(
-                            f"Segment count mismatch. Expected {len(non_empty_segments)}, got {len(translated_segments)}")
+                            f"Segment count mismatch. Expected {len(non_empty_segments)}, got {len(translated_segments)}"
+                        )
                         self.logger.warning(
                             f"Original segments: {non_empty_segments}")
                         self.logger.warning(
-                            f"Translated segments: {translated_segments}")
+                            f"Translated segments: {translated_segments}"
+                        )
                         # 如果数量不匹配，抛出异常让调用者回退到逐段翻译
                         raise ValueError(
-                            f"Segment count mismatch: expected {len(non_empty_segments)}, got {len(translated_segments)}")
+                            f"Segment count mismatch: expected {len(non_empty_segments)}, got {len(translated_segments)}"
+                        )
 
                     return translated_segments
                 else:
@@ -410,7 +419,7 @@ class AgentUtils:
             error_detail = f"Batch translation failed: {type(exc).__name__}: {str(exc)}"
             raise HTTPException(status_code=400, detail=error_detail)
 
-    async def summary(self, content: dict) -> dict:
+    async def summary(self, content: dict) -> Union[dict, list]:
         """
         使用Qwen API对内容进行总结，生成JSON数组格式的摘要
 
@@ -418,7 +427,7 @@ class AgentUtils:
             content: 富文本内容的JSON字典
 
         Returns:
-            包含总结信息的JSON字典：
+            包含总结信息的JSON数组或字典：
             - summary: 关键要点数组，每个要点最多255字符
 
         Raises:
@@ -433,7 +442,8 @@ class AgentUtils:
 
         if not full_text:
             raise HTTPException(
-                status_code=404, detail="No text content found to summarize")
+                status_code=404, detail="No text content found to summarize"
+            )
 
         try:
             # 构建总结提示词
@@ -465,10 +475,10 @@ class AgentUtils:
             response = Generation.call(
                 model=self.translation_model,
                 api_key=self.api_key,
-                messages=[
+                messages=cast(Any, [
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_prompt},
-                ],
+                ]),
                 max_tokens=1000,
                 temperature=0.3,  # 较低的温度以获得更一致的结果
                 top_p=0.8,
@@ -489,13 +499,14 @@ class AgentUtils:
             # 提取总结结果
             try:
                 if hasattr(response, "output") and hasattr(response.output, "choices"):
-                    summary_text = response.output.choices[0].message.content.strip(
-                    )
+                    choices = cast(Any, response.output.choices)
+                    summary_text = choices[0].message.content.strip()
                     if not summary_text:
                         raise ValueError("Empty summary result")
 
                     # 解析JSON结果
                     import json
+
                     summary_data = json.loads(summary_text)
 
                     # 验证必需字段
@@ -536,7 +547,9 @@ class AgentUtils:
             raise
         except Exception as exc:
             # 记录详细错误信息
-            error_detail = f"Summary generation failed: {type(exc).__name__}: {str(exc)}"
+            error_detail = (
+                f"Summary generation failed: {type(exc).__name__}: {str(exc)}"
+            )
             raise HTTPException(status_code=400, detail=error_detail)
 
     def extract_full_text_from_content(self, content: dict) -> dict:
@@ -582,21 +595,26 @@ class AgentUtils:
                     # 收集所有非空文本节点（保持原有空格）
                     if text.strip():  # 只检查是否有非空白内容
                         # 使用父级块类型，更准确地反映文本的上下文
-                        actual_block_type = parent_block_type if parent_block_type != "unknown" else self._get_block_type_from_path(
-                            current_path)
+                        actual_block_type = (
+                            parent_block_type
+                            if parent_block_type != "unknown"
+                            else self._get_block_type_from_path(current_path)
+                        )
 
                         # 保留文本的前导和尾随空格信息
                         has_leading_space = text.startswith(" ")
                         has_trailing_space = text.endswith(" ")
 
-                        text_parts.append({
-                            "text": text,  # 保持原有空格
-                            "path": current_path,
-                            "node": node,
-                            "block_type": actual_block_type,
-                            "has_leading_space": has_leading_space,
-                            "has_trailing_space": has_trailing_space
-                        })
+                        text_parts.append(
+                            {
+                                "text": text,  # 保持原有空格
+                                "path": current_path,
+                                "node": node,
+                                "block_type": actual_block_type,
+                                "has_leading_space": has_leading_space,
+                                "has_trailing_space": has_trailing_space,
+                            }
+                        )
                 return
 
             # 如果是代码块，直接跳过
@@ -608,12 +626,14 @@ class AgentUtils:
                 attrs = node.get("attrs", {})
                 caption = attrs.get("caption")
                 if caption and caption.strip():
-                    media_captions.append({
-                        "caption": caption.strip(),
-                        "type": node.get("type"),
-                        "path": current_path,
-                        "node": node
-                    })
+                    media_captions.append(
+                        {
+                            "caption": caption.strip(),
+                            "type": node.get("type"),
+                            "path": current_path,
+                            "node": node,
+                        }
+                    )
                 return
 
             # 如果有content字段，递归处理子节点
@@ -642,12 +662,17 @@ class AgentUtils:
                 continue
 
             # 检查前一个文本节点的块类型和当前文本节点的块类型
-            prev_part = text_parts[i-1]
+            prev_part = text_parts[i - 1]
             prev_block_type = prev_part.get("block_type", "unknown")
             current_block_type = part.get("block_type", "unknown")
 
             # 如果是不同的块级元素（如段落、标题等），添加换行符
-            if prev_block_type != current_block_type and current_block_type in ["paragraph", "heading", "blockquote", "listItem"]:
+            if prev_block_type != current_block_type and current_block_type in [
+                "paragraph",
+                "heading",
+                "blockquote",
+                "listItem",
+            ]:
                 # 确保前一个块以换行符结尾
                 if not full_text_parts[-1].endswith("\n"):
                     full_text_parts.append("\n")
@@ -656,12 +681,12 @@ class AgentUtils:
                 prev_text = prev_part["text"]
                 # 检查是否需要添加空格
                 needs_space = (
-                    not prev_text.endswith(" ") and  # 前一个文本不以空格结尾
-                    not text.startswith(" ") and     # 当前文本不以空格开头
-                    not prev_text.endswith("\n") and  # 前一个文本不以换行符结尾
-                    not text.startswith("\n") and    # 当前文本不以换行符开头
-                    prev_text.strip() and            # 前一个文本不为空
-                    text.strip()                     # 当前文本不为空
+                    not prev_text.endswith(" ")  # 前一个文本不以空格结尾
+                    and not text.startswith(" ")  # 当前文本不以空格开头
+                    and not prev_text.endswith("\n")  # 前一个文本不以换行符结尾
+                    and not text.startswith("\n")  # 当前文本不以换行符开头
+                    and prev_text.strip()  # 前一个文本不为空
+                    and text.strip()  # 当前文本不为空
                 )
 
                 if needs_space:
@@ -674,7 +699,7 @@ class AgentUtils:
         return {
             "full_text": full_text,
             "text_parts": text_parts,
-            "media_captions": media_captions
+            "media_captions": media_captions,
         }
 
     def _get_block_type_from_path(self, path: str) -> str:
@@ -726,7 +751,8 @@ class AgentUtils:
         # 提取完整文本内容和媒体caption
         extracted_data = self.extract_full_text_from_content(content)
         self.logger.info(
-            f"Extracted data: {len(extracted_data.get('text_parts', []))} text parts, {len(extracted_data.get('media_captions', []))} media captions")
+            f"Extracted data: {len(extracted_data.get('text_parts', []))} text parts, {len(extracted_data.get('media_captions', []))} media captions"
+        )
 
         text_parts = extracted_data.get("text_parts", [])
         media_captions = extracted_data.get("media_captions", [])
@@ -745,8 +771,9 @@ class AgentUtils:
                 # 短段落（<100字符）：批量8个
                 # 中等段落（100-300字符）：批量5个
                 # 长段落（>300字符）：批量3个
-                avg_length = sum(len(part["text"])
-                                 for part in text_parts) / len(text_parts)
+                avg_length = sum(len(part["text"]) for part in text_parts) / len(
+                    text_parts
+                )
                 if avg_length < 100:
                     BATCH_SIZE = 8
                 elif avg_length < 300:
@@ -755,7 +782,8 @@ class AgentUtils:
                     BATCH_SIZE = 3
 
                 self.logger.info(
-                    f"Starting batch translation: {len(text_parts)} segments, batch size: {BATCH_SIZE}")
+                    f"Starting batch translation: {len(text_parts)} segments, batch size: {BATCH_SIZE}"
+                )
                 self.logger.info(
                     f"Average segment length: {avg_length:.0f} characters")
 
@@ -765,7 +793,8 @@ class AgentUtils:
                     batch = text_parts[batch_start:batch_end]
 
                     self.logger.info(
-                        f"Translating batch {batch_start//BATCH_SIZE + 1}/{(len(text_parts) + BATCH_SIZE - 1)//BATCH_SIZE} (segments {batch_start+1}-{batch_end})")
+                        f"Translating batch {batch_start // BATCH_SIZE + 1}/{(len(text_parts) + BATCH_SIZE - 1) // BATCH_SIZE} (segments {batch_start + 1}-{batch_end})"
+                    )
 
                     # 提取批次中的文本
                     batch_texts = [part["text"] for part in batch]
@@ -777,7 +806,8 @@ class AgentUtils:
                         # 验证翻译结果数量
                         if len(translated_texts) != len(batch):
                             self.logger.warning(
-                                "Batch translation count mismatch, falling back to individual translation")
+                                "Batch translation count mismatch, falling back to individual translation"
+                            )
                             # 回退到逐段翻译
                             translated_texts = []
                             for text in batch_texts:
@@ -786,62 +816,80 @@ class AgentUtils:
                                     translated_texts.append(translated)
                                 except Exception as e:
                                     self.logger.error(
-                                        f"Failed to translate segment: {e}")
+                                        f"Failed to translate segment: {e}"
+                                    )
                                     # 翻译失败，保留原文
                                     translated_texts.append(text)
 
                         # 构建翻译结果
                         for orig_part, translated_text in zip(batch, translated_texts):
-                            translated_data["text_parts"].append({
-                                "text": translated_text,
-                                "path": orig_part["path"],
-                                "node": orig_part["node"],
-                                "block_type": orig_part.get("block_type", "unknown")
-                            })
+                            translated_data["text_parts"].append(
+                                {
+                                    "text": translated_text,
+                                    "path": orig_part["path"],
+                                    "node": orig_part["node"],
+                                    "block_type": orig_part.get(
+                                        "block_type", "unknown"
+                                    ),
+                                }
+                            )
 
                         self.logger.info(
-                            f"Batch translation completed: {len(translated_texts)} segments")
+                            f"Batch translation completed: {len(translated_texts)} segments"
+                        )
 
                     except Exception as e:
                         self.logger.error(
-                            f"Batch translation failed: {e}, falling back to individual translation")
+                            f"Batch translation failed: {e}, falling back to individual translation"
+                        )
                         # 批量翻译失败，回退到逐段翻译
                         for text_part in batch:
                             original_text = text_part["text"]
                             try:
                                 translated_text = await self.translate(original_text)
-                                translated_data["text_parts"].append({
-                                    "text": translated_text,
-                                    "path": text_part["path"],
-                                    "node": text_part["node"],
-                                    "block_type": text_part.get("block_type", "unknown")
-                                })
+                                translated_data["text_parts"].append(
+                                    {
+                                        "text": translated_text,
+                                        "path": text_part["path"],
+                                        "node": text_part["node"],
+                                        "block_type": text_part.get(
+                                            "block_type", "unknown"
+                                        ),
+                                    }
+                                )
                             except Exception as e2:
                                 self.logger.error(
                                     f"Failed to translate segment: {e2}")
                                 # 如果单个段落翻译也失败，保留原文
-                                translated_data["text_parts"].append({
-                                    "text": original_text,
-                                    "path": text_part["path"],
-                                    "node": text_part["node"],
-                                    "block_type": text_part.get("block_type", "unknown")
-                                })
+                                translated_data["text_parts"].append(
+                                    {
+                                        "text": original_text,
+                                        "path": text_part["path"],
+                                        "node": text_part["node"],
+                                        "block_type": text_part.get(
+                                            "block_type", "unknown"
+                                        ),
+                                    }
+                                )
 
             # 批量翻译媒体caption
             if media_captions:
                 self.logger.info(
-                    f"Starting batch translation of {len(media_captions)} media captions")
+                    f"Starting batch translation of {len(media_captions)} media captions"
+                )
 
                 # Caption通常较短，使用较大的批量大小
                 CAPTION_BATCH_SIZE = 10
 
                 for batch_start in range(0, len(media_captions), CAPTION_BATCH_SIZE):
                     batch_end = min(
-                        batch_start + CAPTION_BATCH_SIZE, len(media_captions))
+                        batch_start + CAPTION_BATCH_SIZE, len(media_captions)
+                    )
                     batch = media_captions[batch_start:batch_end]
 
                     self.logger.info(
-                        f"Translating caption batch {batch_start//CAPTION_BATCH_SIZE + 1} (captions {batch_start+1}-{batch_end})")
+                        f"Translating caption batch {batch_start // CAPTION_BATCH_SIZE + 1} (captions {batch_start + 1}-{batch_end})"
+                    )
 
                     # 提取批次中的caption文本
                     batch_captions = [item["caption"] for item in batch]
@@ -853,7 +901,8 @@ class AgentUtils:
                         # 验证翻译结果数量
                         if len(translated_captions) != len(batch):
                             self.logger.warning(
-                                "Caption batch translation count mismatch, falling back to individual translation")
+                                "Caption batch translation count mismatch, falling back to individual translation"
+                            )
                             # 回退到逐个翻译
                             translated_captions = []
                             for caption in batch_captions:
@@ -862,45 +911,58 @@ class AgentUtils:
                                     translated_captions.append(translated)
                                 except Exception as e:
                                     self.logger.error(
-                                        f"Failed to translate caption: {e}")
+                                        f"Failed to translate caption: {e}"
+                                    )
                                     # 翻译失败，保留原文
                                     translated_captions.append(caption)
 
                         # 构建翻译结果
-                        for orig_item, translated_caption in zip(batch, translated_captions):
-                            translated_data["media_captions"].append({
-                                "caption": translated_caption,
-                                "type": orig_item["type"],
-                                "path": orig_item["path"],
-                                "node": orig_item["node"]
-                            })
+                        for orig_item, translated_caption in zip(
+                            batch, translated_captions
+                        ):
+                            translated_data["media_captions"].append(
+                                {
+                                    "caption": translated_caption,
+                                    "type": orig_item["type"],
+                                    "path": orig_item["path"],
+                                    "node": orig_item["node"],
+                                }
+                            )
 
                         self.logger.info(
-                            f"Caption batch translation completed: {len(translated_captions)} captions")
+                            f"Caption batch translation completed: {len(translated_captions)} captions"
+                        )
 
                     except Exception as e:
                         self.logger.error(
-                            f"Caption batch translation failed: {e}, falling back to individual translation")
+                            f"Caption batch translation failed: {e}, falling back to individual translation"
+                        )
                         # 批量翻译失败，回退到逐个翻译
                         for caption_item in batch:
                             try:
-                                translated_caption = await self.translate(caption_item["caption"])
-                                translated_data["media_captions"].append({
-                                    "caption": translated_caption,
-                                    "type": caption_item["type"],
-                                    "path": caption_item["path"],
-                                    "node": caption_item["node"]
-                                })
+                                translated_caption = await self.translate(
+                                    caption_item["caption"]
+                                )
+                                translated_data["media_captions"].append(
+                                    {
+                                        "caption": translated_caption,
+                                        "type": caption_item["type"],
+                                        "path": caption_item["path"],
+                                        "node": caption_item["node"],
+                                    }
+                                )
                             except Exception as e2:
                                 self.logger.error(
                                     f"Failed to translate caption: {e2}")
                                 # 如果caption翻译失败，保留原文
-                                translated_data["media_captions"].append({
-                                    "caption": caption_item["caption"],
-                                    "type": caption_item["type"],
-                                    "path": caption_item["path"],
-                                    "node": caption_item["node"]
-                                })
+                                translated_data["media_captions"].append(
+                                    {
+                                        "caption": caption_item["caption"],
+                                        "type": caption_item["type"],
+                                        "path": caption_item["path"],
+                                        "node": caption_item["node"],
+                                    }
+                                )
 
             # 标准化翻译后的内容空格
             self.logger.info("Normalizing spacing in translated content")
@@ -917,14 +979,17 @@ class AgentUtils:
                 for caption in translated_data["media_captions"]:
                     if isinstance(caption, dict) and "caption" in caption:
                         caption["caption"] = self._normalize_english_spacing(
-                            caption["caption"])
+                            caption["caption"]
+                        )
 
             # 将翻译后的内容替换回原JSON结构中
             translated_content = self._replace_translated_content(
-                content, extracted_data, translated_data)
+                content, extracted_data, translated_data
+            )
 
             self.logger.info(
-                f"Translation completed successfully: {len(translated_data['text_parts'])} text segments, {len(translated_data['media_captions'])} captions")
+                f"Translation completed successfully: {len(translated_data['text_parts'])} text segments, {len(translated_data['media_captions'])} captions"
+            )
 
             return translated_content
 
@@ -935,7 +1000,9 @@ class AgentUtils:
             # 重新抛出异常而不是返回原内容，让调用者知道翻译失败
             raise
 
-    def _replace_translated_content(self, content: dict, extracted_data: dict, translated_data: dict) -> dict:
+    def _replace_translated_content(
+        self, content: dict, extracted_data: dict, translated_data: dict
+    ) -> dict:
         """
         在JSON结构中替换逐段翻译的文本内容和媒体caption
 
@@ -1023,7 +1090,9 @@ class AgentUtils:
 
         return result
 
-    def _replace_text_nodes_by_path(self, node: dict, path_to_translation: dict, current_path: str = ""):
+    def _replace_text_nodes_by_path(
+        self, node: dict, path_to_translation: dict, current_path: str = ""
+    ):
         """根据路径递归替换文本节点"""
         if not isinstance(node, dict):
             return
@@ -1052,7 +1121,9 @@ class AgentUtils:
                 self._replace_text_nodes_by_path(
                     child, path_to_translation, child_path)
 
-    def _replace_media_captions_by_path(self, node: dict, path_to_caption: dict, current_path: str = ""):
+    def _replace_media_captions_by_path(
+        self, node: dict, path_to_caption: dict, current_path: str = ""
+    ):
         """根据路径递归替换媒体caption"""
         if not isinstance(node, dict):
             return

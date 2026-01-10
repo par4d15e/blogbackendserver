@@ -1,5 +1,5 @@
 import uuid
-from typing import Optional, List, Dict
+from typing import Optional, Dict, Sequence
 from datetime import datetime, timezone, timedelta
 from fastapi import HTTPException, Depends
 from sqlalchemy import exists
@@ -74,7 +74,7 @@ class AuthCrud:
             Code.user_id == user_id,
             Code.type == type,
             Code.expires_at > func.utc_timestamp(),
-            Code.is_used == False,
+            not Code.is_used,
         )
         result = await self.db.execute(statement)
         return result.scalar_one_or_none()
@@ -88,7 +88,7 @@ class AuthCrud:
             Code.code == code,
             Code.type == type,
             Code.expires_at > func.utc_timestamp(),
-            Code.is_used == False,
+            not Code.is_used,
         )
         result = await self.db.execute(statement)
         return result.scalar_one_or_none()
@@ -138,7 +138,7 @@ class AuthCrud:
         # 提交所有更改
         await self.db.commit()
 
-    async def _get_user_tokens(self, user_id: int) -> List[Token]:
+    async def _get_user_tokens(self, user_id: int) -> Sequence[Token]:
         """Get all valid tokens for user - 优化查询"""
         statement = (
             select(Token)
@@ -146,7 +146,7 @@ class AuthCrud:
             .where(
                 Token.user_id == user_id,
                 Token.expired_at > func.utc_timestamp(),
-                Token.is_active == True,
+                Token.is_active,
             )
         )
         result = await self.db.execute(statement)
@@ -156,7 +156,7 @@ class AuthCrud:
         """Revoke all tokens for user"""
         statement = (
             update(Token)
-            .where(Token.user_id == user_id, Token.is_active == True)
+            .where(Token.user_id == user_id, Token.is_active)
             .values(is_active=False)
         )
         result = await self.db.execute(statement)
@@ -169,8 +169,7 @@ class AuthCrud:
         """
         statement = delete(Token).where(
             Token.user_id == user_id,
-            or_(func.utc_timestamp() >= Token.expired_at,
-                Token.is_active == False),
+            or_(func.utc_timestamp() >= Token.expired_at, not Token.is_active),
         )
         result = await self.db.execute(statement)
         await self.db.commit()
@@ -296,11 +295,11 @@ class AuthCrud:
         access_token_data = {**shared_payload, "jti": access_jti}
         refresh_token_data = {**shared_payload, "jti": refresh_jti}
 
-        access_token, access_token_expired_at = (
-            security_manager.create_access_token(access_token_data)
+        access_token, access_token_expired_at = security_manager.create_access_token(
+            access_token_data
         )
-        refresh_token, refresh_token_expired_at = (
-            security_manager.create_refresh_token(refresh_token_data)
+        refresh_token, refresh_token_expired_at = security_manager.create_refresh_token(
+            refresh_token_data
         )
 
         # 保存令牌（一次提交）
@@ -611,9 +610,7 @@ class AuthCrud:
             user = await self.get_user_by_email(user_email)
             if user and user.password_hash:
                 # 验证新密码是否和数据库中的密码是否一样
-                if security_manager.verify_password(
-                    new_password, user.password_hash
-                ):
+                if security_manager.verify_password(new_password, user.password_hash):
                     raise HTTPException(
                         status_code=409,
                         detail=get_message(
@@ -635,7 +632,7 @@ class AuthCrud:
 
     async def account_login(
         self, request, email: str, password: str, language: Language
-    ) -> Dict[str, str]:
+    ) -> Dict[str, Optional[str]]:
         """User account login - 高性能优化版本"""
 
         try:
@@ -784,7 +781,7 @@ class AuthCrud:
                     Token.user_id == user_id,
                     Token.jit == jit,
                     Token.type == TokenType.refresh,
-                    Token.is_active == True,
+                    Token.is_active,
                     Token.expired_at > func.utc_timestamp(),
                 )
             )
@@ -851,7 +848,7 @@ class AuthCrud:
         provider: SocialProvider,
         provider_user_id: str,
         language: Language,
-    ) -> Dict[str, str]:
+    ) -> Dict[str, Optional[str]]:
         """Create social account for user"""
         # 查找用户
         user = await self.get_user_by_email(email)

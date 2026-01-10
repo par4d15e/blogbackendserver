@@ -1,7 +1,6 @@
 name: Deploy DB Server
 
 on:
-  # 当代码推送到 main 分支时自动触发
   push:
     branches:
       - main
@@ -15,7 +14,6 @@ jobs:
 
       - name: Prepare script file
         run: |
-          # 复制脚本文件到工作目录根目录，避免 SCP 保留目录结构
           cp script/setup-mysql-redis.sh setup-mysql-redis.sh
           ls -lh setup-mysql-redis.sh
 
@@ -35,23 +33,22 @@ jobs:
           username: ubuntu
           key: ${{ secrets.DB_SSH_KEY }}
           script: |
-            echo "🔍 验证文件是否成功上传..."
-            echo "📋 /tmp/ 目录完整内容："
+            echo "Verifying file upload..."
+            echo "Contents of /tmp/:"
             ls -la /tmp/
 
-            # 检查文件可能的位置
             if [ -f /tmp/setup-mysql-redis.sh ]; then
-              echo "✅ 文件已成功上传到 /tmp/setup-mysql-redis.sh"
+              echo "File uploaded to /tmp/setup-mysql-redis.sh"
               ls -lh /tmp/setup-mysql-redis.sh
             elif [ -f /tmp/script/setup-mysql-redis.sh ]; then
-              echo "⚠️  文件在 /tmp/script/setup-mysql-redis.sh，移动到 /tmp/"
+              echo "File at /tmp/script/, moving to /tmp/"
               sudo mv /tmp/script/setup-mysql-redis.sh /tmp/setup-mysql-redis.sh
               sudo rmdir /tmp/script 2>/dev/null || true
-              echo "✅ 文件已移动到 /tmp/setup-mysql-redis.sh"
+              echo "File moved to /tmp/setup-mysql-redis.sh"
             else
-              echo "❌ 文件上传失败：未找到 setup-mysql-redis.sh"
-              echo "📋 递归查找 setup-mysql-redis.sh："
-              find /tmp -name "setup-mysql-redis.sh" 2>/dev/null || echo "未找到"
+              echo "Upload failed: setup-mysql-redis.sh not found"
+              echo "Searching for file:"
+              find /tmp -name "setup-mysql-redis.sh" 2>/dev/null || echo "Not found"
               exit 1
             fi
 
@@ -63,21 +60,18 @@ jobs:
           key: ${{ secrets.DB_SSH_KEY }}
           envs: APP_SERVER_IP,MYSQL_ROOT_PASS,MYSQL_APP_USER,MYSQL_APP_PASS,REDIS_PASS
           script: |
-            # 调试：列出 /tmp/ 目录内容
-            echo "📁 检查 /tmp/ 目录内容："
-            ls -la /tmp/ | grep -E "setup-mysql-redis|total" || echo "未找到 setup-mysql-redis.sh"
+            echo "Checking /tmp/ contents:"
+            ls -la /tmp/ | grep -E "setup-mysql-redis|total" || echo "setup-mysql-redis.sh not found"
 
-            # 检查文件是否存在
             if [ ! -f /tmp/setup-mysql-redis.sh ]; then
-              echo "❌ 错误：文件 /tmp/setup-mysql-redis.sh 不存在"
-              echo "📋 /tmp/ 目录完整内容："
+              echo "Error: /tmp/setup-mysql-redis.sh does not exist"
+              echo "/tmp/ contents:"
               ls -la /tmp/
               exit 1
             fi
 
-            echo "✅ 文件 /tmp/setup-mysql-redis.sh 存在，继续执行..."
+            echo "File exists, continuing..."
 
-            # APP_SERVER_IP: 应用服务器的 IP 地址，用于配置 MySQL 用户允许连接的 IP 和防火墙规则
             export APP_SERVER_IP="${{ secrets.APP_SERVER_IP }}"
             export MYSQL_ROOT_PASS="${{ secrets.MYSQL_ROOT_PASS }}"
             export MYSQL_APP_USER="${{ secrets.MYSQL_APP_USER }}"

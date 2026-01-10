@@ -1,9 +1,8 @@
-from datetime import datetime, timezone
+from datetime import datetime
 from typing import Optional
 from sqlalchemy import text
 from sqlalchemy.dialects.mysql import TIMESTAMP
 from sqlmodel import (
-    Column,
     Field,
     Index,
     SQLModel,
@@ -26,8 +25,7 @@ class Tag(SQLModel, table=True):
     )
 
     id: Optional[int] = Field(default=None, primary_key=True)
-    chinese_title: str = Field(
-        nullable=False, max_length=50, unique=True)  # 优化长度
+    chinese_title: str = Field(nullable=False, max_length=50, unique=True)  # 优化长度
     english_title: str = Field(nullable=False, max_length=50)  # 优化长度
     slug: str = Field(nullable=False, max_length=50, unique=True)
     created_at: datetime = Field(
