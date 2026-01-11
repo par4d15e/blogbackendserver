@@ -520,9 +520,11 @@ class ProjectCrud:
                 "project_price": project.project_monetization.price
                 if project.project_monetization
                 else 0.0,
-                "attachment_id": project.project_attachments.attachment_id,
+                "attachment_id": project.project_attachments.attachment_id
+                if project.project_attachments
+                else None,
                 "attachment_url": project.project_attachments.attachment.original_filepath_url
-                if project.project_attachments.attachment
+                if project.project_attachments and project.project_attachments.attachment
                 else None,
             }
         else:
