@@ -186,7 +186,7 @@ async def favicon():
 async def custom_swagger_ui_html():
     return get_swagger_ui_html(
         openapi_url="/openapi.json",
-        title=f"{settings.app.APP_NAME} - Swagger UI",
+        title=f"{settings.app.APP_NAME} - Docs",
         swagger_favicon_url="/static/image/favicon.ico?v=2",
     )
 
