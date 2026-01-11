@@ -12,11 +12,11 @@ from starlette.middleware import Middleware
 from fastapi.staticfiles import StaticFiles
 
 
-from app.core.i18n.i18n import get_message
-from app.core.i18n.i18n import get_language
+from app.core.i18n.i18n import get_message, set_request_language, get_language
 from app.core.logger import logger_manager
 from app.core.database.connection import db_manager
 from app.core.config.settings import settings
+from app.schemas.common import SuccessResponse
 from app.router.v1 import (
     auth_router,
     user_router,
@@ -118,6 +118,16 @@ app = FastAPI(
 )
 
 
+# 语言检测中间件（必须在其他中间件之后注册）
+@app.middleware("http")
+async def language_middleware(request: Request, call_next):
+    """自动检测并设置请求语言到上下文"""
+    language = get_language(request)
+    set_request_language(language)
+    response = await call_next(request)
+    return response
+
+
 # 全局异常处理器
 @app.exception_handler(HTTPException)
 async def http_exception_handler(_request: Request, exc: HTTPException):
@@ -140,12 +150,11 @@ async def http_exception_handler(_request: Request, exc: HTTPException):
 @app.exception_handler(Exception)
 async def general_exception_handler(_request: Request, exc: Exception):
     logger.error(f"Exception: {exc}")
-    language = get_language(_request)
     return JSONResponse(
         status_code=500,
         content={
             "status": 500,
-            "error": get_message("common.internalError", language),
+            "error": get_message("common.internalError"),
         },
     )
 
@@ -155,9 +164,12 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 
 
 # 根路径健康检查
-@app.get("/", tags=["Health"])
+@app.get("/", tags=["Health"], response_model=SuccessResponse)
 async def root():
-    return {"status": "ok", "message": "Heyxiaoli Backend Server is running"}
+    return SuccessResponse(
+        message=get_message("common.serverRunning"),
+        data=None,
+    )
 
 
 # Favicon 处理
@@ -218,7 +230,7 @@ def custom_openapi(self: FastAPI) -> dict[str, Any]:
         routes=self.routes,
         terms_of_service="https://heyxiaoli.com/copyright",
         contact={
-            "name": "Ning Li",
+            "name": "ning3739",
             "url": "https://heyxiaoli.com",
             "email": "ln729500172@gmail.com",
         },

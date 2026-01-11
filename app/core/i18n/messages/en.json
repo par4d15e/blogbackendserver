@@ -3,7 +3,8 @@
     "internalError": "Internal error, please check the logs",
     "insufficientPermissions": "Insufficient permissions",
     "invalidRequest": "Invalid request",
-    "noDataFound": "No data found for this query"
+    "noDataFound": "No data found for this query",
+    "serverRunning": "Server is running"
   },
   "auth": {
     "common": {
@@ -17,7 +18,9 @@
       "validationCodeAlreadyRequested": "Validation code already requested",
       "invalidVerificationCode": "Invalid verification code",
       "passwordSameAsOld": "Password same as old",
-      "internalError": "Internal error, please check the logs"
+      "internalError": "Internal error, please check the logs",
+      "invalidEmailFormat": "Invalid email format",
+      "unsupportedEmailDomain": "Please use a mainstream email provider (Gmail, Outlook, QQ, 163, etc.)"
     },
     "sendVerificationCode": "Verification code has been sent to your email",
     "sendResetCode": "Reset code has been sent to your email",

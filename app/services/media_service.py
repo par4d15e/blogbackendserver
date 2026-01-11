@@ -235,7 +235,6 @@ class MediaService:
         local_file_path: Union[str, Path],
         user_id: int,
         is_avatar: bool,
-        language: Language,
     ) -> Dict[str, Any]:
         """
         单文件上传实现（供统一入口复用）
@@ -352,7 +351,6 @@ class MediaService:
             "type": media_type,
             "is_avatar": is_avatar,
             "file_name": original_filename,
-            "language": language,
             "original_filepath_url": original_filepath_url,
             "thumbnail_filepath_url": thumbnail_filepath_url,
             "watermark_filepath_url": watermark_filepath_url,
@@ -390,7 +388,6 @@ class MediaService:
         local_file_paths: List[Union[str, Path]],
         user_id: int,
         is_avatar: bool,
-        language: Language,
     ) -> Dict[str, Any]:
         """
         多文件上传实现（供统一入口复用）
@@ -515,7 +512,7 @@ class MediaService:
                     type=mt,
                     is_avatar=is_avatar,
                     file_name=original_filename,
-                    language=language,
+                    
                     original_filepath_url=original_url,
                     thumbnail_filepath_url=thumbnail_url,
                     watermark_filepath_url=watermark_url,
@@ -558,7 +555,6 @@ class MediaService:
         user_id: int,
         page: int,
         size: int,
-        language: Language,
         media_type: Optional[MediaType] = None,
     ) -> Tuple[List[Dict[str, Any]], Dict[str, Any]]:
         # 从 CRUD 获取原始数据
@@ -566,7 +562,7 @@ class MediaService:
             user_id=user_id,
             page=page,
             size=size,
-            language=language,
+            
             media_type=media_type,
         )
 
@@ -601,7 +597,6 @@ class MediaService:
     async def download_media_from_s3(
         self,
         media_id: int,
-        language: Language,
     ) -> str:
         """
         从S3下载媒体文件到本地临时目录
@@ -612,7 +607,7 @@ class MediaService:
         if not media_info:
             raise HTTPException(
                 status_code=404,
-                detail=get_message("media.common.mediaNotFound", language),
+                detail=get_message("media.common.mediaNotFound"),
             )
 
         original_filepath_url = media_info.original_filepath_url
@@ -634,7 +629,6 @@ class MediaService:
         self,
         media_ids: Union[int, List[int]],
         user_id: int,
-        language: Language,
     ) -> Dict[str, Any]:
         """
         删除媒体文件，支持单个或多个文件删除
@@ -715,7 +709,7 @@ class MediaService:
                     await self.media_crud.delete_media_from_s3(
                         media_id=media.id,
                         user_id=user_id,
-                        language=language,
+                        
                     )
                     db_delete_results.append(True)
                 except Exception as e:

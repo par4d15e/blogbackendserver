@@ -22,7 +22,7 @@ from app.core.security import security_manager
 from app.core.config.settings import settings
 from app.core.database.mysql import mysql_manager
 from app.core.database.redis import redis_manager
-from app.core.i18n.i18n import get_message, Language
+from app.core.i18n.i18n import get_message, get_current_language, Language
 from app.crud.subscriber_crud import get_subscriber_crud
 from app.tasks.client_info_task import client_info_task
 from app.tasks.greeting_email_task import greeting_email_task
@@ -333,7 +333,7 @@ class AuthCrud:
         return result.scalar_one_or_none()
 
     async def create_code_crud(
-        self, email: str, type: CodeType, code: str, language: Language
+        self, email: str, type: CodeType, code: str
     ) -> Code:
         """Create code for user by type.
         两种类型都会对未过期且未使用的验证码进行限流。
@@ -347,7 +347,7 @@ class AuthCrud:
                 raise HTTPException(
                     status_code=404,
                     detail=get_message(
-                        key="auth.common.userNotFound", lang=language),
+                        key="auth.common.userNotFound"),
                 )
 
             # verified 流程在用户不存在时创建占位用户
@@ -361,7 +361,7 @@ class AuthCrud:
                 raise HTTPException(
                     status_code=400,
                     detail=get_message(
-                        key="auth.common.userDeleted", lang=language),
+                        key="auth.common.userDeleted"),
                 )
 
             # verified: 已激活已验证的用户不应再次发送注册验证码
@@ -369,7 +369,7 @@ class AuthCrud:
                 raise HTTPException(
                     status_code=409,
                     detail=get_message(
-                        key="auth.common.userExists", lang=language),
+                        key="auth.common.userExists"),
                 )
 
             # reset: 仅允许已激活且已验证的用户
@@ -378,14 +378,14 @@ class AuthCrud:
                     raise HTTPException(
                         status_code=400,
                         detail=get_message(
-                            key="auth.common.userNotActive", lang=language
+                            key="auth.common.userNotActive"
                         ),
                     )
                 if not user.is_verified:
                     raise HTTPException(
                         status_code=400,
                         detail=get_message(
-                            key="auth.common.userNotVerified", lang=language
+                            key="auth.common.userNotVerified"
                         ),
                     )
 
@@ -395,7 +395,7 @@ class AuthCrud:
                 raise HTTPException(
                     status_code=400,
                     detail=get_message(
-                        key="auth.common.validationCodeAlreadyRequested", lang=language
+                        key="auth.common.validationCodeAlreadyRequested"
                     ),
                 )
 
@@ -438,7 +438,6 @@ class AuthCrud:
         password_hash: str,
         code: str,
         type: CodeType,
-        language: Language,
     ) -> bool:
         """Create a new user account with verification code validation."""
         try:
@@ -449,14 +448,14 @@ class AuthCrud:
                 raise HTTPException(
                     status_code=404,
                     detail=get_message(
-                        key="auth.common.userNotFound", lang=language),
+                        key="auth.common.userNotFound"),
                 )
             # 检查用户是否已删除
             elif user.is_deleted:
                 raise HTTPException(
                     status_code=400,
                     detail=get_message(
-                        key="auth.common.userDeleted", lang=language),
+                        key="auth.common.userDeleted"),
                 )
 
             # 检查用户是否已经激活和验证
@@ -464,7 +463,7 @@ class AuthCrud:
                 raise HTTPException(
                     status_code=409,
                     detail=get_message(
-                        key="auth.common.userExists", lang=language),
+                        key="auth.common.userExists"),
                 )
 
             # 验证验证码
@@ -473,7 +472,7 @@ class AuthCrud:
                 raise HTTPException(
                     status_code=400,
                     detail=get_message(
-                        key="auth.common.invalidVerificationCode", lang=language
+                        key="auth.common.invalidVerificationCode"
                     ),
                 )
 
@@ -482,7 +481,7 @@ class AuthCrud:
                 raise HTTPException(
                     status_code=409,
                     detail=get_message(
-                        key="auth.common.userNameAlreadyExists", lang=language
+                        key="auth.common.userNameAlreadyExists"
                     ),
                 )
 
@@ -522,7 +521,7 @@ class AuthCrud:
             )
 
     async def reset_user_password(
-        self, email: str, new_password: str, code: str, language: Language
+        self, email: str, new_password: str, code: str
     ) -> bool:
         """Reset user password."""
         # 查找用户
@@ -531,7 +530,7 @@ class AuthCrud:
             raise HTTPException(
                 status_code=404,
                 detail=get_message(
-                    key="auth.common.userNotFound", lang=language),
+                    key="auth.common.userNotFound"),
             )
 
         # 检查用户是否已删除
@@ -539,14 +538,14 @@ class AuthCrud:
             raise HTTPException(
                 status_code=400,
                 detail=get_message(
-                    key="auth.common.userDeleted", lang=language),
+                    key="auth.common.userDeleted"),
             )
 
         elif user and not user.is_active and not user.is_verified:
             raise HTTPException(
                 status_code=400,
                 detail=get_message(
-                    key="auth.common.userNotVerified", lang=language),
+                    key="auth.common.userNotVerified"),
             )
 
         # 检验密码是否一样
@@ -554,7 +553,7 @@ class AuthCrud:
             raise HTTPException(
                 status_code=400,
                 detail=get_message(
-                    key="auth.common.passwordSameAsOld", lang=language),
+                    key="auth.common.passwordSameAsOld"),
             )
 
         # 加密新密码
@@ -565,14 +564,14 @@ class AuthCrud:
             raise HTTPException(
                 status_code=400,
                 detail=get_message(
-                    key="auth.common.userNotActive", lang=language),
+                    key="auth.common.userNotActive"),
             )
         # 检查用户是否已验证
         if not user.is_verified:
             raise HTTPException(
                 status_code=400,
                 detail=get_message(
-                    key="auth.common.userNotVerified", lang=language),
+                    key="auth.common.userNotVerified"),
             )
 
         # 验证验证码
@@ -581,7 +580,7 @@ class AuthCrud:
             raise HTTPException(
                 status_code=400,
                 detail=get_message(
-                    key="auth.common.invalidVerificationCode", lang=language
+                    key="auth.common.invalidVerificationCode"
                 ),
             )
 
@@ -601,7 +600,7 @@ class AuthCrud:
         return True
 
     async def reset_logged_in_user_password(
-        self, user_email: str, new_password: str, language: Language
+        self, user_email: str, new_password: str
     ) -> bool:
         """Reset logged in user password"""
         # 由于用户已经登陆进来，所以完全可以直接更新password
@@ -614,7 +613,7 @@ class AuthCrud:
                     raise HTTPException(
                         status_code=409,
                         detail=get_message(
-                            key="auth.common.passwordSameAsOld", lang=language
+                            key="auth.common.passwordSameAsOld"
                         ),
                     )
 
@@ -631,7 +630,7 @@ class AuthCrud:
         return False
 
     async def account_login(
-        self, request, email: str, password: str, language: Language
+        self, request, email: str, password: str
     ) -> Dict[str, Optional[str]]:
         """User account login - 高性能优化版本"""
 
@@ -645,14 +644,14 @@ class AuthCrud:
                 raise HTTPException(
                     status_code=404,
                     detail=get_message(
-                        key="auth.common.userNotFound", lang=language),
+                        key="auth.common.userNotFound"),
                 )
             # 3. 用户已被删除
             elif user.is_deleted:
                 raise HTTPException(
                     status_code=400,
                     detail=get_message(
-                        key="auth.common.userDeleted", lang=language),
+                        key="auth.common.userDeleted"),
                 )
 
             # 4. 验证用户是否是social account
@@ -668,7 +667,7 @@ class AuthCrud:
                 raise HTTPException(
                     status_code=400,
                     detail=get_message(
-                        key="auth.accountLogin.socialAccountNotAllowed", lang=language
+                        key="auth.accountLogin.socialAccountNotAllowed"
                     ),
                 )
 
@@ -677,7 +676,7 @@ class AuthCrud:
                 raise HTTPException(
                     status_code=400,
                     detail=get_message(
-                        key="auth.accountLogin.invalidCredentials", lang=language
+                        key="auth.accountLogin.invalidCredentials"
                     ),
                 )
 
@@ -702,7 +701,7 @@ class AuthCrud:
                 ):
                     # 先发欢迎邮件（延迟10秒），完成后再更新客户端信息
                     task_flow = chain(
-                        greeting_email_task.s(user.email, language.value).set(
+                        greeting_email_task.s(user.email, get_current_language().value).set(
                             countdown=10
                         ),
                         # 使用 si 确保不接收上一个任务的返回值
@@ -757,7 +756,7 @@ class AuthCrud:
             return False
 
     async def generate_access_token(
-        self, user_id: int, email: str, jit: str, language: Language
+        self, user_id: int, email: str, jit: str
     ) -> str:
         """Generate access token for user"""
         # 检查是否有真实的用户
@@ -769,7 +768,7 @@ class AuthCrud:
                 raise HTTPException(
                     status_code=401,
                     detail=get_message(
-                        key="common.insufficientPermissions", lang=language
+                        key="common.insufficientPermissions"
                     ),
                 )
 
@@ -793,7 +792,7 @@ class AuthCrud:
                     status_code=404,
                     detail=get_message(
                         key="auth.generateAccessToken.refreshTokenNotFound",
-                        lang=language,
+                        
                     ),
                 )
 
@@ -836,7 +835,7 @@ class AuthCrud:
             raise HTTPException(
                 status_code=401,
                 detail=get_message(
-                    key="common.insufficientPermissions", lang=language),
+                    key="common.insufficientPermissions"),
             )
 
     async def social_account_login(
@@ -847,7 +846,6 @@ class AuthCrud:
         avatar_url: str,
         provider: SocialProvider,
         provider_user_id: str,
-        language: Language,
     ) -> Dict[str, Optional[str]]:
         """Create social account for user"""
         # 查找用户
@@ -887,7 +885,7 @@ class AuthCrud:
                     ):
                         # 先发欢迎邮件（延迟10秒），完成后再更新客户端信息
                         task_flow = chain(
-                            greeting_email_task.s(user.email, language.value).set(
+                            greeting_email_task.s(user.email, get_current_language().value).set(
                                 countdown=10
                             ),
                             # 使用 si 确保不接收上一个任务的返回值
@@ -935,7 +933,7 @@ class AuthCrud:
                     ):
                         # 先发欢迎邮件（延迟10秒），完成后再更新客户端信息
                         task_flow = chain(
-                            greeting_email_task.s(user.email, language.value).set(
+                            greeting_email_task.s(user.email, get_current_language().value).set(
                                 countdown=10
                             ),
                             # 使用 si 确保不接收上一个任务的返回值
@@ -1012,7 +1010,7 @@ class AuthCrud:
                 # 先发欢迎邮件（延迟10秒），完成后再更新客户端信息
                 task_flow = chain(
                     greeting_email_task.s(
-                        user.email, language.value).set(countdown=10),
+                        user.email, get_current_language().value).set(countdown=10),
                     # 使用 si 确保不接收上一个任务的返回值
                     client_info_task.si(user.id, dict(request.headers)),
                 )

@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Set
 from pydantic import Field, SecretStr, PositiveInt
 from app.core.config.base import EnvBaseSettings
 
@@ -20,4 +20,32 @@ class EmailSettings(EnvBaseSettings):
     )
     EMAIL_EXPIRATION: PositiveInt = Field(
         default=300, description="Email verification code expiration time (seconds)"
+    )
+
+    # 允许的邮箱域名白名单
+    ALLOWED_EMAIL_DOMAINS: Set[str] = Field(
+        default={
+            # 国际主流
+            "gmail.com",
+            "outlook.com",
+            "hotmail.com",
+            "live.com",
+            "yahoo.com",
+            "icloud.com",
+            "me.com",
+            "mac.com",
+            "protonmail.com",
+            "proton.me",
+            # 国内主流
+            "qq.com",
+            "163.com",
+            "126.com",
+            "yeah.net",
+            "sina.com",
+            "sina.cn",
+            "sohu.com",
+            "foxmail.com",
+            "aliyun.com",
+        },
+        description="Allowed email domains whitelist",
     )

@@ -172,7 +172,7 @@ class OffsetPaginator:
         if total_count == 0:
             raise HTTPException(
                 status_code=404,
-                detail=get_message("common.noDataFound", language),
+                detail=get_message("common.noDataFound"),
             )
 
         # Apply ordering
@@ -228,7 +228,7 @@ class OffsetPaginator:
         if total_count == 0:
             raise HTTPException(
                 status_code=404,
-                detail=get_message("common.noDataFound", language),
+                detail=get_message("common.noDataFound"),
             )
 
         # Apply ordering

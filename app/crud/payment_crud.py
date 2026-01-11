@@ -14,7 +14,7 @@ from app.models.project_model import Project
 from app.utils.offset_pagination import offset_paginator
 from app.core.database.mysql import mysql_manager
 from app.core.database.redis import redis_manager
-from app.core.i18n.i18n import get_message, Language
+from app.core.i18n.i18n import get_message, Language, get_current_language
 from app.core.logger import logger_manager
 from app.crud.auth_crud import get_auth_crud
 
@@ -38,7 +38,7 @@ class PaymentCrud:
         return order_number
 
     async def _validate_project_for_payment(
-        self, project_id: int, language: Language
+        self, project_id: int
     ) -> Project:
         """验证项目是否存在且可以进行支付，并返回项目实例
 
@@ -66,14 +66,14 @@ class PaymentCrud:
             raise HTTPException(
                 status_code=404,
                 detail=get_message(
-                    key="project.common.projectNotFound", lang=language),
+                    key="project.common.projectNotFound"),
             )
 
         # 验证变现设置
         if project.project_monetization.price <= 0:
             raise HTTPException(
                 status_code=400,
-                detail=get_message("payment.common.paymentFree", language),
+                detail=get_message("payment.common.paymentFree"),
             )
 
         return project
@@ -143,10 +143,10 @@ class PaymentCrud:
         tax_rate: float,
         tax_amount: float,
         final_amount: float,
-        language: Language,
     ) -> Dict[str, Any]:
+        language = get_current_language()
         # 检查project是否是可支付的project
-        project = await self._validate_project_for_payment(project_id, language)
+        project = await self._validate_project_for_payment(project_id)
 
         # 检查用户是否已经购买过该项目
         have_paid = await self._check_user_already_paid(user_id, project_id)
@@ -154,7 +154,7 @@ class PaymentCrud:
             raise HTTPException(
                 status_code=400,
                 detail=get_message(
-                    key="project.common.projectAlreadyExists", lang=language
+                    key="project.common.projectAlreadyExists"
                 ),
             )
 
@@ -251,19 +251,19 @@ class PaymentCrud:
 
     async def get_payment_record(
         self,
-        language: Language,
         role: RoleType,
         page: int = 1,
         size: int = 20,
         user_id: Optional[int] = None,
     ) -> Tuple[List[Dict[str, Any]], Dict[str, Any]]:
+        language = get_current_language()
         try:
             page, size = offset_paginator.validate_pagination_params(
                 page, size)
         except ValueError:
             raise HTTPException(
                 status_code=400,
-                detail=get_message("common.invalidRequest", language),
+                detail=get_message("common.invalidRequest"),
             )
 
         cache_key = f"payment_record:page={page}:size={size}:user_id={user_id}"
@@ -295,7 +295,7 @@ class PaymentCrud:
                 ),
             ],
             filters=filters,
-            language=language,
+            
         )
 
         # 本月新增支付记录数量

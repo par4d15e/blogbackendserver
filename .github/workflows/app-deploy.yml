@@ -11,7 +11,7 @@ on:
 env:
   DOCKER_IMAGE: ${{ secrets.DOCKER_USERNAME }}/server
   DEPLOY_DIR: /opt/server
-  HEALTH_CHECK_URL: https://api.heyxiaoli.com/docs
+  HEALTH_CHECK_URL: https://api.heyxiaoli.com
 
 jobs:
   deploy-app:

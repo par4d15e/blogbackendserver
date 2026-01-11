@@ -7,7 +7,7 @@ from app.services.user_service import get_user_service, UserService
 from app.services.media_service import get_media_service, MediaService
 from app.utils.offset_pagination import offset_paginator
 from app.utils.pagination_headers import set_pagination_headers
-from app.core.i18n.i18n import get_language, get_message, Language
+from app.core.i18n.i18n import get_message
 from app.core.logger import logger_manager
 from app.core.database.redis import redis_manager
 
@@ -21,11 +21,10 @@ router = APIRouter(prefix="/user", tags=["User"])
 async def get_my_profile_router(
     current_user=Depends(get_current_user_dependency),
     user_service: UserService = Depends(get_user_service),
-    language: Language = Depends(get_language),
 ):
-    result = await user_service.get_profile(user_id=current_user.id, language=language)
+    result = await user_service.get_profile(user_id=current_user.id)
     return SuccessResponse(
-        message=get_message("user.getMyProfile", language),
+        message=get_message("user.getMyProfile"),
         data=result,
     )
 
@@ -35,13 +34,12 @@ async def update_my_bio_router(
     form_data: BioRequest,
     current_user=Depends(get_current_user_dependency),
     user_service: UserService = Depends(get_user_service),
-    language: Language = Depends(get_language),
 ):
     result = await user_service.update_my_bio(
         user_id=current_user.id, bio=form_data.bio
     )
     return SuccessResponse(
-        message=get_message("user.updateMyBio", language),
+        message=get_message("user.updateMyBio"),
         data=result,
     )
 
@@ -52,7 +50,6 @@ async def change_my_avatar_router(
     current_user=Depends(get_current_user_dependency),
     user_service: UserService = Depends(get_user_service),
     media_service: MediaService = Depends(get_media_service),
-    language: Language = Depends(get_language),
 ):
     temp_paths = await media_service.process_upload_files(files=[file])
     temp_path = temp_paths[0]  # 获取第一个（也是唯一一个）文件路径
@@ -64,21 +61,21 @@ async def change_my_avatar_router(
             await media_service.delete_media_from_s3(
                 media_ids=old_avatar["media_id"],
                 user_id=current_user.id,
-                language=language,
+                
             )
 
         result = await media_service.upload_single_media_to_s3(
             local_file_path=temp_path,
             user_id=current_user.id,
             is_avatar=True,
-            language=language,
+            
         )
 
         # 删除缓存
         await redis_manager.delete_async(f"user_profile_{current_user.id}")
 
         return SuccessResponse(
-            message=get_message("user.changeMyAvatar", language),
+            message=get_message("user.changeMyAvatar"),
             data=result,
         )
     finally:
@@ -93,11 +90,10 @@ async def change_my_avatar_router(
 async def get_user_profile_router(
     user_id: int,
     user_service: UserService = Depends(get_user_service),
-    language: Language = Depends(get_language),
 ):
-    result = await user_service.get_profile(user_id=user_id, language=language)
+    result = await user_service.get_profile(user_id=user_id)
     return SuccessResponse(
-        message=get_message("user.getOtherUserProfile", language),
+        message=get_message("user.getOtherUserProfile"),
         data=result,
     )
 
@@ -109,18 +105,17 @@ async def get_user_lists_router(
     size: int = Query(20, ge=1, le=100, description="每页数量，最大100"),
     current_user=Depends(get_current_user_dependency),
     user_service: UserService = Depends(get_user_service),
-    language: Language = Depends(get_language),
 ):
     """获取用户列表 - 使用传统分页方式"""
     items, pagination_metadata = await user_service.get_user_lists(
-        page=page, size=size, role=current_user.role, language=language
+        page=page, size=size, role=current_user.role
     )
 
     # 在响应头中添加分页信息
     set_pagination_headers(response, pagination_metadata)
 
     return SuccessResponse(
-        message=get_message("user.getUserLists", language),
+        message=get_message("user.getUserLists"),
         data=offset_paginator.create_response_data(items, pagination_metadata),
     )
 
@@ -130,19 +125,18 @@ async def enable_disable_user_router(
     form_data: EnableDisableUserRequest,
     current_user=Depends(get_current_user_dependency),
     user_service: UserService = Depends(get_user_service),
-    language: Language = Depends(get_language),
 ):
     result = await user_service.enable_or_disable_user(
         user_id=form_data.user_id,
         is_active=form_data.is_active,
         current_user_id=current_user.id,
         role=current_user.role,
-        language=language,
+        
     )
     return SuccessResponse(
-        message=get_message("user.enableDisableUser.enableUserSuccess", language)
+        message=get_message("user.enableDisableUser.enableUserSuccess")
         if form_data.is_active
-        else get_message("user.enableDisableUser.disableUserSuccess", language),
+        else get_message("user.enableDisableUser.disableUserSuccess"),
         data=result,
     )
 
@@ -152,15 +146,14 @@ async def delete_user_router(
     user_id: int,
     current_user=Depends(get_current_user_dependency),
     user_service: UserService = Depends(get_user_service),
-    language: Language = Depends(get_language),
 ):
     result = await user_service.delete_user(
         user_id=user_id,
         role=current_user.role,
         current_user_id=current_user.id,
-        language=language,
+        
     )
     return SuccessResponse(
-        message=get_message("user.deleteUser", language),
+        message=get_message("user.deleteUser"),
         data=result,
     )

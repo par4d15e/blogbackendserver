@@ -36,7 +36,6 @@ class SeoCrud:
 
     async def get_seo_lists(
         self,
-        language: Language,
         page: int = 1,
         size: int = 20,
         role: Optional[RoleType] = None,
@@ -58,18 +57,18 @@ class SeoCrud:
         except ValueError:
             raise HTTPException(
                 status_code=400,
-                detail=get_message("common.invalidRequest", language),
+                detail=get_message("common.invalidRequest"),
             )
 
         # 检查权限
         if role != RoleType.admin:
             raise HTTPException(
                 status_code=403,
-                detail=get_message(key="common.insufficientPermissions", lang=language),
+                detail=get_message(key="common.insufficientPermissions"),
             )
 
         # 缓存键
-        cache_key = f"seo_lists:lang={language}:page={page}:size={size}"
+        cache_key = f"seo_lists:page={page}:size={size}"
         cache_data = await redis_manager.get_async(cache_key)
         if cache_data:
             payload = json.loads(cache_data)
@@ -138,19 +137,18 @@ class SeoCrud:
         chinese_title: str,
         chinese_description: str,
         chinese_keywords: str,
-        language: Language,
     ) -> bool:
         if role != RoleType.admin:
             raise HTTPException(
                 status_code=403,
-                detail=get_message(key="common.insufficientPermissions", lang=language),
+                detail=get_message(key="common.insufficientPermissions"),
             )
 
         seo = await self._get_seo_by_chinese_title(chinese_title)
         if seo:
             raise HTTPException(
                 status_code=400,
-                detail=get_message(key="seo.createSeo.seoAlreadyExists", lang=language),
+                detail=get_message(key="seo.createSeo.seoAlreadyExists"),
             )
 
         english_title = await agent_utils.translate(text=chinese_title)
@@ -182,12 +180,11 @@ class SeoCrud:
         chinese_title: str,
         chinese_description: str,
         chinese_keywords: str,
-        language: Language,
     ) -> bool:
         if role != RoleType.admin:
             raise HTTPException(
                 status_code=403,
-                detail=get_message(key="common.insufficientPermissions", lang=language),
+                detail=get_message(key="common.insufficientPermissions"),
             )
 
         # 获取要更新的SEO记录
@@ -198,7 +195,7 @@ class SeoCrud:
         if not seo:
             raise HTTPException(
                 status_code=404,
-                detail=get_message(key="seo.common.seoNotFound", lang=language),
+                detail=get_message(key="seo.common.seoNotFound"),
             )
 
         # 检查是否存在相同的chinese_title（排除当前记录）
@@ -213,7 +210,7 @@ class SeoCrud:
         if existing_seo:
             raise HTTPException(
                 status_code=400,
-                detail=get_message(key="seo.updateSeo.seoAlreadyExists", lang=language),
+                detail=get_message(key="seo.updateSeo.seoAlreadyExists"),
             )
 
         # 更新SEO数据
@@ -255,12 +252,11 @@ class SeoCrud:
         self,
         seo_id: int,
         role: RoleType,
-        language: Language,
     ) -> bool:
         if role == RoleType.user:
             raise HTTPException(
                 status_code=403,
-                detail=get_message(key="common.insufficientPermissions", lang=language),
+                detail=get_message(key="common.insufficientPermissions"),
             )
 
         seo = await self._get_seo_by_id(seo_id)
@@ -268,7 +264,7 @@ class SeoCrud:
         if not seo:
             raise HTTPException(
                 status_code=400,
-                detail=get_message(key="seo.common.seoNotFound", lang=language),
+                detail=get_message(key="seo.common.seoNotFound"),
             )
 
         await self.db.execute(delete(Seo).where(Seo.id == seo_id))

@@ -11,7 +11,7 @@ from sqlalchemy.orm import lazyload, load_only
 from app.core.database.mysql import mysql_manager
 from app.core.database.redis import redis_manager
 from app.core.logger import logger_manager
-from app.core.i18n.i18n import get_message, Language
+from app.core.i18n.i18n import get_message, Language, get_current_language
 from app.utils.agent import agent_utils
 from app.utils.keyset_pagination import paginator_desc
 from app.utils.offset_pagination import offset_paginator
@@ -53,8 +53,8 @@ class FriendCrud:
 
     async def get_friend_details(
         self,
-        language: Language,
     ) -> Dict[str, Any]:
+        language = get_current_language()
         # 获取缓存
         cache_key = f"friend_details:lang={language}"
         cache_result = await redis_manager.get_async(cache_key)
@@ -70,7 +70,7 @@ class FriendCrud:
             raise HTTPException(
                 status_code=404,
                 detail=get_message(
-                    key="friend.common.friendNotFound", lang=language),
+                    key="friend.common.friendNotFound"),
             )
 
         response = {
@@ -96,7 +96,6 @@ class FriendCrud:
         friend_id: int,
         chinese_title: str,
         chinese_description: str,
-        language: Language,
     ) -> bool:
         # 检查友链是否存在
         friend = await self._get_friend_by_id(friend_id)
@@ -104,7 +103,7 @@ class FriendCrud:
             raise HTTPException(
                 status_code=404,
                 detail=get_message(
-                    key="friend.common.friendNotFound", lang=language),
+                    key="friend.common.friendNotFound"),
             )
 
         # 检查创建用户的身份
@@ -112,7 +111,7 @@ class FriendCrud:
             raise HTTPException(
                 status_code=403,
                 detail=get_message(
-                    key="common.insufficientPermissions", lang=language),
+                    key="common.insufficientPermissions"),
             )
 
         # 更新友链
@@ -150,7 +149,6 @@ class FriendCrud:
     async def get_friend_list(
         self,
         friend_id: int,
-        language: Language,
         limit: int = 10,
         cursor: Optional[str] = None,
     ) -> Dict[str, Any]:
@@ -165,6 +163,7 @@ class FriendCrud:
         Returns:
             包含分页信息和友链列表的字典
         """
+        language = get_current_language()
         # 构建缓存键
         cache_key = f"friend_list:{friend_id}:{limit}:{cursor}:{language}"
         cache_data = await redis_manager.get_async(cache_key)
@@ -206,7 +205,7 @@ class FriendCrud:
             raise HTTPException(
                 status_code=404,
                 detail=get_message(
-                    key="friend.common.friendNotFound", lang=language),
+                    key="friend.common.friendNotFound"),
             )
 
         # 构建响应数据
@@ -299,7 +298,6 @@ class FriendCrud:
         site_url: str,
         chinese_title: str,
         chinese_description: str,
-        language: Language,
     ) -> bool:
         # 检查是否有friend
         friend = await self._get_friend_by_id(friend_id)
@@ -309,7 +307,7 @@ class FriendCrud:
             raise HTTPException(
                 status_code=404,
                 detail=get_message(
-                    key="friend.common.friendNotFound", lang=language),
+                    key="friend.common.friendNotFound"),
             )
         # 翻译
         if chinese_title:
@@ -366,14 +364,13 @@ class FriendCrud:
         self,
         role: RoleType,
         friend_list_id: int,
-        language: Language,
     ) -> bool:
         # 检查创建用户的身份
         if role != RoleType.admin:
             raise HTTPException(
                 status_code=403,
                 detail=get_message(
-                    key="common.insufficientPermissions", lang=language),
+                    key="common.insufficientPermissions"),
             )
 
         # 检查友链是否存在
@@ -384,7 +381,7 @@ class FriendCrud:
             raise HTTPException(
                 status_code=404,
                 detail=get_message(
-                    key="friend.common.friendNotFound", lang=language),
+                    key="friend.common.friendNotFound"),
             )
 
         # 删除友链
@@ -404,14 +401,13 @@ class FriendCrud:
         friend_list_id: int,
         type: FriendType,
         role: RoleType,
-        language: Language,
     ) -> bool:
         # 检查创建用户的身份
         if role != RoleType.admin:
             raise HTTPException(
                 status_code=403,
                 detail=get_message(
-                    key="common.insufficientPermissions", lang=language),
+                    key="common.insufficientPermissions"),
             )
 
         # 检查友链是否存在
@@ -420,7 +416,7 @@ class FriendCrud:
             raise HTTPException(
                 status_code=404,
                 detail=get_message(
-                    key="friend.common.friendNotFound", lang=language),
+                    key="friend.common.friendNotFound"),
             )
 
         # 更新友链类型

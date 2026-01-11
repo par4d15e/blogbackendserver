@@ -122,5 +122,13 @@ celery_app.conf.beat_schedule = {
         "options": {
             "expires": 3600,  # 任务过期时间：1小时
         },
-    }
+    },
+    "cleanup-unverified-users-daily": {
+        "task": "cleanup_unverified_users_task",
+        "schedule": crontab(hour=2, minute=0),  # 每天凌晨 2 点执行
+        "args": (24,),  # retention_hours=24，删除注册超过24小时仍未验证的用户
+        "options": {
+            "expires": 1800,  # 任务过期时间：30分钟
+        },
+    },
 }

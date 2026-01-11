@@ -9,7 +9,7 @@ from sqlalchemy.orm import selectinload
 from app.core.database.mysql import mysql_manager
 from app.core.database.redis import redis_manager
 from app.core.logger import logger_manager
-from app.core.i18n.i18n import get_message, Language
+from app.core.i18n.i18n import get_message, Language, get_current_language
 from app.utils.agent import agent_utils
 from app.utils.keyset_pagination import paginator_desc
 
@@ -66,8 +66,8 @@ class BoardCrud:
 
     async def get_board_details(
         self,
-        language: Language,
     ) -> Dict[str, Any]:
+        language = get_current_language()
         # 获取缓存
         cache_key = f"board_details:lang={language}"
         cache_result = await redis_manager.get_async(cache_key)
@@ -82,7 +82,7 @@ class BoardCrud:
             raise HTTPException(
                 status_code=404,
                 detail=get_message(
-                    key="board.common.boardNotFound", lang=language),
+                    key="board.common.boardNotFound"),
             )
 
         response = {
@@ -107,13 +107,12 @@ class BoardCrud:
         role: RoleType,
         chinese_title: str,
         chinese_description: str,
-        language: Language,
     ) -> bool:
         if role != RoleType.admin:
             raise HTTPException(
                 status_code=403,
                 detail=get_message(
-                    key="common.insufficientPermissions", lang=language),
+                    key="common.insufficientPermissions"),
             )
 
         # check if board exists
@@ -122,7 +121,7 @@ class BoardCrud:
             raise HTTPException(
                 status_code=404,
                 detail=get_message(
-                    key="board.common.boardNotFound", lang=language),
+                    key="board.common.boardNotFound"),
             )
 
         # update board
@@ -160,7 +159,6 @@ class BoardCrud:
         user_id: int,
         parent_id: Optional[int],
         comment: str,
-        language: Language,
     ) -> bool:
         # 检查board是否存在
         board = await self._get_board_by_id(board_id)
@@ -168,7 +166,7 @@ class BoardCrud:
             raise HTTPException(
                 status_code=404,
                 detail=get_message(
-                    key="board.common.boardNotFound", lang=language),
+                    key="board.common.boardNotFound"),
             )
 
         # 插入board_comment
@@ -191,7 +189,6 @@ class BoardCrud:
     async def get_board_comment_lists(
         self,
         board_id: int,
-        language: Language,
         limit: int = 20,
         cursor: Optional[str] = None,
     ) -> Dict[str, Any]:
@@ -238,7 +235,7 @@ class BoardCrud:
             raise HTTPException(
                 status_code=404,
                 detail=get_message(
-                    "board.createBoardComment.commentNotFound", language
+                    "board.createBoardComment.commentNotFound"
                 ),
             )
 
@@ -317,7 +314,6 @@ class BoardCrud:
         user_id: int,
         board_comment_id: int,
         comment: str,
-        language: Language,
     ) -> bool:
         # check if board_comment exists
         board_comment = await self._get_board_comment_by_id(board_comment_id)
@@ -325,7 +321,7 @@ class BoardCrud:
             raise HTTPException(
                 status_code=404,
                 detail=get_message(
-                    key="board.createBoardComment.boardCommentNotFound", lang=language
+                    key="board.createBoardComment.boardCommentNotFound"
                 ),
             )
 
@@ -334,7 +330,7 @@ class BoardCrud:
             raise HTTPException(
                 status_code=403,
                 detail=get_message(
-                    key="common.insufficientPermissions", lang=language),
+                    key="common.insufficientPermissions"),
             )
 
         # update board_comment
@@ -358,7 +354,6 @@ class BoardCrud:
         user_id: int,
         role: RoleType,
         board_comment_id: int,
-        language: Language,
     ) -> bool:
         # check if board_comment exists
         board_comment = await self._get_board_comment_by_id(board_comment_id)
@@ -366,7 +361,7 @@ class BoardCrud:
             raise HTTPException(
                 status_code=404,
                 detail=get_message(
-                    key="board.createBoardComment.boardCommentNotFound", lang=language
+                    key="board.createBoardComment.boardCommentNotFound"
                 ),
             )
 
@@ -375,7 +370,7 @@ class BoardCrud:
             raise HTTPException(
                 status_code=404,
                 detail=get_message(
-                    key="board.createBoardComment.boardCommentNotFound", lang=language
+                    key="board.createBoardComment.boardCommentNotFound"
                 ),
             )
 

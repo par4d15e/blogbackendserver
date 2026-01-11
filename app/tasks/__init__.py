@@ -9,6 +9,7 @@ from .summary_content_task import summary_blog_content
 from .generate_content_audio_task import generate_content_audio_task
 from .notification_task import notification_task
 from .backup_database_task import backup_database_task
+from .cleanup_unverified_users_task import cleanup_unverified_users_task
 
 __all__ = [
     "client_info_task",
@@ -24,4 +25,5 @@ __all__ = [
     "generate_content_audio_task",
     "notification_task",
     "backup_database_task",
+    "cleanup_unverified_users_task",
 ]

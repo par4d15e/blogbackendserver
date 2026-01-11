@@ -3,112 +3,119 @@
 """
 
 import json
-import os
-from typing import Dict, Optional
+from pathlib import Path
+from typing import Any, Optional
 from enum import Enum
+from contextvars import ContextVar
+from functools import reduce
 from fastapi import Request
 
 
 class Language(Enum):
     """支持的语言枚举"""
+    ZH_CN = "zh"
+    EN_US = "en"
 
-    ZH_CN = "zh"  # 简体中文
-    EN_US = "en"  # 英文
+
+# 请求级别的语言上下文变量
+_request_language: ContextVar[Language] = ContextVar(
+    "request_language", default=Language.EN_US
+)
+
+# 消息文件目录
+_MESSAGES_DIR = Path(__file__).parent / "messages"
+_FALLBACK_MESSAGE = "Unknown error"
+
+
+def _load_messages(language: Language) -> dict:
+    """加载指定语言的消息文件"""
+    try:
+        file_path = _MESSAGES_DIR / f"{language.value}.json"
+        return json.loads(file_path.read_text(encoding="utf-8"))
+    except (FileNotFoundError, json.JSONDecodeError) as e:
+        print(f"Warning: Failed to load messages for {language.value}: {e}")
+        return {}
+
+
+def _get_nested(data: dict, keys: list[str]) -> Any:
+    """安全获取嵌套字典值"""
+    try:
+        return reduce(lambda d, k: d[k], keys, data)
+    except (KeyError, TypeError):
+        return None
+
+
+def _detect_language(header: Optional[str]) -> Optional[Language]:
+    """从 header 值检测语言"""
+    if not header:
+        return None
+    header_lower = header.lower()
+    if header_lower.startswith("zh"):
+        return Language.ZH_CN
+    if header_lower.startswith("en"):
+        return Language.EN_US
+    return None
 
 
 class I18nManager:
     """国际化管理器"""
 
     def __init__(self):
-        self._messages = {}
+        self._messages = {lang: _load_messages(lang) for lang in Language}
         self._default_language = Language.EN_US
-        self._load_all_languages()
-
-    def _load_all_languages(self):
-        """加载所有支持的语言消息"""
-        for language in Language:
-            self._messages[language] = self._load_language_messages(language)
-
-    def _load_language_messages(self, language: Language) -> Dict[str, str]:
-        """从JSON文件加载指定语言的消息"""
-        try:
-            # 获取当前文件所在目录
-            current_dir = os.path.dirname(os.path.abspath(__file__))
-            messages_dir = os.path.join(current_dir, "messages")
-            file_path = os.path.join(messages_dir, f"{language.value}.json")
-
-            with open(file_path, "r", encoding="utf-8") as f:
-                return json.load(f)
-        except (FileNotFoundError, json.JSONDecodeError) as e:
-            # 如果文件不存在或解析失败，返回空字典
-            print(
-                f"Warning: Failed to load messages for {language.value}: {e}")
-            return {}
 
     def get_localized_message(self, key: str, language: Optional[Language] = None) -> str:
         """获取指定语言的消息"""
-        if language is None:
-            language = self._default_language
+        lang = language or self._default_language
+        messages = self._messages.get(lang, self._messages[self._default_language])
+        
+        # 获取消息值
+        keys = key.split(".") if key else []
+        result = _get_nested(messages, keys) if keys else None
+        
+        # 如果结果是字符串则返回，否则返回 fallback
+        if isinstance(result, str):
+            return result
+        
+        # Fallback: common.internalError
+        fallback = _get_nested(messages, ["common", "internalError"])
+        return fallback if isinstance(fallback, str) else _FALLBACK_MESSAGE
 
-        messages = self._messages.get(
-            language, self._messages[self._default_language])
-
-        # 支持嵌套key访问，如 "common.internalError"
-        if "." in key:
-            keys = key.split(".")
-            result = messages
-            for k in keys:
-                if isinstance(result, dict) and k in result:
-                    result = result[k]
-                else:
-                    return messages.get("common", {}).get(
-                        "internalError", "Unknown error"
-                    )
-            return (
-                result
-                if isinstance(result, str)
-                else messages.get("common", {}).get("internalError", "Unknown error")
-            )
-
-        return messages.get(
-            key, messages.get("common", {}).get(
-                "internalError", "Unknown error")
-        )
-
-    def get_supported_languages(self) -> list:
+    def get_supported_languages(self) -> list[str]:
         """获取支持的语言列表"""
-        return [lang.value for lang in self._messages.keys()]
+        return [lang.value for lang in self._messages]
 
 
-# 全局国际化管理器实例
+# 全局实例
 i18n_manager = I18nManager()
 
 
+def set_request_language(language: Language):
+    """设置当前请求的语言"""
+    _request_language.set(language)
+
+
+def get_current_language() -> Language:
+    """获取当前请求的语言"""
+    return _request_language.get()
+
+
 def get_language(request: Request) -> Language:
-    """Resolve request language with simplified fallbacks.
-
-    Priority: X-Language header -> Accept-Language -> 'en'
-    """
-    # 1) Custom header (主要方式)
-    lang = request.headers.get("X-Language")
-    if lang and lang.startswith("zh"):
-        return Language.ZH_CN
-    if lang and lang.startswith("en"):
-        return Language.EN_US
-
-    # 2) Accept-Language (浏览器默认语言)
-    accept_language = request.headers.get("Accept-Language")
-    if not accept_language:
-        return Language.EN_US
-    for part in accept_language.split(","):
-        tag = part.split(";")[0].strip().lower()
-        if tag.startswith("zh"):
-            return Language.ZH_CN
-        if tag.startswith("en"):
-            return Language.EN_US
+    """从请求解析语言，优先级: X-Language -> Accept-Language -> 默认英文"""
+    # X-Language header
+    if lang := _detect_language(request.headers.get("X-Language")):
+        return lang
+    
+    # Accept-Language header
+    accept = request.headers.get("Accept-Language") or ""
+    for part in accept.split(","):
+        tag = part.split(";")[0].strip()
+        if lang := _detect_language(tag):
+            return lang
+    
     return Language.EN_US
 
 
-def get_message(key: str, lang: Language) -> str:
-    """获取错误消息的便捷函数"""
-    return i18n_manager.get_localized_message(key, lang)
+def get_message(key: str, lang: Optional[Language] = None) -> str:
+    """获取国际化消息"""
+    return i18n_manager.get_localized_message(key, lang or get_current_language())

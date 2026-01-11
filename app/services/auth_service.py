@@ -53,7 +53,6 @@ class AuthService:
         avatar_url: str,
         provider: SocialProvider,
         provider_user_id: str,
-        language: Language,
     ) -> Dict[str, Optional[str]]:
         """Social account login."""
         # 创建或更新社交账户
@@ -64,7 +63,7 @@ class AuthService:
             avatar_url=avatar_url,
             provider=provider,
             provider_user_id=provider_user_id,
-            language=language,
+            
         )
         access_token = tokens["access_token"]
         refresh_token = tokens["refresh_token"]
@@ -74,19 +73,21 @@ class AuthService:
         }
 
     async def send_auth_code_email(
-        self, email: str, type: CodeType, language: Language
+        self, email: str, type: CodeType
     ) -> bool:
         # 生成验证码
         code = str(random.randint(100000, 999999))  # 生成6位随机验证码
 
         # 保存验证码
         await self.auth_crud.create_code_crud(
-            email=email, type=type, code=code, language=language
+            email=email, type=type, code=code
         )
 
         # 获取用户ID（如果用户存在）
+        from app.core.i18n.i18n import get_current_language
+        current_language = get_current_language()
         if type == CodeType.verified:
-            if language == Language.ZH_CN:
+            if current_language == Language.ZH_CN:
                 subject = f"[{settings.app.APP_NAME}] - 账号激活码"
             else:
                 subject = f"[{settings.app.APP_NAME}] - Account Activation Code"
@@ -95,11 +96,11 @@ class AuthService:
                 recipient=email,
                 template="verification",
                 code=code,
-                language=language,
+                
             )
             self.logger.info(f"verification email has been sent to {email}")
         else:
-            if language == Language.ZH_CN:
+            if current_language == Language.ZH_CN:
                 subject = f"[{settings.app.APP_NAME}] - 密码重置码"
             else:
                 subject = f"[{settings.app.APP_NAME}] - Password Reset Code"
@@ -108,21 +109,21 @@ class AuthService:
                 recipient=email,
                 template="resetcode",
                 code=code,
-                language=language,
+                
             )
             self.logger.info(f"password reset email has been sent to {email}")
 
         return True
 
     async def create_user_account(
-        self, email: str, username: str, password: str, code: str, language: Language
+        self, email: str, username: str, password: str, code: str
     ) -> bool:
         """Create a new user account."""
         # 检查密码是否符合要求
         if not self.security_manager.validate_password(password):
             raise HTTPException(
                 status_code=400,
-                detail=get_message("auth.common.invalidPassword", language),
+                detail=get_message("auth.common.invalidPassword"),
             )
 
         # 加密密码
@@ -135,25 +136,25 @@ class AuthService:
             password_hash=password_hash,
             code=code,
             type=CodeType.verified,
-            language=language,
+            
         )
 
         return True
 
     async def reset_user_password(
-        self, email: str, new_password: str, code: str, language: Language
+        self, email: str, new_password: str, code: str
     ) -> bool:
         """Reset user password."""
         # 检查密码是否符合要求
         if not self.security_manager.validate_password(new_password):
             raise HTTPException(
                 status_code=400,
-                detail=get_message("auth.common.invalidPassword", language),
+                detail=get_message("auth.common.invalidPassword"),
             )
 
         # 重置密码
         result = await self.auth_crud.reset_user_password(
-            email=email, new_password=new_password, code=code, language=language
+            email=email, new_password=new_password, code=code
         )
 
         return result
@@ -164,11 +165,10 @@ class AuthService:
         email: str,
         password: str,
         response: Response,
-        language: Language,
     ) -> bool:
         """User account login."""
         token_data = await self.auth_crud.account_login(
-            request=request, email=email, password=password, language=language
+            request=request, email=email, password=password
         )
 
         # 设置access token cookie
@@ -198,7 +198,7 @@ class AuthService:
         return True
 
     async def account_logout(
-        self, response: Response, user_id: int, language: Language
+        self, response: Response, user_id: int
     ) -> bool:
         """User account logout - Revoke all user tokens."""
         try:
@@ -221,11 +221,11 @@ class AuthService:
             self.logger.error(f"Error cleaning up user tokens: {str(e)}")
             raise HTTPException(
                 status_code=500,
-                detail=get_message("auth.common.internalError", language),
+                detail=get_message("auth.common.internalError"),
             )
 
     async def generate_access_token(
-        self, request, response: Response, language: Language
+        self, request, response: Response
     ) -> Dict[str, str]:
         """Generate access token for user"""
         # 获取refresh_token
@@ -238,7 +238,7 @@ class AuthService:
             raise HTTPException(
                 status_code=404,
                 detail=get_message(
-                    "auth.generateAccessToken.refreshTokenNotFound", language
+                    "auth.generateAccessToken.refreshTokenNotFound"
                 ),
             )
 
@@ -247,7 +247,7 @@ class AuthService:
         if not token_data:
             raise HTTPException(
                 status_code=401,
-                detail=get_message("common.insufficientPermissions", language),
+                detail=get_message("common.insufficientPermissions"),
             )
 
         user_id = token_data.get("user_id")
@@ -257,7 +257,7 @@ class AuthService:
         if not user_id or not email_id or not jit:
             raise HTTPException(
                 status_code=401,
-                detail=get_message("common.insufficientPermissions", language),
+                detail=get_message("common.insufficientPermissions"),
             )
 
         # 生成新的access_token
@@ -265,13 +265,13 @@ class AuthService:
             user_id=user_id,
             email=email_id,
             jit=jit,
-            language=language,
+            
         )
         if not access_token:
             raise HTTPException(
                 status_code=404,
                 detail=get_message(
-                    "auth.generateAccessToken.accessTokenNotFound", language
+                    "auth.generateAccessToken.accessTokenNotFound"
                 ),
             )
 
@@ -291,7 +291,7 @@ class AuthService:
             "access_token": access_token,
         }
 
-    async def check_auth_token(self, request, language: Language) -> Dict[str, Union[str, bool]]:
+    async def check_auth_token(self, request) -> Dict[str, Union[str, bool]]:
         """Check access token."""
         access_token = APIKeyCookie(name="access_token", auto_error=False)
         access_token = await access_token(request)
@@ -345,7 +345,6 @@ class AuthService:
     async def github_callback(
         self,
         request,
-        language: Language,
     ) -> RedirectResponse:
         """GitHub callback."""
         token = await self.github.authorize_access_token(request)
@@ -353,7 +352,7 @@ class AuthService:
             raise HTTPException(
                 status_code=404,
                 detail=get_message(
-                    "auth.githubCallback.githubTokenNotFound", language),
+                    "auth.githubCallback.githubTokenNotFound"),
             )
         user_info = await self.github.get("https://api.github.com/user", token=token)
         user_info = user_info.json()
@@ -379,7 +378,7 @@ class AuthService:
                     raise HTTPException(
                         status_code=404,
                         detail=get_message(
-                            "auth.githubCallback.githubEmailNotFound", language
+                            "auth.githubCallback.githubEmailNotFound"
                         ),
                     )
 
@@ -396,7 +395,7 @@ class AuthService:
             avatar_url=avatar_url,
             provider=SocialProvider.github,
             provider_user_id=str(user_info.get("id")),
-            language=language,
+            
         )
 
         access_token = tokens["access_token"]
@@ -451,7 +450,6 @@ class AuthService:
     async def google_callback(
         self,
         request,
-        language: Language,
     ) -> RedirectResponse:
         """Google callback."""
         tokens = await self.google.authorize_access_token(request)
@@ -459,7 +457,7 @@ class AuthService:
             raise HTTPException(
                 status_code=404,
                 detail=get_message(
-                    "auth.googleCallback.googleTokenNotFound", language),
+                    "auth.googleCallback.googleTokenNotFound"),
             )
         user_info = await self.google.get(
             "https://www.googleapis.com/userinfo/v2/me", token=tokens
@@ -471,7 +469,7 @@ class AuthService:
             raise HTTPException(
                 status_code=404,
                 detail=get_message(
-                    "auth.googleCallback.googleEmailNotFound", language),
+                    "auth.googleCallback.googleEmailNotFound"),
             )
         username = user_info.get("name").lower()
         if not username:
@@ -485,7 +483,7 @@ class AuthService:
             avatar_url=avatar_url,
             provider=SocialProvider.google,
             provider_user_id=str(user_info.get("id")),
-            language=language,
+            
         )
 
         access_token = tokens["access_token"]
@@ -533,11 +531,10 @@ class AuthService:
         self,
         user_email: str,
         new_password: str,
-        language: Language,
     ) -> bool:
         """重置已登录用户的密码"""
         await self.auth_crud.reset_logged_in_user_password(
-            user_email=user_email, new_password=new_password, language=language
+            user_email=user_email, new_password=new_password
         )
 
         return True

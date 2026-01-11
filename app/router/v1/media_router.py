@@ -20,7 +20,7 @@ from app.core.logger import logger_manager
 from app.router.v1.auth_router import get_current_user_dependency
 from app.utils.offset_pagination import offset_paginator
 from app.utils.pagination_headers import set_pagination_headers
-from app.core.i18n.i18n import get_language, get_message, Language
+from app.core.i18n.i18n import get_message, Language, get_current_language
 
 logger = logger_manager.get_logger(__name__)
 
@@ -35,7 +35,6 @@ async def get_media_lists_router(
     size: int = Query(20, ge=1, le=100, description="每页数量，最大100"),
     current_user=Depends(get_current_user_dependency),
     media_service: MediaService = Depends(get_media_service),
-    language: Language = Depends(get_language),
     media_type: Optional[MediaType] = Query(None, description="媒体类型"),
 ):
     """
@@ -45,12 +44,12 @@ async def get_media_lists_router(
         user_id=current_user.id,
         page=page,
         size=size,
-        language=language,
+        
         media_type=media_type,
     )
     set_pagination_headers(response, pagination_metadata)
     return SuccessResponse(
-        message=get_message("media.getMediaLists", language),
+        message=get_message("media.getMediaLists"),
         data=offset_paginator.create_response_data(items, pagination_metadata),
     )
 
@@ -60,7 +59,6 @@ async def upload_router(
     files: List[UploadFile] = File(...),
     current_user=Depends(get_current_user_dependency),
     media_service: MediaService = Depends(get_media_service),
-    language: Language = Depends(get_language),
 ):
     """
     批量上传媒体文件
@@ -76,7 +74,7 @@ async def upload_router(
         if not files:
             raise HTTPException(
                 status_code=400,
-                detail=get_message("media.uploadMedia", language),
+                detail=get_message("media.uploadMedia"),
             )
 
         # 处理上传文件（验证、保存到临时文件）
@@ -89,14 +87,14 @@ async def upload_router(
                     local_file_path=temp_paths[0],
                     user_id=current_user.id,
                     is_avatar=False,
-                    language=language,
+                    
                 )
             else:
                 result = await media_service.upload_multiple_media_to_s3(
                     local_file_paths=temp_paths,
                     user_id=current_user.id,
                     is_avatar=False,
-                    language=language,
+                    
                 )
 
             zh_message = (
@@ -118,6 +116,7 @@ async def upload_router(
                 )
             )
 
+            language = get_current_language()
             return SuccessResponse(
                 message=zh_message if language == Language.ZH_CN else en_message,
                 data=result,
@@ -145,7 +144,6 @@ async def download_router(
     media_id: int,
     current_user=Depends(get_current_user_dependency),
     media_service: MediaService = Depends(get_media_service),
-    language: Language = Depends(get_language),
 ):
     """
     下载源媒体文件
@@ -163,7 +161,7 @@ async def download_router(
         # 调用服务层下载媒体文件
         local_file_path = await media_service.download_media_from_s3(
             media_id=media_id,
-            language=language,
+            
         )
 
         # 获取文件名
@@ -198,7 +196,6 @@ async def delete_router(
     delete_request: DeleteMediaRequest,
     current_user=Depends(get_current_user_dependency),
     media_service: MediaService = Depends(get_media_service),
-    language: Language = Depends(get_language),
 ):
     """
     删除媒体文件，支持单个或多个文件删除
@@ -217,7 +214,7 @@ async def delete_router(
         result = await media_service.delete_media_from_s3(
             media_ids=delete_request.media_ids,
             user_id=current_user.id,
-            language=language,
+            
         )
 
         # 记录删除操作日志

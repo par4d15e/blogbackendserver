@@ -3,7 +3,8 @@
     "internalError": "内部错误,请检查日志",
     "insufficientPermissions": "权限不足",
     "invalidRequest": "无效的请求",
-    "noDataFound": "无法找到任何数据"
+    "noDataFound": "无法找到任何数据",
+    "serverRunning": "服务器运行中"
   },
   "auth": {
     "common": {
@@ -17,7 +18,9 @@
       "validationCodeAlreadyRequested": "验证码已请求, 请检查您的邮箱",
       "invalidVerificationCode": "无效的验证码, 请确保验证码正确",
       "passwordSameAsOld": "密码与旧密码相同",
-      "internalError": "内部错误,请检查日志"
+      "internalError": "内部错误,请检查日志",
+      "invalidEmailFormat": "邮箱格式无效",
+      "unsupportedEmailDomain": "请使用主流邮箱服务商（Gmail、Outlook、QQ、163等）"
     },
     "sendVerificationCode": "验证码已发送至您的邮箱",
     "sendResetCode": "重置码已发送至您的邮箱",

@@ -6,7 +6,7 @@ from app.core.config.settings import settings
 from app.core.logger import logger_manager
 from app.crud.payment_crud import PaymentCrud, get_payment_crud
 from app.models.payment_model import PaymentStatus, PaymentType
-from app.core.i18n.i18n import Language, get_message
+from app.core.i18n.i18n import Language, get_message, get_current_language
 from app.tasks.send_invoice_email_task import send_invoice_email_task
 from app.tasks import notification_task
 from app.schemas.common import NotificationType
@@ -31,7 +31,6 @@ class PaymentService:
         tax_rate: float,
         tax_amount: float,
         final_amount: float,
-        language: Language,
     ) -> Optional[str]:
         """创建 Stripe 支付意图"""
         try:
@@ -46,7 +45,7 @@ class PaymentService:
                 tax_rate=tax_rate,
                 tax_amount=tax_amount,
                 final_amount=final_amount,
-                language=language,
+                
             )
 
             self.logger.info(
@@ -104,7 +103,7 @@ class PaymentService:
                 "tax_amount": response["tax"]["tax_amount"],
                 "final_amount": response["final_amount"],
                 "order_number": response["order_number"],
-                "language": language.value,
+                "language": get_current_language().value,
             }
 
             # 使用正确的 Stripe API 调用方式
@@ -316,7 +315,7 @@ class PaymentService:
         return {"status": "success"}
 
     async def get_payment_success_details(
-        self, payment_intent_id: str, language: Language
+        self, payment_intent_id: str
     ) -> Dict[str, Any]:
         """通过 payment_intent_id 获取支付成功的产品详情"""
         try:
@@ -328,7 +327,7 @@ class PaymentService:
                 raise HTTPException(
                     status_code=400,
                     detail=get_message(
-                        "payment.common.paymentFailed", language),
+                        "payment.common.paymentFailed"),
                 )
 
             # 提取元数据
@@ -339,7 +338,7 @@ class PaymentService:
                 raise HTTPException(
                     status_code=400,
                     detail=get_message(
-                        "payment.paymentSuccess.invalidMetadata", language
+                        "payment.paymentSuccess.invalidMetadata"
                     ),
                 )
 
@@ -385,27 +384,26 @@ class PaymentService:
             raise HTTPException(
                 status_code=400,
                 detail=get_message(
-                    "payment.paymentSuccess.stripeError", language),
+                    "payment.paymentSuccess.stripeError"),
             )
         except Exception as e:
             self.logger.error(f"获取支付详情时发生错误: {str(e)}")
             raise HTTPException(
                 status_code=500,
                 detail=get_message(
-                    "payment.paymentSuccess.internalError", language),
+                    "payment.paymentSuccess.internalError"),
             )
 
     async def get_payment_record(
         self,
         user_id: int,
         role: RoleType,
-        language: Language,
         page: int = 1,
         size: int = 20,
     ) -> Tuple[List[Dict[str, Any]], Dict[str, Any]]:
         if role == RoleType.user:
             return await self.payment_crud.get_payment_record(
-                language=language,
+                
                 page=page,
                 size=size,
                 user_id=user_id,
@@ -413,7 +411,7 @@ class PaymentService:
             )
         else:
             return await self.payment_crud.get_payment_record(
-                language=language,
+                
                 page=page,
                 size=size,
                 role=role,

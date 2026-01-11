@@ -10,7 +10,7 @@ from app.models.user_model import RoleType
 from app.core.database.mysql import mysql_manager
 from app.core.database.redis import redis_manager
 from app.core.logger import logger_manager
-from app.core.i18n.i18n import get_message, Language
+from app.core.i18n.i18n import get_message, get_current_language, Language
 from app.utils.agent import agent_utils
 
 
@@ -63,7 +63,8 @@ class SectionCrud:
                 tree.append(section_dict)
         return tree
 
-    async def get_section_lists(self, language: Language) -> List[Dict[str, Any]]:
+    async def get_section_lists(self) -> List[Dict[str, Any]]:
+        language = get_current_language()
         cache_key = f"section_lists_tree:{language.value}"
         cache_data = await redis_manager.get_async(cache_key)
 
@@ -83,7 +84,7 @@ class SectionCrud:
             raise HTTPException(
                 status_code=404,
                 detail=get_message(
-                    key="section.common.sectionNotFound", lang=language),
+                    key="section.common.sectionNotFound"),
             )
 
         # 构建树形结构
@@ -95,7 +96,7 @@ class SectionCrud:
         return response
 
     async def get_section_seo_by_slug(
-        self, slug: str, language: Language
+        self, slug: str
     ) -> Optional[Dict[str, Any]]:
         cache_key = f"section_seo_by_slug:{slug}"
         cache_data = await redis_manager.get_async(cache_key)
@@ -109,7 +110,7 @@ class SectionCrud:
                 status_code=404,
                 detail=get_message(
                     key="section.common.sectionNotFound",
-                    lang=language,
+                    
                 ),
             )
         if section.seo:
@@ -133,8 +134,9 @@ class SectionCrud:
             return None
 
     async def get_section_details_by_slug(
-        self, slug: str, language: Language
+        self, slug: str
     ) -> Optional[Dict[str, Any]]:
+        language = get_current_language()
         cache_key = f"section_details_by_slug:{slug}:{language}"
         cache_data = await redis_manager.get_async(cache_key)
 
@@ -147,7 +149,7 @@ class SectionCrud:
             raise HTTPException(
                 status_code=404,
                 detail=get_message(
-                    key="section.common.sectionNotFound", lang=language),
+                    key="section.common.sectionNotFound"),
             )
 
         response = {
@@ -176,7 +178,6 @@ class SectionCrud:
     async def update_section(
         self,
         section_id: int,
-        language: Language,
         chinese_title: str,
         chinese_description: str,
         role: str,
@@ -188,7 +189,7 @@ class SectionCrud:
             raise HTTPException(
                 status_code=401,
                 detail=get_message(
-                    key="common.insufficientPermissions", lang=language),
+                    key="common.insufficientPermissions"),
             )
 
         # 检查是否有section
@@ -197,7 +198,7 @@ class SectionCrud:
             raise HTTPException(
                 status_code=404,
                 detail=get_message(
-                    key="section.common.sectionNotFound", lang=language),
+                    key="section.common.sectionNotFound"),
             )
 
         # 翻译section

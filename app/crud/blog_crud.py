@@ -29,7 +29,7 @@ from app.utils.offset_pagination import offset_paginator
 from app.utils.agent import agent_utils
 
 from app.utils.client_info import client_info_utils
-from app.core.i18n.i18n import get_message, Language
+from app.core.i18n.i18n import get_message, Language, get_current_language
 
 from app.tasks import (
     large_content_translation_task,
@@ -103,7 +103,6 @@ class BlogCrud:
         self,
         blog_id: int,
         comment_type: str,
-        language: Language,
     ) -> bool:
         blog_stats = await self.db.execute(
             select(Blog_Stats).where(Blog_Stats.blog_id == blog_id)
@@ -112,7 +111,7 @@ class BlogCrud:
         if not blog_stats:
             raise HTTPException(
                 status_code=404,
-                detail=get_message("blog.common.blogNotFound", language),
+                detail=get_message("blog.common.blogNotFound"),
             )
 
         if comment_type == "create":
@@ -166,7 +165,6 @@ class BlogCrud:
 
     async def get_blog_lists(
         self,
-        language: Language,
         section_id: int,
         page: int = 1,
         size: int = 20,
@@ -177,6 +175,7 @@ class BlogCrud:
         返回 (items, pagination_metadata)，并在缓存中存储标准响应结构。
         统计数据和变现信息每次都实时获取，不会被缓存。
         """
+        language = get_current_language()
         # 验证分页参数
         try:
             page, size = offset_paginator.validate_pagination_params(
@@ -184,7 +183,7 @@ class BlogCrud:
         except ValueError:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=get_message("common.invalidRequest", language),
+                detail=get_message("common.invalidRequest"),
             )
 
         cache_key = f"blog_lists:{section_id}:lang={language}:page={page}:size={size}:published_only={published_only}"
@@ -357,7 +356,6 @@ class BlogCrud:
     async def get_blog_lists_by_tag_slug(
         self,
         tag_slug: str,
-        language: Language,
         page: int = 1,
         size: int = 20,
     ) -> Tuple[List[Dict[str, Any]], Dict[str, Any]]:
@@ -365,7 +363,6 @@ class BlogCrud:
 
         Args:
             tag_slug: 标签的slug
-            language: 语言设置，用于错误消息
             page: 页码
             size: 每页数量
 
@@ -375,6 +372,7 @@ class BlogCrud:
         Raises:
             HTTPException: 当标签不存在时抛出404错误
         """
+        language = get_current_language()
         # 验证分页参数
         try:
             page, size = offset_paginator.validate_pagination_params(
@@ -382,7 +380,7 @@ class BlogCrud:
         except ValueError:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=get_message("common.invalidRequest", language),
+                detail=get_message("common.invalidRequest"),
             )
 
         # 首先验证标签是否存在
@@ -393,7 +391,7 @@ class BlogCrud:
         if not tag:
             raise HTTPException(
                 status_code=404,
-                detail=get_message("tag.common.tagNotFound", language),
+                detail=get_message("tag.common.tagNotFound"),
             )
 
         # 缓存键
@@ -472,20 +470,19 @@ class BlogCrud:
 
     async def get_archived_blog_lists(
         self,
-        language: Language,
         cursor: Optional[str] = None,
         limit: int = 20,
     ) -> Dict[str, Any]:
         """获取归档的博客列表，使用 cursor pagination
 
         Args:
-            language: 语言设置
             cursor: 可选的分页游标
             limit: 每页数量
 
         Returns:
             包含归档博客列表和分页信息的字典
         """
+        language = get_current_language()
         # 缓存键
         cache_key = f"blog_archived_lists:lang={language}:limit={limit}:cursor={cursor}"
         cache_data = await redis_manager.get_async(cache_key)
@@ -577,7 +574,6 @@ class BlogCrud:
     async def get_blog_details_seo(
         self,
         blog_slug: str,
-        language: Language,
     ) -> Optional[Dict]:
         seo_cache_key = f"blog_details_seo:{blog_slug}"
         cache_data = await redis_manager.get_async(seo_cache_key)
@@ -588,7 +584,7 @@ class BlogCrud:
         if not blog:
             raise HTTPException(
                 status_code=404,
-                detail=get_message("blog.common.blogNotFound", language),
+                detail=get_message("blog.common.blogNotFound"),
             )
 
         # 使用 LEFT JOIN 查询博客和 SEO 信息
@@ -603,7 +599,7 @@ class BlogCrud:
         if not row:
             raise HTTPException(
                 status_code=404,
-                detail=get_message("blog.common.blogNotFound", language),
+                detail=get_message("blog.common.blogNotFound"),
             )
 
         _, blog_seo = row
@@ -612,7 +608,7 @@ class BlogCrud:
         if not blog_seo or blog_seo.id is None:
             raise HTTPException(
                 status_code=404,
-                detail=get_message("blog.common.blogNotFound", language),
+                detail=get_message("blog.common.blogNotFound"),
             )
 
         response = {
@@ -638,10 +634,10 @@ class BlogCrud:
         self,
         request: Request,
         blog_slug: str,
-        language: Language,
         is_editor: bool = False,
         user_id: Optional[int] = None,
     ) -> Optional[Dict]:
+        language = get_current_language()
         details_cache_key = f"blog_details:{blog_slug}:lang={language}:is_editor={is_editor}:user_id={user_id}"
         hash_cache_key = (
             f"blog_details_hash:{blog_slug}:is_editor={is_editor}:user_id={user_id}"
@@ -654,7 +650,7 @@ class BlogCrud:
         if not blog:
             raise HTTPException(
                 status_code=404,
-                detail=get_message("blog.common.blogNotFound", language),
+                detail=get_message("blog.common.blogNotFound"),
             )
 
         # 计算哈希值
@@ -784,7 +780,7 @@ class BlogCrud:
             raise HTTPException(
                 status_code=404,
                 detail=get_message(
-                    "blog.getBlogTTS.blogTtsNotFound", language),
+                    "blog.getBlogTTS.blogTtsNotFound"),
             )
 
         # 根据语言选择对应的 TTS ID
@@ -912,7 +908,6 @@ class BlogCrud:
 
     async def update_blog(
         self,
-        language: Language,
         user_id: int,
         blog_slug: str,
         seo_id: int,
@@ -922,11 +917,12 @@ class BlogCrud:
         cover_id: int,
         blog_tags: List[int] = [],
     ) -> Optional[str]:
+        language = get_current_language()
         blog = await self.get_blog_by_slug(blog_slug)
         if not blog or blog.user_id != user_id:
             raise HTTPException(
                 status_code=404,
-                detail=get_message("blog.common.blogNotFound", language),
+                detail=get_message("blog.common.blogNotFound"),
             )
 
         # 查看博客内容是否发生变化
@@ -1028,8 +1024,8 @@ class BlogCrud:
     async def get_blog_summary(
         self,
         blog_id: int,
-        language: Language,
     ) -> Optional[Dict]:
+        language = get_current_language()
         cache_key = f"blog_summary:{blog_id}:lang={language}"
         cache_data = await redis_manager.get_async(cache_key)
 
@@ -1043,7 +1039,7 @@ class BlogCrud:
             raise HTTPException(
                 status_code=404,
                 detail=get_message(
-                    "blog.getBlogSummary.blogSummaryNotFound", language),
+                    "blog.getBlogSummary.blogSummaryNotFound"),
             )
 
         response = {
@@ -1059,7 +1055,6 @@ class BlogCrud:
     async def get_blog_comment_lists(
         self,
         blog_id: int,
-        language: Language,
         limit: int = 20,
         cursor: Optional[str] = None,
     ) -> Dict[str, Any]:
@@ -1110,7 +1105,7 @@ class BlogCrud:
             raise HTTPException(
                 status_code=404,
                 detail=get_message(
-                    "blog.getBlogCommentLists.commentNotFound", language
+                    "blog.getBlogCommentLists.commentNotFound"
                 ),
             )
 
@@ -1188,14 +1183,13 @@ class BlogCrud:
         user_id: int,
         blog_id: int,
         comment: str,
-        language: Language,
         parent_id: Optional[int] = None,
     ) -> bool:
         blog = await self.get_blog_by_id(blog_id)
         if not blog:
             raise HTTPException(
                 status_code=404,
-                detail=get_message("blog.common.blogNotFound", language),
+                detail=get_message("blog.common.blogNotFound"),
             )
 
         # 检查是否parent_id是否存在
@@ -1207,7 +1201,7 @@ class BlogCrud:
                 raise HTTPException(
                     status_code=404,
                     detail=get_message(
-                        "blog.getBlogCommentLists.commentNotFound", language
+                        "blog.getBlogCommentLists.commentNotFound"
                     ),
                 )
 
@@ -1225,7 +1219,7 @@ class BlogCrud:
 
         # 改变博客评论数
         await self._change_blog_comment_count(
-            blog_id=blog_id, comment_type="create", language=language
+            blog_id=blog_id, comment_type="create"
         )
 
         # 更新缓存
@@ -1238,7 +1232,6 @@ class BlogCrud:
         user_id: int,
         comment_id: int,
         comment: str,
-        language: Language,
     ) -> bool:
         comment_obj = await self._get_blog_comment_by_id(
             comment_id=comment_id, include_deleted=False
@@ -1247,7 +1240,7 @@ class BlogCrud:
             raise HTTPException(
                 status_code=404,
                 detail=get_message(
-                    "blog.getBlogCommentLists.commentNotFound", language
+                    "blog.getBlogCommentLists.commentNotFound"
                 ),
             )
 
@@ -1271,7 +1264,6 @@ class BlogCrud:
         user_id: int,
         role: RoleType,
         comment_id: int,
-        language: Language,
     ) -> bool:
         comment_obj = await self._get_blog_comment_by_id(
             comment_id=comment_id, include_deleted=False
@@ -1281,7 +1273,7 @@ class BlogCrud:
             raise HTTPException(
                 status_code=404,
                 detail=get_message(
-                    "blog.getBlogCommentLists.commentNotFound", language
+                    "blog.getBlogCommentLists.commentNotFound"
                 ),
             )
 
@@ -1290,7 +1282,7 @@ class BlogCrud:
             raise HTTPException(
                 status_code=404,
                 detail=get_message(
-                    "blog.getBlogCommentLists.commentNotFound", language
+                    "blog.getBlogCommentLists.commentNotFound"
                 ),
             )
 
@@ -1304,7 +1296,7 @@ class BlogCrud:
 
         # 改变博客评论数
         await self._change_blog_comment_count(
-            blog_id=comment_obj.blog_id, comment_type="delete", language=language
+            blog_id=comment_obj.blog_id, comment_type="delete"
         )
 
         # 更新缓存
@@ -1318,14 +1310,13 @@ class BlogCrud:
         self,
         user_id: int,
         blog_id: int,
-        language: Language,
     ) -> bool:
         # 检查是否有blog
         blog = await self.get_blog_by_id(blog_id)
         if not blog:
             raise HTTPException(
                 status_code=404,
-                detail=get_message("blog.common.blogNotFound", language),
+                detail=get_message("blog.common.blogNotFound"),
             )
 
         # 检查是否已经保存
@@ -1374,7 +1365,7 @@ class BlogCrud:
             return True
 
     async def like_blog_button(
-        self, blog_id: int, language: Language, ip_address: str
+        self, blog_id: int, ip_address: str
     ) -> bool:
         cache_key = f"blog_like_button:{blog_id}:ip={ip_address}"
         cache_data = await redis_manager.get_async(cache_key)
@@ -1393,7 +1384,7 @@ class BlogCrud:
         if not blog:
             raise HTTPException(
                 status_code=404,
-                detail=get_message("blog.common.blogNotFound", language),
+                detail=get_message("blog.common.blogNotFound"),
             )
 
         # 增加点赞数
@@ -1412,7 +1403,6 @@ class BlogCrud:
     async def update_blog_status(
         self,
         blog_id: int,
-        language: Language,
         is_published: Optional[bool] = None,
         is_archived: Optional[bool] = None,
         is_featured: Optional[bool] = None,
@@ -1425,7 +1415,7 @@ class BlogCrud:
             raise HTTPException(
                 status_code=400,
                 detail=get_message(
-                    "blog.updateBlogStatus.invalidStatusUpdate", language
+                    "blog.updateBlogStatus.invalidStatusUpdate"
                 ),
             )
 
@@ -1433,7 +1423,7 @@ class BlogCrud:
         if not blog:
             raise HTTPException(
                 status_code=404,
-                detail=get_message("blog.common.blogNotFound", language),
+                detail=get_message("blog.common.blogNotFound"),
             )
 
         # 构建更新值字典，只包含非None的字段
@@ -1460,13 +1450,12 @@ class BlogCrud:
         return True
 
     async def get_blog_navigation(
-        self, blog_id: int, language: Language
+        self, blog_id: int
     ) -> Optional[Dict]:
         """获取博客的上一篇和下一篇导航信息
 
         Args:
-            blog_slug: 当前博客的slug
-            language: 语言设置，影响标题显示
+            blog_id: 当前博客的ID
 
         Returns:
             包含previous和next字段的字典，每个字段包含blog_id、blog_slug、blog_title、created_at
@@ -1475,6 +1464,7 @@ class BlogCrud:
         Raises:
             HTTPException: 当博客不存在时
         """
+        language = get_current_language()
         cache_key = f"blog_navigation:{blog_id}:lang={language}"
         cache_data = await redis_manager.get_async(cache_key)
 
@@ -1486,7 +1476,7 @@ class BlogCrud:
         if not blog:
             raise HTTPException(
                 status_code=404,
-                detail=get_message("blog.common.blogNotFound", language),
+                detail=get_message("blog.common.blogNotFound"),
             )
 
         # 从博客获取section_id
@@ -1558,7 +1548,7 @@ class BlogCrud:
 
         return response
 
-    async def get_blog_stats(self, blog_id: int, language: Language) -> Optional[Dict]:
+    async def get_blog_stats(self, blog_id: int) -> Optional[Dict]:
         stats = await self.db.execute(
             select(Blog_Stats).where(Blog_Stats.blog_id == blog_id)
         )
@@ -1568,7 +1558,7 @@ class BlogCrud:
             raise HTTPException(
                 status_code=404,
                 detail=get_message(
-                    "blog.getBlogStats.blogStatsNotFound", language),
+                    "blog.getBlogStats.blogStatsNotFound"),
             )
 
         response = {
@@ -1580,13 +1570,13 @@ class BlogCrud:
 
         return response
 
-    async def delete_blog(self, blog_id: int, language: Language) -> bool:
+    async def delete_blog(self, blog_id: int) -> bool:
         # 首先检查博客是否存在
         blog = await self.db.get(Blog, blog_id)
         if not blog:
             raise HTTPException(
                 status_code=404,
-                detail=get_message("blog.common.blogNotFound", language),
+                detail=get_message("blog.common.blogNotFound"),
             )
 
         try:
@@ -1619,7 +1609,6 @@ class BlogCrud:
     async def get_saved_blog_lists(
         self,
         user_id: int,
-        language: Language,
         page: int = 1,
         size: int = 20,
     ) -> Tuple[List[Dict[str, Any]], Dict[str, Any]]:
@@ -1629,6 +1618,7 @@ class BlogCrud:
         Returns:
             Tuple of (items, pagination_metadata)
         """
+        language = get_current_language()
         # 验证分页参数
         try:
             page, size = offset_paginator.validate_pagination_params(
@@ -1636,7 +1626,7 @@ class BlogCrud:
         except ValueError:
             raise HTTPException(
                 status_code=400,
-                detail=get_message("common.invalidRequest", language),
+                detail=get_message("common.invalidRequest"),
             )
 
         # 缓存键
@@ -1665,7 +1655,7 @@ class BlogCrud:
             page=page,
             size=size,
             order_by=[Saved_Blog.created_at.desc(), Saved_Blog.id.desc()],
-            language=language,
+            
         )
 
         # 计算本月收藏的博客数量
@@ -1719,11 +1709,11 @@ class BlogCrud:
 
         return formatted_items, pagination_metadata
 
-    async def get_recent_populor_blog(self, language: Language) -> List[Dict[str, Any]]:
+    async def get_recent_populor_blog(self) -> List[Dict[str, Any]]:
         """
         获取最近受欢迎阅读量 留言点赞收藏加起来数量最多的排名前3的博客
         """
-
+        language = get_current_language()
         # 缓存键
         cache_key = f"get_recent_populor_blog:lang={language}"
         cache_data = await redis_manager.get_async(cache_key)

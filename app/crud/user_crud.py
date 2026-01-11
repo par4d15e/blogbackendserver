@@ -23,7 +23,7 @@ class UserCrud:
         self.auth_crud = get_auth_crud(db)
         self.logger = logger_manager.get_logger(__name__)
 
-    async def get_profile(self, user_id: int, language: Language) -> Dict[str, Any]:
+    async def get_profile(self, user_id: int) -> Dict[str, Any]:
         """Get current user's profile by id."""
         key = f"user_profile_{user_id}"
         cached_data = await redis_manager.get_async(key)
@@ -40,7 +40,7 @@ class UserCrud:
         if not user:
             raise HTTPException(
                 status_code=404,
-                detail=get_message(key="auth.common.userNotFound", lang=language),
+                detail=get_message(key="auth.common.userNotFound"),
             )
         response = {
             "user_id": user.id,
@@ -93,7 +93,6 @@ class UserCrud:
 
     async def get_user_lists(
         self,
-        language: Language,
         page: int = 1,
         size: int = 20,
         role: Optional[RoleType] = None,
@@ -116,14 +115,14 @@ class UserCrud:
         except ValueError:
             raise HTTPException(
                 status_code=400,
-                detail=get_message("common.invalidRequest", language),
+                detail=get_message("common.invalidRequest"),
             )
 
         # 检查权限
         if role != RoleType.admin:
             raise HTTPException(
                 status_code=403,
-                detail=get_message(key="common.insufficientPermissions", lang=language),
+                detail=get_message(key="common.insufficientPermissions"),
             )
 
         # 缓存键
@@ -141,7 +140,7 @@ class UserCrud:
             size=size,
             order_by=[User.created_at.desc(), User.id.desc()],
             join_options=[selectinload(User.avatar)],
-            language=language,
+            
             filters={"is_verified": True},
         )
 
@@ -202,13 +201,13 @@ class UserCrud:
         return response_items, pagination_metadata
 
     async def delete_user(
-        self, user_id: int, role: RoleType, current_user_id: int, language: Language
+        self, user_id: int, role: RoleType, current_user_id: int
     ) -> bool:
         """Delete user by id using DB-level cascades/SET NULL to handle dependents."""
         if role != RoleType.admin:
             raise HTTPException(
                 status_code=403,
-                detail=get_message(key="common.insufficientPermissions", lang=language),
+                detail=get_message(key="common.insufficientPermissions"),
             )
 
         if user_id == current_user_id:
@@ -217,7 +216,7 @@ class UserCrud:
             )
             raise HTTPException(
                 status_code=403,
-                detail=get_message(key="common.insufficientPermissions", lang=language),
+                detail=get_message(key="common.insufficientPermissions"),
             )
 
         # Ensure user exists
@@ -225,7 +224,7 @@ class UserCrud:
         if result.scalar_one_or_none() is None:
             raise HTTPException(
                 status_code=404,
-                detail=get_message(key="auth.common.userNotFound", lang=language),
+                detail=get_message(key="auth.common.userNotFound"),
             )
 
         # 删除用户所有媒体文件
@@ -244,26 +243,25 @@ class UserCrud:
         is_active: bool,
         current_user_id: int,
         role: int,
-        language: Language,
     ) -> bool:
         """Enable or disable user by id"""
         if role != RoleType.admin:
             raise HTTPException(
                 status_code=403,
-                detail=get_message(key="common.insufficientPermissions", lang=language),
+                detail=get_message(key="common.insufficientPermissions"),
             )
 
         if current_user_id == user_id:
             raise HTTPException(
                 status_code=403,
-                detail=get_message(key="common.insufficientPermissions", lang=language),
+                detail=get_message(key="common.insufficientPermissions"),
             )
 
         user = await self.auth_crud.get_user_by_id(user_id)
         if not user:
             raise HTTPException(
                 status_code=404,
-                detail=get_message(key="auth.common.userNotFound", lang=language),
+                detail=get_message(key="auth.common.userNotFound"),
             )
 
         user.is_active = is_active

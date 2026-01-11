@@ -12,7 +12,7 @@ from app.models.user_model import RoleType
 from app.core.database.mysql import mysql_manager
 from app.core.database.redis import redis_manager
 from app.core.logger import logger_manager
-from app.core.i18n.i18n import get_message, Language
+from app.core.i18n.i18n import get_message, Language, get_current_language
 from app.utils.agent import agent_utils
 from app.utils.offset_pagination import offset_paginator
 
@@ -36,19 +36,19 @@ class TagCrud:
 
     async def get_tag_lists(
         self,
-        language: Language,
         page: int = 1,
         size: int = 20,
         published_only: Optional[bool] = False,
     ) -> Tuple[List[Dict[str, Any]], Dict[str, Any]]:
         """Get tag lists with traditional pagination"""
+        language = get_current_language()
         # 验证分页参数
         try:
             page, size = offset_paginator.validate_pagination_params(page, size)
         except ValueError:
             raise HTTPException(
                 status_code=400,
-                detail=get_message("common.invalidRequest", language),
+                detail=get_message("common.invalidRequest"),
             )
 
         # 缓存键（包含语言以避免不同语言之间的缓存污染）
@@ -133,12 +133,11 @@ class TagCrud:
         self,
         role: RoleType,
         chinese_title: str,
-        language: Language,
     ) -> bool:
         if role != RoleType.admin:
             raise HTTPException(
                 status_code=403,
-                detail=get_message(key="common.insufficientPermissions", lang=language),
+                detail=get_message(key="common.insufficientPermissions"),
             )
 
         # 检查tag是否已经存在
@@ -146,7 +145,7 @@ class TagCrud:
         if existing_tag:
             raise HTTPException(
                 status_code=400,
-                detail=get_message(key="tag.createTag.tagAlreadyExists", lang=language),
+                detail=get_message(key="tag.createTag.tagAlreadyExists"),
             )
 
         # 翻译english name
@@ -178,12 +177,11 @@ class TagCrud:
         tag_id: int,
         role: RoleType,
         chinese_title: str,
-        language: Language,
     ) -> bool:
         if role != RoleType.admin:
             raise HTTPException(
                 status_code=403,
-                detail=get_message(key="common.insufficientPermissions", lang=language),
+                detail=get_message(key="common.insufficientPermissions"),
             )
 
         # 检查tag是否已经存在
@@ -193,7 +191,7 @@ class TagCrud:
         if not tag:
             raise HTTPException(
                 status_code=404,
-                detail=get_message(key="tag.common.tagNotFound", lang=language),
+                detail=get_message(key="tag.common.tagNotFound"),
             )
 
         # 检查是否存在相同的chinese_title（排除当前记录）
@@ -208,7 +206,7 @@ class TagCrud:
         if existing_tag:
             raise HTTPException(
                 status_code=400,
-                detail=get_message(key="tag.createTag.tagAlreadyExists", lang=language),
+                detail=get_message(key="tag.createTag.tagAlreadyExists"),
             )
 
         # 翻译english name
@@ -243,12 +241,11 @@ class TagCrud:
         self,
         tag_id: int,
         role: RoleType,
-        language: Language,
     ) -> bool:
         if role == RoleType.user:
             raise HTTPException(
                 status_code=403,
-                detail=get_message(key="common.insufficientPermissions", lang=language),
+                detail=get_message(key="common.insufficientPermissions"),
             )
 
         # 检查tag是否存在
@@ -256,7 +253,7 @@ class TagCrud:
         if not tag:
             raise HTTPException(
                 status_code=404,
-                detail=get_message(key="tag.common.tagNotFound", lang=language),
+                detail=get_message(key="tag.common.tagNotFound"),
             )
 
         # 删除tag

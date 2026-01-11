@@ -9,9 +9,9 @@ class UserService:
     def __init__(self, user_crud: UserCrud):
         self.user_crud = user_crud
 
-    async def get_profile(self, user_id: int, language: Language) -> Dict[str, Any]:
+    async def get_profile(self, user_id: int) -> Dict[str, Any]:
         """Get my profile"""
-        user = await self.user_crud.get_profile(user_id=user_id, language=language)
+        user = await self.user_crud.get_profile(user_id=user_id)
         return user
 
     async def update_my_bio(self, user_id: int, bio: str) -> bool:
@@ -29,26 +29,25 @@ class UserService:
 
     async def get_user_lists(
         self,
-        language: Language,
         page: int = 1,
         size: int = 20,
         role: Optional[RoleType] = None,
     ) -> Tuple[List[Dict[str, Any]], Dict[str, Any]]:
         """Get all users with traditional pagination"""
         items, pagination_metadata = await self.user_crud.get_user_lists(
-            language=language, page=page, size=size, role=role
+             page=page, size=size, role=role
         )
         return items, pagination_metadata
 
     async def delete_user(
-        self, user_id: int, role: RoleType, current_user_id: int, language: Language
+        self, user_id: int, role: RoleType, current_user_id: int
     ) -> bool:
         """Delete user by id"""
         await self.user_crud.delete_user(
             user_id=user_id,
             role=role,
             current_user_id=current_user_id,
-            language=language,
+            
         )
         return True
 
@@ -58,7 +57,6 @@ class UserService:
         is_active: bool,
         current_user_id: int,
         role: RoleType,
-        language: Language,
     ) -> bool:
         """Enable or disable user by id"""
         await self.user_crud.enable_or_disable_user(
@@ -66,7 +64,7 @@ class UserService:
             is_active=is_active,
             current_user_id=current_user_id,
             role=role,
-            language=language,
+            
         )
         return True
 

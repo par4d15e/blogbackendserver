@@ -41,7 +41,6 @@ class MediaCrud:
         user_id: int,
         page: int,
         size: int,
-        language: Language,
         media_type: Optional[MediaType] = None,
     ) -> Tuple[List[Dict[str, Any]], Dict[str, Any]]:
         # 验证分页参数
@@ -50,7 +49,7 @@ class MediaCrud:
         except ValueError:
             raise HTTPException(
                 status_code=400,
-                detail=get_message("common.invalidRequest", language),
+                detail=get_message("common.invalidRequest"),
             )
 
         cache_key = f"media_lists:{user_id}:{media_type}:{page}:{size}"
@@ -86,7 +85,7 @@ class MediaCrud:
         if total_count == 0:
             raise HTTPException(
                 status_code=404,
-                detail=get_message(key="media.common.mediaNotFound", lang=language),
+                detail=get_message(key="media.common.mediaNotFound"),
             )
 
         # 应用排序和分页
@@ -164,7 +163,6 @@ class MediaCrud:
         type: MediaType,
         is_avatar: bool,
         file_name: str,
-        language: Language,
         original_filepath_url: str,
         thumbnail_filepath_url: Optional[str] = None,
         watermark_filepath_url: Optional[str] = None,
@@ -173,7 +171,7 @@ class MediaCrud:
         if not original_filepath_url:
             raise HTTPException(
                 status_code=404,
-                detail=get_message(key="media.common.mediaNotFound", lang=language),
+                detail=get_message(key="media.common.mediaNotFound"),
             )
 
         try:
@@ -211,7 +209,7 @@ class MediaCrud:
         return True
 
     async def delete_media_from_s3(
-        self, media_id: int, user_id: int, language: Language
+        self, media_id: int, user_id: int
     ):
         """
         删除媒体文件记录
@@ -222,7 +220,7 @@ class MediaCrud:
         if not media:
             raise HTTPException(
                 status_code=404,
-                detail=get_message(key="media.common.mediaNotFound", lang=language),
+                detail=get_message(key="media.common.mediaNotFound"),
             )
 
         # 删除数据库中的记录
@@ -235,7 +233,7 @@ class MediaCrud:
 
         return True
 
-    async def download_media_from_s3(self, media_id: int, language: Language):
+    async def download_media_from_s3(self, media_id: int):
         """
         获取媒体文件下载URL
         简化参数，只使用media_id
@@ -245,7 +243,7 @@ class MediaCrud:
         if not media:
             raise HTTPException(
                 status_code=404,
-                detail=get_message(key="media.common.mediaNotFound", lang=language),
+                detail=get_message(key="media.common.mediaNotFound"),
             )
 
         # 原文件url

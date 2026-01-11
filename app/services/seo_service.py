@@ -11,14 +11,13 @@ class SeoService:
 
     async def get_seo_lists(
         self,
-        language: Language,
         page: int = 1,
         size: int = 20,
         role: Optional[RoleType] = None,
     ) -> Tuple[List[Dict[str, Any]], Dict[str, Any]]:
         """Get seo lists with traditional pagination"""
         items, pagination_metadata = await self.seo_crud.get_seo_lists(
-            page=page, size=size, language=language, role=role
+            page=page, size=size, role=role
         )
         return items, pagination_metadata
 
@@ -28,14 +27,13 @@ class SeoService:
         chinese_title: str,
         chinese_description: str,
         chinese_keywords: str,
-        language: Language,
     ) -> bool:
         return await self.seo_crud.create_seo(
             role=role,
             chinese_title=chinese_title,
             chinese_description=chinese_description,
             chinese_keywords=chinese_keywords,
-            language=language,
+            
         )
 
     async def update_seo(
@@ -45,7 +43,6 @@ class SeoService:
         chinese_title: str,
         chinese_description: str,
         chinese_keywords: str,
-        language: Language,
     ) -> bool:
         return await self.seo_crud.update_seo(
             seo_id=seo_id,
@@ -53,17 +50,16 @@ class SeoService:
             chinese_title=chinese_title,
             chinese_description=chinese_description,
             chinese_keywords=chinese_keywords,
-            language=language,
+            
         )
 
     async def delete_seo(
         self,
         seo_id: int,
         role: RoleType,
-        language: Language,
     ) -> bool:
         return await self.seo_crud.delete_seo(
-            seo_id=seo_id, role=role, language=language
+            seo_id=seo_id, role=role
         )
 
 

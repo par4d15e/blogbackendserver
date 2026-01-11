@@ -14,18 +14,16 @@ class ProjectService:
 
     async def get_project_lists(
         self,
-        language: Language,
         page: int = 1,
         size: int = 20,
         published_only: bool = True,
     ) -> Tuple[List[Dict[str, Any]], Dict[str, Any]]:
         return await self.project_crud.get_project_lists(
-            language=language, page=page, size=size, published_only=published_only
+             page=page, size=size, published_only=published_only
         )
 
     async def create_project(
         self,
-        language: Language,
         project_type: ProjectType,
         section_id: int,
         seo_id: Optional[int],
@@ -40,10 +38,10 @@ class ProjectService:
         if role != RoleType.admin:
             raise HTTPException(
                 status_code=403,
-                detail=get_message("common.insufficientPermissions", language),
+                detail=get_message("common.insufficientPermissions"),
             )
         return await self.project_crud.create_project(
-            language=language,
+            
             project_type=project_type,
             section_id=section_id,
             seo_id=seo_id,
@@ -57,7 +55,6 @@ class ProjectService:
 
     async def update_project(
         self,
-        language: Language,
         project_slug: str,
         project_type: ProjectType,
         seo_id: Optional[int],
@@ -72,10 +69,10 @@ class ProjectService:
         if role != RoleType.admin:
             raise HTTPException(
                 status_code=403,
-                detail=get_message("common.insufficientPermissions", language),
+                detail=get_message("common.insufficientPermissions"),
             )
         return await self.project_crud.update_project(
-            language=language,
+            
             project_slug=project_slug,
             project_type=project_type,
             seo_id=seo_id,
@@ -89,7 +86,6 @@ class ProjectService:
 
     async def publish_Or_Unpublish_project(
         self,
-        language: Language,
         project_id: int,
         is_publish: bool = True,
         role: RoleType = RoleType.admin,
@@ -97,43 +93,42 @@ class ProjectService:
         if role != RoleType.admin:
             raise HTTPException(
                 status_code=403,
-                detail=get_message("common.insufficientPermissions", language),
+                detail=get_message("common.insufficientPermissions"),
             )
         return await self.project_crud.publish_Or_Unpublish_project(
-            language=language, project_id=project_id, is_publish=is_publish
+             project_id=project_id, is_publish=is_publish
         )
 
     async def get_project_details(
         self,
-        language: Language,
         project_slug: str,
         user_id: Optional[int] = None,
         is_editor: Optional[bool] = False,
     ) -> Dict[str, Any]:
         return await self.project_crud.get_project_details(
-            language=language,
+            
             project_slug=project_slug,
             user_id=user_id,
             is_editor=is_editor,
         )
 
     async def get_project_details_seo(
-        self, language: Language, project_slug: str
+        self, project_slug: str
     ) -> Dict[str, Any]:
         return await self.project_crud.get_project_details_seo(
-            language=language, project_slug=project_slug
+             project_slug=project_slug
         )
 
     async def delete_project(
-        self, language: Language, project_id: int, role: RoleType
+        self, project_id: int, role: RoleType
     ) -> bool:
         if role != RoleType.admin:
             raise HTTPException(
                 status_code=403,
-                detail=get_message("common.insufficientPermissions", language),
+                detail=get_message("common.insufficientPermissions"),
             )
         return await self.project_crud.delete_project(
-            language=language, project_id=project_id
+             project_id=project_id
         )
 
 

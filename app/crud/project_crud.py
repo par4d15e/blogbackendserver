@@ -14,7 +14,7 @@ from app.models.project_model import (
     Project_Attachment,
     Project_Monetization,
 )
-from app.core.i18n.i18n import Language, get_message
+from app.core.i18n.i18n import Language, get_message, get_current_language
 from app.models.payment_model import Payment_Record, Tax
 from app.core.database.mysql import mysql_manager
 from app.core.database.redis import redis_manager
@@ -95,7 +95,6 @@ class ProjectCrud:
 
     async def get_project_lists(
         self,
-        language: Language,
         page: int = 1,
         size: int = 20,
         published_only: bool = True,
@@ -109,6 +108,7 @@ class ProjectCrud:
             size: Number of items per page
             published_only: If True, only return published projects. If False, return all projects.
         """
+        language = get_current_language()
         # Validate pagination parameters
         try:
             page, size = offset_paginator.validate_pagination_params(
@@ -116,7 +116,7 @@ class ProjectCrud:
         except ValueError:
             raise HTTPException(
                 status_code=400,
-                detail=get_message("common.invalidRequest", language),
+                detail=get_message("common.invalidRequest"),
             )
 
         # Cache key
@@ -137,7 +137,7 @@ class ProjectCrud:
             order_by=[Project.created_at.desc(), Project.id.desc()],
             filters=filters,
             join_options=[joinedload(Project.cover)],
-            language=language,
+            
         )
         # 计算本月的项目数量
         if published_only is False:
@@ -221,7 +221,6 @@ class ProjectCrud:
 
     async def create_project(
         self,
-        language: Language,
         project_type: ProjectType,
         section_id: int,
         seo_id: Optional[int],
@@ -236,7 +235,7 @@ class ProjectCrud:
             raise HTTPException(
                 status_code=400,
                 detail=get_message(
-                    key="project.common.projectAlreadyExists", lang=language
+                    key="project.common.projectAlreadyExists"
                 ),
             )
 
@@ -308,7 +307,6 @@ class ProjectCrud:
 
     async def update_project(
         self,
-        language: Language,
         project_slug: str,
         project_type: ProjectType,
         seo_id: Optional[int],
@@ -325,7 +323,7 @@ class ProjectCrud:
             raise HTTPException(
                 status_code=404,
                 detail=get_message(
-                    key="project.common.projectNotFound", lang=language),
+                    key="project.common.projectNotFound"),
             )
 
         if chinese_title and chinese_title != existing_project.chinese_title:
@@ -425,14 +423,15 @@ class ProjectCrud:
         return slug
 
     async def publish_Or_Unpublish_project(
-        self, language: Language, project_id: int, is_publish: bool = True
+        self, project_id: int, is_publish: bool = True
     ) -> bool:
+        language = get_current_language()
         project = await self._get_project_by_id(project_id)
         if not project:
             raise HTTPException(
                 status_code=404,
                 detail=get_message(
-                    key="project.common.projectNotFound", lang=language),
+                    key="project.common.projectNotFound"),
             )
 
         await self.db.execute(
@@ -452,11 +451,11 @@ class ProjectCrud:
 
     async def get_project_details(
         self,
-        language: Language,
         project_slug: str,
         user_id: Optional[int] = None,
         is_editor: Optional[bool] = False,
     ) -> Dict[str, Any]:
+        language = get_current_language()
         cache_key = f"project_details:lang={language}:project_slug={project_slug}:user_id={user_id}:is_editor={is_editor}"
         cache_result = await redis_manager.get_async(cache_key)
         if cache_result:
@@ -467,7 +466,7 @@ class ProjectCrud:
             raise HTTPException(
                 status_code=404,
                 detail=get_message(
-                    key="project.common.projectNotFound", lang=language),
+                    key="project.common.projectNotFound"),
             )
 
         payment_status = None
@@ -570,8 +569,9 @@ class ProjectCrud:
         return response
 
     async def get_project_details_seo(
-        self, language: Language, project_slug: str
+        self, project_slug: str
     ) -> Dict[str, Any]:
+        language = get_current_language()
         cache_key = f"project_seo:lang={language}:project_slug={project_slug}"
         cache_result = await redis_manager.get_async(cache_key)
         if cache_result:
@@ -582,14 +582,14 @@ class ProjectCrud:
             raise HTTPException(
                 status_code=404,
                 detail=get_message(
-                    key="project.common.projectNotFound", lang=language),
+                    key="project.common.projectNotFound"),
             )
 
         if not project.seo:
             raise HTTPException(
                 status_code=404,
                 detail=get_message(
-                    key="seo.common.seoNotFound", lang=language),
+                    key="seo.common.seoNotFound"),
             )
 
         response = {
@@ -612,20 +612,20 @@ class ProjectCrud:
 
         return response
 
-    async def delete_project(self, language: Language, project_id: int) -> bool:
+    async def delete_project(self, project_id: int) -> bool:
         project = await self._get_project_by_id(project_id)
         if not project:
             raise HTTPException(
                 status_code=404,
                 detail=get_message(
-                    key="project.common.projectNotFound", lang=language),
+                    key="project.common.projectNotFound"),
             )
 
         if project.project_monetization.price > 0:
             raise HTTPException(
                 status_code=400,
                 detail=get_message(
-                    key="project.common.projectHasMonetization", lang=language
+                    key="project.common.projectHasMonetization"
                 ),
             )
 

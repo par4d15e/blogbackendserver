@@ -14,14 +14,13 @@ class BlogService:
 
     async def get_blog_lists(
         self,
-        language: Language,
         section_id: int,
         page: int = 1,
         size: int = 20,
         published_only: bool = True,
     ) -> tuple[list[dict], dict]:
         return await self.blog_crud.get_blog_lists(
-            language=language,
+            
             section_id=section_id,
             page=page,
             size=size,
@@ -52,7 +51,6 @@ class BlogService:
 
     async def update_blog(
         self,
-        language: Language,
         user_id: int,
         blog_slug: str,
         seo_id: int,
@@ -63,7 +61,7 @@ class BlogService:
         blog_tags: List[int] = [],
     ) -> Optional[str]:
         return await self.blog_crud.update_blog(
-            language=language,
+            
             user_id=user_id,
             seo_id=seo_id,
             cover_id=cover_id,
@@ -77,25 +75,23 @@ class BlogService:
     async def get_blog_details_seo(
         self,
         blog_slug: str,
-        language: Language,
     ) -> Optional[Dict]:
         return await self.blog_crud.get_blog_details_seo(
             blog_slug=blog_slug,
-            language=language,
+            
         )
 
     async def get_blog_details(
         self,
         request: Request,
         blog_slug: str,
-        language: Language,
         is_editor: bool = False,
         user_id: Optional[int] = None,
     ) -> Optional[Dict]:
         return await self.blog_crud.get_blog_details(
             request=request,
             blog_slug=blog_slug,
-            language=language,
+            
             is_editor=is_editor,
             user_id=user_id,
         )
@@ -103,27 +99,24 @@ class BlogService:
     async def get_blog_tts(
         self,
         blog_id: int,
-        language: Language,
     ) -> Optional[Dict]:
         return await self.blog_crud.get_blog_tts(
             blog_id=blog_id,
-            language=language,
+            
         )
 
     async def get_blog_summary(
         self,
         blog_id: int,
-        language: Language,
     ) -> Optional[Dict]:
         return await self.blog_crud.get_blog_summary(
             blog_id=blog_id,
-            language=language,
+            
         )
 
     async def get_blog_comment_lists(
         self,
         blog_id: int,
-        language: Language,
         limit: int = 20,
         cursor: Optional[str] = None,
     ) -> Dict[str, Any]:
@@ -131,7 +124,7 @@ class BlogService:
             blog_id=blog_id,
             limit=limit,
             cursor=cursor,
-            language=language,
+            
         )
 
     async def create_blog_comment(
@@ -139,7 +132,6 @@ class BlogService:
         user_id: int,
         blog_id: int,
         comment: str,
-        language: Language,
         parent_id: Optional[int] = None,
     ) -> bool:
         return await self.blog_crud.create_blog_comment(
@@ -147,7 +139,7 @@ class BlogService:
             blog_id=blog_id,
             comment=comment,
             parent_id=parent_id,
-            language=language,
+            
         )
 
     async def update_blog_comment(
@@ -155,13 +147,12 @@ class BlogService:
         user_id: int,
         comment_id: int,
         comment: str,
-        language: Language,
     ) -> bool:
         return await self.blog_crud.update_blog_comment(
             user_id=user_id,
             comment_id=comment_id,
             comment=comment,
-            language=language,
+            
         )
 
     async def delete_blog_comment(
@@ -169,31 +160,28 @@ class BlogService:
         user_id: int,
         role: RoleType,
         comment_id: int,
-        language: Language,
     ) -> bool:
         return await self.blog_crud.delete_blog_comment(
             user_id=user_id,
             role=role,
             comment_id=comment_id,
-            language=language,
+            
         )
 
     async def save_blog_button(
         self,
         user_id: int,
         blog_id: int,
-        language: Language,
     ) -> bool:
         return await self.blog_crud.save_blog_button(
             user_id=user_id,
             blog_id=blog_id,
-            language=language,
+            
         )
 
     async def update_blog_status(
         self,
         blog_id: int,
-        language: Language,
         role: RoleType,
         is_published: Optional[bool] = None,
         is_archived: Optional[bool] = None,
@@ -202,67 +190,66 @@ class BlogService:
         if role != RoleType.admin:
             raise HTTPException(
                 status_code=403,
-                detail=get_message("common.insufficientPermissions", language),
+                detail=get_message("common.insufficientPermissions"),
             )
         return await self.blog_crud.update_blog_status(
             blog_id=blog_id,
-            language=language,
+            
             is_published=is_published,
             is_archived=is_archived,
             is_featured=is_featured,
         )
 
     async def get_blog_navigation(
-        self, blog_id: int, language: Language
+        self, blog_id: int
     ) -> Optional[Dict]:
         return await self.blog_crud.get_blog_navigation(
             blog_id=blog_id,
-            language=language,
+            
         )
 
-    async def get_blog_stats(self, blog_id: int, language: Language) -> Optional[Dict]:
+    async def get_blog_stats(self, blog_id: int) -> Optional[Dict]:
         return await self.blog_crud.get_blog_stats(
             blog_id=blog_id,
-            language=language,
+            
         )
 
     async def like_blog_button(
-        self, request: Request, blog_id: int, language: Language
+        self, request: Request, blog_id: int
     ) -> bool:
         ip_address = client_info_utils.get_client_ip(request)
         return await self.blog_crud.like_blog_button(
             blog_id=blog_id,
-            language=language,
+            
             ip_address=ip_address,
         )
 
     async def delete_blog(
-        self, blog_id: int, language: Language, role: RoleType
+        self, blog_id: int, role: RoleType
     ) -> bool:
         if role != RoleType.admin:
             raise HTTPException(
                 status_code=403,
-                detail=get_message("common.insufficientPermissions", language),
+                detail=get_message("common.insufficientPermissions"),
             )
         return await self.blog_crud.delete_blog(
             blog_id=blog_id,
-            language=language,
+            
         )
 
     async def get_saved_blog_lists(
-        self, user_id: int, language: Language, page: int = 1, size: int = 20
+        self, user_id: int, page: int = 1, size: int = 20
     ) -> Tuple[List[Dict[str, Any]], Dict[str, Any]]:
         return await self.blog_crud.get_saved_blog_lists(
-            user_id=user_id, page=page, size=size, language=language
+            user_id=user_id, page=page, size=size
         )
 
-    async def get_recent_populor_blog(self, language: Language) -> List[Dict[str, Any]]:
-        return await self.blog_crud.get_recent_populor_blog(language=language)
+    async def get_recent_populor_blog(self) -> List[Dict[str, Any]]:
+        return await self.blog_crud.get_recent_populor_blog()
 
     async def get_blog_lists_by_tag_slug(
         self,
         tag_slug: str,
-        language: Language,
         page: int = 1,
         size: int = 20,
     ) -> tuple[list[dict], dict]:
@@ -279,14 +266,13 @@ class BlogService:
         """
         return await self.blog_crud.get_blog_lists_by_tag_slug(
             tag_slug=tag_slug,
-            language=language,
+            
             page=page,
             size=size,
         )
 
     async def get_archived_blog_lists(
         self,
-        language: Language,
         cursor: Optional[str] = None,
         limit: int = 20,
     ) -> Dict[str, Any]:
@@ -301,7 +287,7 @@ class BlogService:
             包含归档博客列表和分页信息的字典
         """
         return await self.blog_crud.get_archived_blog_lists(
-            language=language,
+            
             cursor=cursor,
             limit=limit,
         )
