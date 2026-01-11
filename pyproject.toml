@@ -1,7 +1,7 @@
 [project]
-name = "backend-server"
+name = "HeyXiaoli_Backend_Server"
 version = "0.1.0"
-description = "Add your description here"
+description = "HeyXiaoli is a personal blog site built with FastAPI to share experiences on programming, technology, and life."
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [

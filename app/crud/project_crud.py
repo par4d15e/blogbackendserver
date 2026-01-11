@@ -545,12 +545,14 @@ class ProjectCrud:
                 if project.project_monetization
                 else 0.0,
                 "tax_name": project.project_monetization.tax.tax_name
-                if project.project_monetization.tax
+                if project.project_monetization and project.project_monetization.tax
                 else None,
                 "tax_rate": tax_rate,
                 "tax_amount": tax_amount,
                 "final_amount": final_amount,
-                "attachment_id": project.project_attachments.attachment_id,
+                "attachment_id": project.project_attachments.attachment_id
+                if project.project_attachments
+                else None,
                 "created_at": project.created_at.isoformat(),
                 "updated_at": project.updated_at.isoformat()
                 if project.updated_at
