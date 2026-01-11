@@ -225,7 +225,7 @@ class BlogCrud:
                 )
                 .where(
                     Blog.section_id == section_id,
-                    Blog_Status.is_published,
+                    Blog_Status.is_published == True,
                 )
             )
         else:
@@ -419,7 +419,7 @@ class BlogCrud:
             )
             .where(
                 Blog_Tag.tag_id == tag.id,
-                Blog_Status.is_published,
+                Blog_Status.is_published == True,
             )
         )
 
@@ -429,7 +429,7 @@ class BlogCrud:
             .join(Blog_Status, Blog_Status.blog_id == Blog.id)
             .where(
                 Blog_Tag.tag_id == tag.id,
-                Blog_Status.is_published,
+                Blog_Status.is_published == True,
             )
         )
 
@@ -500,7 +500,7 @@ class BlogCrud:
             .options(
                 joinedload(Blog.section),
             )
-            .where(Blog_Status.is_archived)
+            .where(Blog_Status.is_archived == True)
         )
 
         # 应用 keyset pagination 过滤
@@ -1501,7 +1501,7 @@ class BlogCrud:
             .join(Blog_Status, Blog_Status.blog_id == Blog.id)
             .where(
                 Blog.section_id == section_id,
-                Blog_Status.is_published,
+                Blog_Status.is_published == True,
                 # 使用复合条件：时间更早，或者时间相同但ID更小
                 (Blog.created_at < current_created_at)
                 | ((Blog.created_at == current_created_at) & (Blog.id < current_id)),
@@ -1519,7 +1519,7 @@ class BlogCrud:
             .join(Blog_Status, Blog_Status.blog_id == Blog.id)
             .where(
                 Blog.section_id == section_id,
-                Blog_Status.is_published,
+                Blog_Status.is_published == True,
                 # 使用复合条件：时间更晚，或者时间相同但ID更大
                 (Blog.created_at > current_created_at)
                 | ((Blog.created_at == current_created_at) & (Blog.id > current_id)),
@@ -1740,7 +1740,7 @@ class BlogCrud:
                 joinedload(Blog.cover),
                 selectinload(Blog.blog_tags).selectinload(Blog_Tag.tag),
             )
-            .where(Blog_Status.is_published)
+            .where(Blog_Status.is_published == True)
             .order_by(
                 (
                     Blog_Stats.views

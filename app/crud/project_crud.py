@@ -45,7 +45,7 @@ class ProjectCrud:
         self.logger = logger_manager.get_logger(__name__)
 
     async def _get_tax(self) -> Optional[int]:
-        statement = select(Tax.id).where(Tax.tax_name == "GST", Tax.is_active)
+        statement = select(Tax.id).where(Tax.tax_name == "GST", Tax.is_active == True)
         result = await self.db.execute(statement)
         tax_id = result.scalar_one_or_none()
         if tax_id:

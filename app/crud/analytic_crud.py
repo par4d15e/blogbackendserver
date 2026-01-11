@@ -81,19 +81,19 @@ class AnalyticCrud:
 
         # 已发布博客数
         published_blogs = await self.db.execute(
-            select(func.count(Blog_Status.id)).where(Blog_Status.is_published)
+            select(func.count(Blog_Status.id)).where(Blog_Status.is_published == True)
         )
         published_blogs = published_blogs.scalar_one()
 
         # 归档博客数
         archived_blogs = await self.db.execute(
-            select(func.count(Blog_Status.id)).where(Blog_Status.is_archived)
+            select(func.count(Blog_Status.id)).where(Blog_Status.is_archived == True)
         )
         archived_blogs = archived_blogs.scalar_one()
 
         # 精选博客数
         featured_blogs = await self.db.execute(
-            select(func.count(Blog_Status.id)).where(Blog_Status.is_featured)
+            select(func.count(Blog_Status.id)).where(Blog_Status.is_featured == True)
         )
         featured_blogs = featured_blogs.scalar_one()
 
@@ -286,7 +286,7 @@ class AnalyticCrud:
 
         # 已发布项目数
         published_projects = await self.db.execute(
-            select(func.count(Project.id)).where(Project.is_published)
+            select(func.count(Project.id)).where(Project.is_published == True)
         )
         published_projects = published_projects.scalar_one()
 
@@ -481,7 +481,7 @@ class AnalyticCrud:
 
         # 头像数量
         avatar_count = await self.db.execute(
-            select(func.count(Media.id)).where(Media.is_avatar)
+            select(func.count(Media.id)).where(Media.is_avatar == True)
         )
         avatar_count = avatar_count.scalar_one()
 

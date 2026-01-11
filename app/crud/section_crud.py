@@ -23,7 +23,7 @@ class SectionCrud:
         statement = (
             select(Section)
             .options(joinedload(Section.seo))
-            .where(Section.id == section_id, Section.is_active)
+            .where(Section.id == section_id, Section.is_active == True)
         )
         result = await self.db.execute(statement)
         return result.scalar_one_or_none()
@@ -32,7 +32,7 @@ class SectionCrud:
         statement = (
             select(Section)
             .options(joinedload(Section.seo))
-            .where(Section.slug == slug, Section.is_active)
+            .where(Section.slug == slug, Section.is_active == True)
         )
         result = await self.db.execute(statement)
         return result.scalar_one_or_none()
@@ -73,7 +73,7 @@ class SectionCrud:
         # cache miss, fetch from database
         statement = (
             select(Section)
-            .where(Section.is_active)
+            .where(Section.is_active == True)
             .order_by(Section.parent_id, Section.id)
         )
         result = await self.db.execute(statement)

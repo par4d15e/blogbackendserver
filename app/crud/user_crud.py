@@ -162,7 +162,7 @@ class UserCrud:
 
         # 计算活跃用户数量
         count_active_users = await self.db.execute(
-            select(func.count(User.id)).where(User.is_active)
+            select(func.count(User.id)).where(User.is_active == True)
         )
         count_active_users = count_active_users.scalar_one_or_none()
 

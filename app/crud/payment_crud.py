@@ -58,7 +58,7 @@ class PaymentCrud:
                 joinedload(Project.project_monetization), joinedload(
                     Project.section)
             )
-            .where(Project.id == project_id, Project.is_published)
+            .where(Project.id == project_id, Project.is_published == True)
         )
         project = result.unique().scalar_one_or_none()
 

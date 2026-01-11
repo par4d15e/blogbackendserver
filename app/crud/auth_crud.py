@@ -74,7 +74,7 @@ class AuthCrud:
             Code.user_id == user_id,
             Code.type == type,
             Code.expires_at > func.utc_timestamp(),
-            not Code.is_used,
+            Code.is_used == False,
         )
         result = await self.db.execute(statement)
         return result.scalar_one_or_none()
@@ -88,7 +88,7 @@ class AuthCrud:
             Code.code == code,
             Code.type == type,
             Code.expires_at > func.utc_timestamp(),
-            not Code.is_used,
+            Code.is_used == False,
         )
         result = await self.db.execute(statement)
         return result.scalar_one_or_none()
@@ -146,7 +146,7 @@ class AuthCrud:
             .where(
                 Token.user_id == user_id,
                 Token.expired_at > func.utc_timestamp(),
-                Token.is_active,
+                Token.is_active == True,
             )
         )
         result = await self.db.execute(statement)
@@ -156,7 +156,7 @@ class AuthCrud:
         """Revoke all tokens for user"""
         statement = (
             update(Token)
-            .where(Token.user_id == user_id, Token.is_active)
+            .where(Token.user_id == user_id, Token.is_active == True)
             .values(is_active=False)
         )
         result = await self.db.execute(statement)
@@ -169,7 +169,7 @@ class AuthCrud:
         """
         statement = delete(Token).where(
             Token.user_id == user_id,
-            or_(func.utc_timestamp() >= Token.expired_at, not Token.is_active),
+            or_(func.utc_timestamp() >= Token.expired_at, Token.is_active == False),
         )
         result = await self.db.execute(statement)
         await self.db.commit()
@@ -781,7 +781,7 @@ class AuthCrud:
                     Token.user_id == user_id,
                     Token.jit == jit,
                     Token.type == TokenType.refresh,
-                    Token.is_active,
+                    Token.is_active == True,
                     Token.expired_at > func.utc_timestamp(),
                 )
             )

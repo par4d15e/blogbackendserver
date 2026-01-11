@@ -62,8 +62,8 @@ class MediaCrud:
         # 构建查询条件
         where_conditions = [
             Media.user_id == user_id,
-            not Media.is_avatar,
-            not Media.is_content_audio,
+            Media.is_avatar == False,
+            Media.is_content_audio == False,
         ]
 
         # 只有当media_type不为None时才添加类型过滤条件
@@ -109,8 +109,8 @@ class MediaCrud:
         # 查询用户所有媒体文件中本月新增的数量
         this_month_count_stmt = select(func.count(Media.id)).where(
             Media.user_id == user_id,
-            not Media.is_avatar,
-            not Media.is_content_audio,
+            Media.is_avatar == False,
+            Media.is_content_audio == False,
             func.extract("year", Media.created_at) == current_year,
             func.extract("month", Media.created_at) == current_month,
         )
@@ -176,29 +176,33 @@ class MediaCrud:
                 detail=get_message(key="media.common.mediaNotFound", lang=language),
             )
 
-        if is_avatar:
-            # 删除掉旧的avatar
+        try:
+            if is_avatar:
+                # 删除掉旧的avatar
+                await self.db.execute(
+                    delete(Media).where(
+                        Media.user_id == user_id,
+                        Media.is_avatar == True,
+                    )
+                )
+
             await self.db.execute(
-                delete(Media).where(
-                    Media.user_id == user_id,
-                    Media.is_avatar,
+                insert(Media).values(
+                    uuid=uuid,
+                    user_id=user_id,
+                    type=type,
+                    is_avatar=is_avatar,
+                    file_name=file_name,
+                    original_filepath_url=original_filepath_url,
+                    thumbnail_filepath_url=thumbnail_filepath_url,
+                    watermark_filepath_url=watermark_filepath_url,
+                    file_size=file_size,
                 )
             )
-
-        await self.db.execute(
-            insert(Media).values(
-                uuid=uuid,
-                user_id=user_id,
-                type=type,
-                is_avatar=is_avatar,
-                file_name=file_name,
-                original_filepath_url=original_filepath_url,
-                thumbnail_filepath_url=thumbnail_filepath_url,
-                watermark_filepath_url=watermark_filepath_url,
-                file_size=file_size,
-            )
-        )
-        await self.db.commit()
+            await self.db.commit()
+        except Exception as e:
+            await self.db.rollback()
+            raise
 
         # 更新缓存
         cache_key = f"media_lists:{user_id}:*"
