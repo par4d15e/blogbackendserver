@@ -103,7 +103,7 @@ class BlogService:
         language = get_current_language()
         return await self.blog_crud.get_blog_tts(
             blog_id=blog_id,
-            language=language.value,
+            language=language,
         )
 
     async def get_blog_summary(

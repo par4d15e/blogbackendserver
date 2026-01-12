@@ -763,9 +763,9 @@ class BlogCrud:
     async def get_blog_tts(
         self,
         blog_id: int,
-        language: str,
+        language: Language,
     ) -> Optional[Dict]:
-        cache_key = f"blog_tts:{blog_id}:lang={language}"
+        cache_key = f"blog_tts:{blog_id}:lang={language.value}"
         cache_data = await redis_manager.get_async(cache_key)
 
         if cache_data:
