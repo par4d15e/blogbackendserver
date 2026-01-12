@@ -3,7 +3,7 @@ from fastapi import Depends, Request, HTTPException
 from app.core.logger import logger_manager
 from app.models.user_model import RoleType
 from app.crud.blog_crud import BlogCrud, get_blog_crud
-from app.core.i18n.i18n import Language, get_message
+from app.core.i18n.i18n import Language, get_message, get_current_language
 from app.utils.client_info import client_info_utils
 
 
@@ -100,9 +100,10 @@ class BlogService:
         self,
         blog_id: int,
     ) -> Optional[Dict]:
+        language = get_current_language()
         return await self.blog_crud.get_blog_tts(
             blog_id=blog_id,
-            
+            language=language.value,
         )
 
     async def get_blog_summary(
