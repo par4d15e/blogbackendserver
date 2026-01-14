@@ -1580,7 +1580,23 @@ class BlogCrud:
             )
 
         try:
-            # 删除博客（级联删除相关数据）
+            # Step 1: 删除所有子评论（replies）- 先删除有 parent_id 的评论
+            await self.db.execute(
+                delete(Blog_Comment).where(
+                    Blog_Comment.blog_id == blog_id,
+                    Blog_Comment.parent_id.isnot(None)
+                )
+            )
+            
+            # Step 2: 删除所有父评论（parent comments）- 删除 parent_id 为 NULL 的评论
+            await self.db.execute(
+                delete(Blog_Comment).where(
+                    Blog_Comment.blog_id == blog_id,
+                    Blog_Comment.parent_id.is_(None)
+                )
+            )
+            
+            # Step 3: 删除博客（级联删除其他相关数据如 saved_blogs, blog_tags 等）
             await self.db.execute(delete(Blog).where(Blog.id == blog_id))
             await self.db.commit()
 
