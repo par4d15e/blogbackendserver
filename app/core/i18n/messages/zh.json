@@ -186,7 +186,8 @@
     "common": {
       "projectNotFound": "项目未找到",
       "projectAlreadyExists": "项目已存在",
-      "projectHasMonetization": "项目有变现,不能删除"
+      "projectHasMonetization": "项目有变现,不能删除",
+      "projectHasPaymentRecords": "项目存在支付记录，无法删除。支付记录是重要的财务数据，必须保留。"
     },
     "getProjectLists": "项目列表获取成功",
     "createProject": "项目创建成功",

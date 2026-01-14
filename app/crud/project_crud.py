@@ -621,7 +621,23 @@ class ProjectCrud:
                     key="project.common.projectNotFound"),
             )
 
-        if project.project_monetization.price > 0:
+        # Check if project has any payment records
+        payment_record_exists = await self.db.execute(
+            select(exists(select(Payment_Record.id)).where(
+                Payment_Record.project_id == project_id
+            ))
+        )
+        has_payment_records = payment_record_exists.scalar_one()
+
+        if has_payment_records:
+            raise HTTPException(
+                status_code=400,
+                detail=get_message(
+                    key="project.common.projectHasPaymentRecords"
+                ),
+            )
+
+        if project.project_monetization and project.project_monetization.price > 0:
             raise HTTPException(
                 status_code=400,
                 detail=get_message(

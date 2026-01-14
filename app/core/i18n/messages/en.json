@@ -186,7 +186,8 @@
     "common": {
       "projectNotFound": "Project not found",
       "projectAlreadyExists": "Project already exists",
-      "projectHasMonetization": "Project has monetization, cannot be deleted"
+      "projectHasMonetization": "Project has monetization, cannot be deleted",
+      "projectHasPaymentRecords": "Project has payment records and cannot be deleted. Payment records are important financial data that must be preserved."
     },
     "getProjectLists": "Project lists get successfully",
     "createProject": "Project created successfully",
