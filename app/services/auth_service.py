@@ -63,7 +63,7 @@ class AuthService:
             avatar_url=avatar_url,
             provider=provider,
             provider_user_id=provider_user_id,
-            
+
         )
         access_token = tokens["access_token"]
         refresh_token = tokens["refresh_token"]
@@ -96,7 +96,7 @@ class AuthService:
                 recipient=email,
                 template="verification",
                 code=code,
-                
+
             )
             self.logger.info(f"verification email has been sent to {email}")
         else:
@@ -109,7 +109,7 @@ class AuthService:
                 recipient=email,
                 template="resetcode",
                 code=code,
-                
+
             )
             self.logger.info(f"password reset email has been sent to {email}")
 
@@ -136,7 +136,7 @@ class AuthService:
             password_hash=password_hash,
             code=code,
             type=CodeType.verified,
-            
+
         )
 
         return True
@@ -265,9 +265,14 @@ class AuthService:
             user_id=user_id,
             email=email_id,
             jit=jit,
-            
         )
+
         if not access_token:
+            response.delete_cookie(
+                "refresh_token",
+                domain=settings.domain.COOKIE_DOMAIN,
+                path="/",
+            )
             raise HTTPException(
                 status_code=404,
                 detail=get_message(
@@ -395,7 +400,7 @@ class AuthService:
             avatar_url=avatar_url,
             provider=SocialProvider.github,
             provider_user_id=str(user_info.get("id")),
-            
+
         )
 
         access_token = tokens["access_token"]
@@ -483,7 +488,7 @@ class AuthService:
             avatar_url=avatar_url,
             provider=SocialProvider.google,
             provider_user_id=str(user_info.get("id")),
-            
+
         )
 
         access_token = tokens["access_token"]

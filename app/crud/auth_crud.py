@@ -169,7 +169,8 @@ class AuthCrud:
         """
         statement = delete(Token).where(
             Token.user_id == user_id,
-            or_(func.utc_timestamp() >= Token.expired_at, Token.is_active == False),
+            or_(func.utc_timestamp() >= Token.expired_at,
+                Token.is_active == False),
         )
         result = await self.db.execute(statement)
         await self.db.commit()
@@ -792,7 +793,7 @@ class AuthCrud:
                     status_code=404,
                     detail=get_message(
                         key="auth.generateAccessToken.refreshTokenNotFound",
-                        
+
                     ),
                 )
 
