@@ -215,17 +215,6 @@ media_data = [
         "watermark_filepath_url": f"{settings.domain.DOMAIN_URL}/static/image/default_avatar.jpg",
         "file_size": 1000,
     },
-    {
-        "uuid": "123e4567-e89b-12d3-a456-426614174001",
-        "user_id": 2,
-        "type": MediaType.image,
-        "is_avatar": True,
-        "file_name": "avatar2.jpg",
-        "original_filepath_url": f"{settings.domain.DOMAIN_URL}/static/image/default_avatar.jpg",
-        "thumbnail_filepath_url": f"{settings.domain.DOMAIN_URL}/static/image/default_avatar.jpg",
-        "watermark_filepath_url": f"{settings.domain.DOMAIN_URL}/static/image/default_avatar.jpg",
-        "file_size": 1000,
-    },
 ]
 
 
