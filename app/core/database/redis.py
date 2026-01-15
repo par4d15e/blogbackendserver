@@ -86,6 +86,12 @@ class RedisManager:
         keys = await client.keys(pattern)
         return await client.delete(*keys) if keys else 0
 
+    async def exists_async(self, key: str) -> bool:
+        """检查键是否存在（异步）"""
+        client = await self.get_async_client()
+        result = await client.exists(key)
+        return result > 0
+
     async def async_test_connection(self) -> bool:
         try:
             client = await self.get_async_client()
