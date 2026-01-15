@@ -164,6 +164,12 @@ jobs:
             CURRENT_VERSION=$(sudo docker exec server /server/.venv/bin/alembic current 2>&1 | grep -oP '(?<=\(head\) )[a-f0-9]+' || echo "none")
             echo "📌 Current version: $CURRENT_VERSION"
             
+            # If no version, ensure alembic is at base state
+            if [ "$CURRENT_VERSION" = "none" ]; then
+              echo "⚠️  No version found, ensuring clean state..."
+              sudo docker exec server /server/.venv/bin/alembic stamp base || true
+            fi
+            
             # Generate migration
             echo "📝 Generating migration from current models..."
             sudo docker exec server /server/.venv/bin/alembic revision --autogenerate -m "Migration $(date +%Y%m%d_%H%M%S)"
