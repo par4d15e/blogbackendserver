@@ -1,36 +1,65 @@
 # Python-generated files
 __pycache__/
 *.py[oc]
+*.pyo
+*.pyd
 build/
 dist/
 wheels/
 *.egg-info
+*.egg
+
+# IDE and Editor
 .DS_Store
-.vscode
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.cursor/
 
 # Virtual environments
-.venv
+.venv/
+venv/
+ENV/
+env/
 
 # Ruff
-.ruff_cache
+.ruff_cache/
 
 # pytest
-.pytest_cache
+.pytest_cache/
+.coverage
+htmlcov/
+*.cover
 
 # Celery
 celerybeat-schedule
 celerybeat-schedule-*
+celerybeat.pid
 
 # Logs
 logs/
+*.log
 
-# Secret
+# Secret files
 secret/*
+!secret/.gitkeep
 
-# certs
+# Certificates
 certs/*
+!certs/.gitkeep
 
-# database
+# Database migrations (auto-generated)
 alembic/versions/*
+!alembic/versions/__init__.py
 
-.cursor
+# Static files (if generated)
+static/uploads/
+static/temp/
+
+# Backup files
+*.bak
+*.backup
+*.sql
+*.dump

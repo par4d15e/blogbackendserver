@@ -156,17 +156,19 @@ jobs:
               sleep 2
             done
 
-            # Verify migration files exist
-            MIGRATION_FILES=$(ls -1 "$DEPLOY_DIR/alembic/versions"/*.py 2>/dev/null | grep -v __init__ | wc -l || echo "0")
-            echo "Found $MIGRATION_FILES migration file(s)"
+            # For fresh database, generate initial migration
+            CURRENT_VERSION=$(sudo docker exec server /server/.venv/bin/alembic current 2>&1 | grep -oP '(?<=\(head\) )[a-f0-9]+' || echo "none")
             
-            if [ "$MIGRATION_FILES" -eq "0" ]; then
-              echo "⚠️  No migration files found, generating initial migration"
+            if [ "$CURRENT_VERSION" = "none" ]; then
+              echo "⚠️  Fresh database detected, generating initial migration"
               sudo docker exec server /server/.venv/bin/alembic revision --autogenerate -m "Initial migration" || { echo "❌ Failed to generate migration"; exit 1; }
+              sudo docker exec server /server/.venv/bin/alembic upgrade head || { echo "❌ Migration failed"; exit 1; }
+            else
+              echo "✅ Database already migrated to version: $CURRENT_VERSION"
+              # Still run upgrade in case there are new migrations
+              sudo docker exec server /server/.venv/bin/alembic upgrade head || { echo "❌ Migration failed"; exit 1; }
             fi
-
-            # Run migration
-            sudo docker exec server /server/.venv/bin/alembic upgrade head || { echo "❌ Migration failed"; exit 1; }
+            
             echo "✅ Migration completed"
 
       - name: Insert initial data
