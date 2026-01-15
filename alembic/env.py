@@ -37,13 +37,13 @@ from app.models.user_model import User  # noqa: F401
 from app.models.media_model import Media  # noqa: F401
 from app.models.seo_model import Seo  # noqa: F401
 from app.models.tag_model import Tag  # noqa: F401
-from app.models.payment_model import Tax, PaymentRecord  # noqa: F401
+from app.models.payment_model import Tax, Payment_Record  # noqa: F401
 from app.models.section_model import Section  # noqa: F401
-from app.models.board_model import Board, BoardComment  # noqa: F401
-from app.models.friend_model import Friend, FriendList  # noqa: F401
+from app.models.board_model import Board, Board_Comment  # noqa: F401
+from app.models.friend_model import Friend, Friend_List  # noqa: F401
 from app.models.subscriber_model import Subscriber  # noqa: F401
-from app.models.blog_model import Blog, BlogTag, BlogComment, BlogStats, BlogStatus, BlogSummary, BlogTTS, SavedBlog  # noqa: F401
-from app.models.project_model import Project, ProjectAttachment, ProjectMonetization  # noqa: F401
+from app.models.blog_model import Blog, Blog_Tag, Blog_Comment, Blog_Stats, Blog_Status, Blog_Summary, Blog_TTS, Saved_Blog  # noqa: F401
+from app.models.project_model import Project, Project_Attachment, Project_Monetization  # noqa: F401
 from app.models.auth_model import RefreshToken, Code, Social_Account  # noqa: F401
 
 target_metadata = SQLModel.metadata
