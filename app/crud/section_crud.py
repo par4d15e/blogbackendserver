@@ -47,8 +47,7 @@ class SectionCrud:
         tree = []
         for section in sections:
             if section.parent_id == parent_id:
-                children = self._build_section_tree(
-                    sections, language, section.id)
+                children = self._build_section_tree(sections, language, section.id)
                 section_dict = {
                     "section_id": section.id,
                     "type": section.type.name,
@@ -83,8 +82,7 @@ class SectionCrud:
         if not sections:
             raise HTTPException(
                 status_code=404,
-                detail=get_message(
-                    key="section.common.sectionNotFound"),
+                detail=get_message(key="section.common.sectionNotFound"),
             )
 
         # 构建树形结构
@@ -95,9 +93,7 @@ class SectionCrud:
 
         return response
 
-    async def get_section_seo_by_slug(
-        self, slug: str
-    ) -> Optional[Dict[str, Any]]:
+    async def get_section_seo_by_slug(self, slug: str) -> Optional[Dict[str, Any]]:
         cache_key = f"section_seo_by_slug:{slug}"
         cache_data = await redis_manager.get_async(cache_key)
 
@@ -110,7 +106,6 @@ class SectionCrud:
                 status_code=404,
                 detail=get_message(
                     key="section.common.sectionNotFound",
-                    
                 ),
             )
         if section.seo:
@@ -133,9 +128,7 @@ class SectionCrud:
         else:
             return None
 
-    async def get_section_details_by_slug(
-        self, slug: str
-    ) -> Optional[Dict[str, Any]]:
+    async def get_section_details_by_slug(self, slug: str) -> Optional[Dict[str, Any]]:
         language = get_current_language()
         cache_key = f"section_details_by_slug:{slug}:{language}"
         cache_data = await redis_manager.get_async(cache_key)
@@ -148,8 +141,7 @@ class SectionCrud:
         if not section:
             raise HTTPException(
                 status_code=404,
-                detail=get_message(
-                    key="section.common.sectionNotFound"),
+                detail=get_message(key="section.common.sectionNotFound"),
             )
 
         response = {
@@ -188,8 +180,7 @@ class SectionCrud:
         if role != RoleType.admin:
             raise HTTPException(
                 status_code=401,
-                detail=get_message(
-                    key="common.insufficientPermissions"),
+                detail=get_message(key="common.insufficientPermissions"),
             )
 
         # 检查是否有section
@@ -197,8 +188,7 @@ class SectionCrud:
         if not section:
             raise HTTPException(
                 status_code=404,
-                detail=get_message(
-                    key="section.common.sectionNotFound"),
+                detail=get_message(key="section.common.sectionNotFound"),
             )
 
         # 翻译section
@@ -228,8 +218,7 @@ class SectionCrud:
         }
 
         statement = (
-            update(Section).where(Section.id ==
-                                  section_id).values(**update_values)
+            update(Section).where(Section.id == section_id).values(**update_values)
         )
         await self.db.execute(statement)
         await self.db.commit()

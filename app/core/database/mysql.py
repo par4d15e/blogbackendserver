@@ -1,6 +1,11 @@
 from collections.abc import AsyncGenerator
 from typing import Optional
-from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession, AsyncEngine
+from sqlalchemy.ext.asyncio import (
+    create_async_engine,
+    async_sessionmaker,
+    AsyncSession,
+    AsyncEngine,
+)
 from sqlalchemy import create_engine, text, Engine
 from sqlalchemy.orm import sessionmaker, Session
 from app.core.logger import logger_manager
@@ -88,8 +93,7 @@ class MySQLManager:
                 expire_on_commit=False,
             )
 
-            self.logger.info(
-                "✅ MySQL initialized successfully (async + sync).")
+            self.logger.info("✅ MySQL initialized successfully (async + sync).")
         except Exception:
             self.logger.exception("❌ Failed to initialize MySQL.")
             raise
@@ -97,8 +101,7 @@ class MySQLManager:
     async def get_db(self) -> AsyncGenerator[AsyncSession, None]:
         """FastAPI 依赖注入使用：返回异步会话生成器"""
         if not self.async_session_maker:
-            raise RuntimeError(
-                "Database not initialized. Call initialize() first.")
+            raise RuntimeError("Database not initialized. Call initialize() first.")
 
         async with self.async_session_maker() as session:
             yield session
@@ -106,8 +109,7 @@ class MySQLManager:
     def get_sync_db(self) -> Session:
         """Celery 任务使用：返回同步会话"""
         if not self.sync_session_maker:
-            raise RuntimeError(
-                "Database not initialized. Call initialize() first.")
+            raise RuntimeError("Database not initialized. Call initialize() first.")
 
         return self.sync_session_maker()
 
@@ -136,8 +138,7 @@ class MySQLManager:
                 self.async_session_maker = None
                 self.logger.info("✅ MySQL async engine disposed successfully.")
             except Exception:
-                self.logger.exception(
-                    "❌ Failed to dispose MySQL async engine.")
+                self.logger.exception("❌ Failed to dispose MySQL async engine.")
                 raise
 
         if self.sync_engine:

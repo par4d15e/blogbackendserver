@@ -94,8 +94,7 @@ async def lifespan(_app: FastAPI):
         logger.info("🎉 Database connections test successfully")
     except Exception as e:
         logger.error(f"❌ Database connection failed: {e}")
-        logger.warning(
-            "⚠️ Application will start without database connections")
+        logger.warning("⚠️ Application will start without database connections")
 
     yield
 
@@ -250,7 +249,10 @@ def custom_openapi(self: FastAPI) -> dict[str, Any]:
     openapi_schema["tags"] = [
         {"name": "Health", "description": "Health check endpoints"},
         {"name": "Documentation", "description": "API documentation endpoints"},
-        {"name": "Authentication", "description": "User authentication and authorization"},
+        {
+            "name": "Authentication",
+            "description": "User authentication and authorization",
+        },
         {"name": "User", "description": "User profile and account management"},
         {"name": "Blog", "description": "Blog post CRUD operations"},
         {"name": "Section", "description": "Blog sections and categories"},

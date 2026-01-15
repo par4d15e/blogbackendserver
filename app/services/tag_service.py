@@ -19,7 +19,6 @@ class TagService:
         items, pagination_metadata = await self.tag_crud.get_tag_lists(
             page=page,
             size=size,
-            
             published_only=published_only,
         )
         return items, pagination_metadata
@@ -29,9 +28,7 @@ class TagService:
         role: RoleType,
         chinese_title: str,
     ) -> bool:
-        return await self.tag_crud.create_tag(
-            role=role, chinese_title=chinese_title
-        )
+        return await self.tag_crud.create_tag(role=role, chinese_title=chinese_title)
 
     async def update_tag(
         self,
@@ -48,9 +45,7 @@ class TagService:
         tag_id: int,
         role: RoleType,
     ) -> bool:
-        return await self.tag_crud.delete_tag(
-            tag_id=tag_id, role=role
-        )
+        return await self.tag_crud.delete_tag(tag_id=tag_id, role=role)
 
 
 def get_tag_service(tag_crud: TagCrud = Depends(get_tag_crud)) -> TagService:

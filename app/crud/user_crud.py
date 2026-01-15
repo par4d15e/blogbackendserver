@@ -77,9 +77,7 @@ class UserCrud:
 
     async def get_my_avatar(self, user_id: int) -> Optional[Dict[str, Any]]:
         """Get current user's avatar by id."""
-        statement = select(Media).where(
-            Media.user_id == user_id, Media.is_avatar
-        )
+        statement = select(Media).where(Media.user_id == user_id, Media.is_avatar)
         result = await self.db.execute(statement)
         media = result.scalar_one_or_none()
 
@@ -140,7 +138,6 @@ class UserCrud:
             size=size,
             order_by=[User.created_at.desc(), User.id.desc()],
             join_options=[selectinload(User.avatar)],
-            
             filters={"is_verified": True},
         )
 

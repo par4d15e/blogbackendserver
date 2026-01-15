@@ -13,19 +13,11 @@ class SectionService:
     async def get_section_lists(self) -> List[Dict[str, Any]]:
         return await self.section_crud.get_section_lists()
 
-    async def get_section_seo_by_slug(
-        self, slug: str
-    ) -> Optional[Dict[str, Any]]:
-        return await self.section_crud.get_section_seo_by_slug(
-            slug=slug
-        )
+    async def get_section_seo_by_slug(self, slug: str) -> Optional[Dict[str, Any]]:
+        return await self.section_crud.get_section_seo_by_slug(slug=slug)
 
-    async def get_section_details_by_slug(
-        self, slug: str
-    ) -> Optional[Dict[str, Any]]:
-        return await self.section_crud.get_section_details_by_slug(
-            slug=slug
-        )
+    async def get_section_details_by_slug(self, slug: str) -> Optional[Dict[str, Any]]:
+        return await self.section_crud.get_section_details_by_slug(slug=slug)
 
     async def update_section(
         self,
@@ -38,7 +30,6 @@ class SectionService:
     ) -> bool:
         return await self.section_crud.update_section(
             section_id=section_id,
-            
             chinese_title=chinese_title,
             chinese_description=chinese_description,
             role=role,

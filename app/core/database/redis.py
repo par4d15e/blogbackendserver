@@ -90,12 +90,10 @@ class RedisManager:
         try:
             client = await self.get_async_client()
             await client.ping()
-            self.logger.info(
-                "✅ Redis async client connection test successful.")
+            self.logger.info("✅ Redis async client connection test successful.")
             return True
         except Exception:
-            self.logger.exception(
-                "❌ Redis async client connection test failed.")
+            self.logger.exception("❌ Redis async client connection test failed.")
             raise
 
     # -------------------------------
@@ -139,8 +137,7 @@ class RedisManager:
             self.logger.info("✅ Redis sync client connection test successful.")
             return True
         except Exception:
-            self.logger.exception(
-                "❌ Redis sync client connection test failed.")
+            self.logger.exception("❌ Redis sync client connection test failed.")
             raise
 
     # -------------------------------

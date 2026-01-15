@@ -160,7 +160,8 @@ def generate_content_audio_task(self, blog_id: int) -> bool:
                     try:
                         # 生成中文音频
                         audio_path = generate_audio_for_text(
-                            chinese_text, Language.ZH_CN)
+                            chinese_text, Language.ZH_CN
+                        )
 
                         # 保存到数据库
                         chinese_media = save_audio_to_media_db(
@@ -193,7 +194,8 @@ def generate_content_audio_task(self, blog_id: int) -> bool:
                     try:
                         # 生成英文音频
                         audio_path = generate_audio_for_text(
-                            english_text, Language.EN_US)
+                            english_text, Language.EN_US
+                        )
 
                         # 保存到数据库
                         english_media = save_audio_to_media_db(
@@ -231,16 +233,14 @@ def generate_content_audio_task(self, blog_id: int) -> bool:
 
                     if blog_tts.chinese_tts_id:
                         old_chinese_media_result = session.execute(
-                            select(Media).where(
-                                Media.id == blog_tts.chinese_tts_id)
+                            select(Media).where(Media.id == blog_tts.chinese_tts_id)
                         ).first()
                         if old_chinese_media_result:
                             old_chinese_media = old_chinese_media_result[0]
 
                     if blog_tts.english_tts_id:
                         old_english_media_result = session.execute(
-                            select(Media).where(
-                                Media.id == blog_tts.english_tts_id)
+                            select(Media).where(Media.id == blog_tts.english_tts_id)
                         ).first()
                         if old_english_media_result:
                             old_english_media = old_english_media_result[0]
@@ -309,12 +309,10 @@ def generate_content_audio_task(self, blog_id: int) -> bool:
                         f"Successfully created new Blog_TTS record for blog ID: {blog_id}"
                     )
 
-            logger.info(
-                f"Successfully generated content audio for blog ID: {blog_id}")
+            logger.info(f"Successfully generated content audio for blog ID: {blog_id}")
             return True
     except Exception as e:
-        logger.error(
-            f"Failed to generate content audio for blog ID {blog_id}: {e}")
+        logger.error(f"Failed to generate content audio for blog ID {blog_id}: {e}")
         # 重试任务如果失败
         if self.request.retries < self.max_retries:
             raise self.retry(exc=e, countdown=60)

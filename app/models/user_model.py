@@ -15,7 +15,7 @@ from sqlmodel import (
 # 防止循环导入
 if TYPE_CHECKING:
     from app.models.media_model import Media
-    from app.models.auth_model import Code, Token, Social_Account
+    from app.models.auth_model import Code, RefreshToken, Social_Account
     from app.models.blog_model import Blog, Blog_Status, Blog_Comment, Saved_Blog
     from app.models.payment_model import Payment_Record
 
@@ -105,7 +105,7 @@ class User(SQLModel, table=True):
         }
     )
 
-    tokens: List["Token"] = Relationship(
+    refresh_tokens: List["RefreshToken"] = Relationship(
         sa_relationship_kwargs={
             "uselist": True,
             "lazy": "select",

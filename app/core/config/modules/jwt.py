@@ -12,7 +12,8 @@ class JWTSettings(EnvBaseSettings):
         default=1800, description="JWT access token expiration time (seconds)"
     )
     JWT_REFRESH_TOKEN_EXPIRATION: PositiveInt = Field(
-        default=86400, description="JWT refresh token expiration time (seconds)"
+        default=604800,
+        description="JWT refresh token expiration time (seconds) - 7 days",
     )
     JWT_ISSUER: Optional[str] = Field(default="xiaoli", description="JWT issuer")
     JWT_AUDIENCE: Optional[str] = Field(

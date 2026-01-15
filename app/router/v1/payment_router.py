@@ -27,7 +27,6 @@ async def create_payment_intent(
         tax_rate=form_data.tax_rate,
         tax_amount=form_data.tax_amount,
         final_amount=form_data.final_amount,
-        
     )
     return SuccessResponse(
         message=get_message("payment.createPaymentIntent"),
@@ -55,13 +54,10 @@ async def get_payment_success_details_router(
     """获取支付成功的产品详情"""
     payment_details = await payment_service.get_payment_success_details(
         payment_intent_id=payment_intent,
-        
     )
 
     return SuccessResponse(
-        message=get_message(
-            "payment.paymentSuccess.getSuccessDetailsSuccess"
-        ),
+        message=get_message("payment.paymentSuccess.getSuccessDetailsSuccess"),
         data=payment_details,
     )
 
@@ -75,7 +71,6 @@ async def get_payment_record_router(
     payment_service: PaymentService = Depends(get_payment_service),
 ):
     items, pagination_metadata = await payment_service.get_payment_record(
-        
         page=page,
         size=size,
         role=current_user.role,

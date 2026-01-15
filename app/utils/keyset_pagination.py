@@ -143,8 +143,7 @@ class KeysetPaginator:
 
         # 如果 prev_cursor 为 None，从响应中移除该字段以保持简洁
         if prev_cursor is None:
-            cast(Dict[str, Any], response["pagination"]).pop(
-                "prev_cursor", None)
+            cast(Dict[str, Any], response["pagination"]).pop("prev_cursor", None)
 
         return response
 

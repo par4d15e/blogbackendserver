@@ -37,9 +37,7 @@ class PaymentCrud:
         order_number = f"{data_stamp}{user_id}{section_id_str}{random_str}"
         return order_number
 
-    async def _validate_project_for_payment(
-        self, project_id: int
-    ) -> Project:
+    async def _validate_project_for_payment(self, project_id: int) -> Project:
         """验证项目是否存在且可以进行支付，并返回项目实例
 
         Args:
@@ -55,8 +53,7 @@ class PaymentCrud:
         result = await self.db.execute(
             select(Project)
             .options(
-                joinedload(Project.project_monetization), joinedload(
-                    Project.section)
+                joinedload(Project.project_monetization), joinedload(Project.section)
             )
             .where(Project.id == project_id, Project.is_published == True)
         )
@@ -65,8 +62,7 @@ class PaymentCrud:
         if not project:
             raise HTTPException(
                 status_code=404,
-                detail=get_message(
-                    key="project.common.projectNotFound"),
+                detail=get_message(key="project.common.projectNotFound"),
             )
 
         # 验证变现设置
@@ -119,8 +115,7 @@ class PaymentCrud:
         result = await self.db.execute(
             select(Payment_Record)
             .options(
-                joinedload(Payment_Record.user), joinedload(
-                    Payment_Record.project)
+                joinedload(Payment_Record.user), joinedload(Payment_Record.project)
             )
             .where(
                 Payment_Record.user_id == user_id,
@@ -153,9 +148,7 @@ class PaymentCrud:
         if have_paid:
             raise HTTPException(
                 status_code=400,
-                detail=get_message(
-                    key="project.common.projectAlreadyExists"
-                ),
+                detail=get_message(key="project.common.projectAlreadyExists"),
             )
 
         # 生成订单号，使用项目的 section_id
@@ -237,8 +230,7 @@ class PaymentCrud:
         # 获取创建的记录
         payment_record_id = result.inserted_primary_key[0]
         payment_record_result = await self.db.execute(
-            select(Payment_Record).where(
-                Payment_Record.id == payment_record_id)
+            select(Payment_Record).where(Payment_Record.id == payment_record_id)
         )
         payment_record = payment_record_result.scalar_one()
 
@@ -258,8 +250,7 @@ class PaymentCrud:
     ) -> Tuple[List[Dict[str, Any]], Dict[str, Any]]:
         language = get_current_language()
         try:
-            page, size = offset_paginator.validate_pagination_params(
-                page, size)
+            page, size = offset_paginator.validate_pagination_params(page, size)
         except ValueError:
             raise HTTPException(
                 status_code=400,
@@ -286,8 +277,7 @@ class PaymentCrud:
             model_class=Payment_Record,
             page=page,
             size=size,
-            order_by=[Payment_Record.created_at.desc(),
-                      Payment_Record.id.desc()],
+            order_by=[Payment_Record.created_at.desc(), Payment_Record.id.desc()],
             join_options=[
                 joinedload(Payment_Record.user),
                 joinedload(Payment_Record.project).joinedload(
@@ -295,7 +285,6 @@ class PaymentCrud:
                 ),
             ],
             filters=filters,
-            
         )
 
         # 本月新增支付记录数量

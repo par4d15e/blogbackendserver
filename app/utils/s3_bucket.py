@@ -32,8 +32,7 @@ class RobustS3Bucket:
 
         # 验证必要的配置参数
         if not all(
-            [self.bucket_name, self.access_key_id,
-                self.secret_access_key, self.region]
+            [self.bucket_name, self.access_key_id, self.secret_access_key, self.region]
         ):
             missing_params = []
             if not self.bucket_name:
@@ -164,8 +163,7 @@ class RobustS3Bucket:
             Optional[Dict[str, Any]]: 对象信息，若不存在或获取失败返回None
         """
         try:
-            response = self.s3_client.head_object(
-                Bucket=self.bucket_name, Key=s3_key)
+            response = self.s3_client.head_object(Bucket=self.bucket_name, Key=s3_key)
             return {
                 "size": response.get("ContentLength"),
                 "etag": (response.get("ETag") or "").strip('"'),
@@ -274,8 +272,7 @@ class RobustS3Bucket:
                                 # 避免回调函数异常影响上传
                                 pass
 
-                extra_args["Callback"] = ProgressWrapper(
-                    progress_callback, file_size)
+                extra_args["Callback"] = ProgressWrapper(progress_callback, file_size)
 
             # 执行上传（使用传输配置提升吞吐）
             self.s3_client.upload_file(
@@ -371,11 +368,12 @@ class RobustS3Bucket:
                 else (acl if isinstance(acl, str) else None)
             )
             # 将三参数回调转换为二参数回调
-            single_progress_callback: Optional[Callable[[
-                int, int], None]] = None
+            single_progress_callback: Optional[Callable[[int, int], None]] = None
             if progress_callback:
+
                 def single_progress_callback(uploaded: int, total: int) -> None:
                     progress_callback(0, uploaded, total)
+
             return self._upload_single_file(
                 local_file_path=file_paths[0],
                 s3_key=s3_keys[0],
@@ -412,8 +410,7 @@ class RobustS3Bucket:
 
                     if progress_callback:
                         try:
-                            progress_callback(
-                                uploaded_count, total_files, total_files)
+                            progress_callback(uploaded_count, total_files, total_files)
                         except Exception:
                             pass
 
@@ -427,8 +424,7 @@ class RobustS3Bucket:
 
                     if progress_callback:
                         try:
-                            progress_callback(
-                                uploaded_count, total_files, total_files)
+                            progress_callback(uploaded_count, total_files, total_files)
                         except Exception:
                             pass
 
@@ -444,8 +440,7 @@ class RobustS3Bucket:
                 if isinstance(acl, (list, tuple))
                 else (acl if isinstance(acl, str) else None)
             )
-            file_infos.append(
-                (file_path, s3_key, metadata, content_type, acl_value))
+            file_infos.append((file_path, s3_key, metadata, content_type, acl_value))
 
         # 使用线程池并发上传
         with ThreadPoolExecutor(max_workers=max_workers) as executor:
@@ -508,8 +503,7 @@ class RobustS3Bucket:
                             except Exception:
                                 pass
 
-                extra_args["Callback"] = ProgressWrapper(
-                    progress_callback, file_size)
+                extra_args["Callback"] = ProgressWrapper(progress_callback, file_size)
 
             self.s3_client.download_file(
                 self.bucket_name, s3_key, str(local_file_path), ExtraArgs=extra_args
@@ -554,10 +548,8 @@ class RobustS3Bucket:
         # 如果只有一个文件，直接处理单个文件删除
         if len(s3_keys) == 1:
             try:
-                self.s3_client.delete_object(
-                    Bucket=self.bucket_name, Key=s3_keys[0])
-                self.logger.info(
-                    f"文件删除成功: s3://{self.bucket_name}/{s3_keys[0]}")
+                self.s3_client.delete_object(Bucket=self.bucket_name, Key=s3_keys[0])
+                self.logger.info(f"文件删除成功: s3://{self.bucket_name}/{s3_keys[0]}")
                 return True
             except Exception as e:
                 self.logger.error(f"删除文件失败 {s3_keys[0]}: {str(e)}")
@@ -573,8 +565,7 @@ class RobustS3Bucket:
             nonlocal deleted_count
 
             try:
-                self.s3_client.delete_object(
-                    Bucket=self.bucket_name, Key=s3_key)
+                self.s3_client.delete_object(Bucket=self.bucket_name, Key=s3_key)
                 self.logger.info(f"文件删除成功: s3://{self.bucket_name}/{s3_key}")
 
                 with lock:
@@ -583,8 +574,7 @@ class RobustS3Bucket:
 
                     if progress_callback:
                         try:
-                            progress_callback(
-                                deleted_count, total_files, total_files)
+                            progress_callback(deleted_count, total_files, total_files)
                         except Exception:
                             pass
 
@@ -598,8 +588,7 @@ class RobustS3Bucket:
 
                     if progress_callback:
                         try:
-                            progress_callback(
-                                deleted_count, total_files, total_files)
+                            progress_callback(deleted_count, total_files, total_files)
                         except Exception:
                             pass
 

@@ -10,8 +10,7 @@ from celery import chain
 from app.models.auth_model import (
     Code,
     CodeType,
-    Token,
-    TokenType,
+    RefreshToken,
     Social_Account,
     SocialProvider,
 )
@@ -35,8 +34,7 @@ class AuthCrud:
 
     async def _get_user_by_username(self, username: str) -> bool:
         """Get user by username - 新增方法，利用索引"""
-        statement = select(exists(select(User.id)).where(
-            User.username == username))
+        statement = select(exists(select(User.id)).where(User.username == username))
         result = await self.db.execute(statement)
         return bool(result.scalar_one())
 
@@ -138,51 +136,38 @@ class AuthCrud:
         # 提交所有更改
         await self.db.commit()
 
-    async def _get_user_tokens(self, user_id: int) -> Sequence[Token]:
-        """Get all valid tokens for user - 优化查询"""
+    async def _get_user_tokens(self, user_id: int) -> Sequence[RefreshToken]:
+        """Get all valid refresh tokens for user - 优化查询"""
         statement = (
-            select(Token)
+            select(RefreshToken)
             .options(lazyload("*"))
             .where(
-                Token.user_id == user_id,
-                Token.expired_at > func.utc_timestamp(),
-                Token.is_active == True,
+                RefreshToken.user_id == user_id,
+                RefreshToken.expired_at > func.utc_timestamp(),
+                RefreshToken.is_active == True,
             )
         )
         result = await self.db.execute(statement)
         return result.scalars().all()
 
     async def _revoke_user_tokens(self, user_id: int) -> bool:
-        """Revoke all tokens for user"""
+        """Revoke all refresh tokens for user"""
         statement = (
-            update(Token)
-            .where(Token.user_id == user_id, Token.is_active == True)
+            update(RefreshToken)
+            .where(RefreshToken.user_id == user_id, RefreshToken.is_active == True)
             .values(is_active=False)
         )
         result = await self.db.execute(statement)
         await self.db.commit()
         return (result.rowcount or 0) > 0
 
-    async def _cleanup_tokens(self, user_id: int) -> int:
-        """
-        清理已过期或未激活的 Token
-        """
-        statement = delete(Token).where(
-            Token.user_id == user_id,
-            or_(func.utc_timestamp() >= Token.expired_at,
-                Token.is_active == False),
-        )
-        result = await self.db.execute(statement)
-        await self.db.commit()
-        return result.rowcount
-
     async def _save_token_to_database(
-        self, user_id: int, jit: str, type: TokenType, token: str, expired_at: datetime
-    ) -> Token:
-        """Create a new token."""
+        self, user_id: int, jit: str, token: str, expired_at: datetime
+    ) -> RefreshToken:
+        """Create a new refresh token."""
         new_token = await self.db.execute(
-            insert(Token).values(
-                user_id=user_id, jit=jit, type=type, token=token, expired_at=expired_at
+            insert(RefreshToken).values(
+                user_id=user_id, jit=jit, token=token, expired_at=expired_at
             )
         )
         await self.db.commit()
@@ -191,98 +176,34 @@ class AuthCrud:
     async def _generate_tokens_by_condition(
         self, user_id: int, email: str, role: RoleType, username: str
     ) -> Dict[str, str]:
-        """根据条件生成访问令牌和刷新令牌"""
-        # 一次性查询所有有效的tokens
+        """根据条件生成访问令牌和刷新令牌
+
+        注意：
+        - Access token 不存储在数据库中，仅 refresh token 存储
+        - 实现并发登录限制：最多允许 5 个活跃设备
+        """
+        # 查询现有的 refresh token
         valid_tokens = await self._get_user_tokens(user_id)
-        # 高效分类token - 使用字典推导式
-        token_dict = {token.type: token for token in valid_tokens}
-        existing_access_token = token_dict.get(TokenType.access)
-        existing_refresh_token = token_dict.get(TokenType.refresh)
 
-        # 定期清理过期token
-        await self._cleanup_tokens(user_id)
+        # 并发登录限制：最多 5 个活跃设备
+        MAX_CONCURRENT_SESSIONS = 5
 
-        # 检查token状态并智能处理
-        if existing_access_token and existing_refresh_token:
-            # 如果access和refresh token都有效，直接返回
+        if len(valid_tokens) >= MAX_CONCURRENT_SESSIONS:
+            # 撤销最旧的 token
+            oldest_token = min(valid_tokens, key=lambda t: t.created_at)
+            oldest_token.is_active = False
+            self.db.add(oldest_token)
+            await self.db.flush()
             self.logger.info(
-                f"User {email} already has valid tokens after social login."
+                f"User {email} exceeded max concurrent sessions ({MAX_CONCURRENT_SESSIONS}), "
+                f"revoked oldest token (jti: {oldest_token.jit})"
             )
-            return {
-                "access_token": existing_access_token.token,
-                "refresh_token": existing_refresh_token.token,
-            }
-        elif existing_refresh_token and not existing_access_token:
-            # refresh_token有效，access_token无效 - 用refresh_token生成新的access_token
-            self.logger.info(
-                f"User {email} has valid refresh token after social login, generating new access token."
-            )
-            access_jti = str(uuid.uuid4())
-            refresh_jti = existing_refresh_token.jit  # 保持现有的refresh_token
+            # 从列表中移除已撤销的 token
+            valid_tokens = [t for t in valid_tokens if t.id != oldest_token.id]
 
-            shared_payload = {
-                "user_id": user_id,
-                "email": email,
-                "username": username,
-                "role": role,
-            }
+        # 总是生成新的 token 对（不复用旧 token）
+        self.logger.info(f"Generating new token pair for user {email}")
 
-            access_token_data = {**shared_payload, "jti": access_jti}
-            access_token, access_token_expired_at = (
-                security_manager.create_access_token(access_token_data)
-            )
-
-            # 只保存新的access_token
-            await self._save_token_to_database(
-                user_id=user_id,
-                jit=access_jti,
-                type=TokenType.access,
-                token=access_token,
-                expired_at=access_token_expired_at,
-            )
-
-            return {
-                "access_token": access_token,
-                "refresh_token": existing_refresh_token.token,
-            }
-
-        elif existing_access_token and not existing_refresh_token:
-            # access_token有效，refresh_token无效 - 用access_token生成新的refresh_token
-            self.logger.info(
-                f"User {email} has valid access token after social login, generating new refresh token."
-            )
-            access_jti = existing_access_token.jit  # 保持现有的access_token
-            refresh_jti = str(uuid.uuid4())
-
-            shared_payload = {
-                "user_id": user_id,
-                "email": email,
-                "username": username,
-                "role": role,
-            }
-
-            refresh_token_data = {**shared_payload, "jti": refresh_jti}
-            refresh_token, refresh_token_expired_at = (
-                security_manager.create_refresh_token(refresh_token_data)
-            )
-
-            # 只保存新的refresh_token
-            await self._save_token_to_database(
-                user_id=user_id,
-                jit=refresh_jti,
-                type=TokenType.refresh,
-                token=refresh_token,
-                expired_at=refresh_token_expired_at,
-            )
-
-            return {
-                "access_token": existing_access_token.token,
-                "refresh_token": refresh_token,
-            }
-
-        # 两个token都无效，生成全新的token对
-        self.logger.info(
-            f"User {email} needs new token pair after social login.")
         access_jti = str(uuid.uuid4())
         refresh_jti = str(uuid.uuid4())
 
@@ -296,25 +217,18 @@ class AuthCrud:
         access_token_data = {**shared_payload, "jti": access_jti}
         refresh_token_data = {**shared_payload, "jti": refresh_jti}
 
-        access_token, access_token_expired_at = security_manager.create_access_token(
-            access_token_data
-        )
+        # 生成 access token（不存数据库）
+        access_token, _ = security_manager.create_access_token(access_token_data)
+
+        # 生成 refresh token（存数据库）
         refresh_token, refresh_token_expired_at = security_manager.create_refresh_token(
             refresh_token_data
         )
 
-        # 保存令牌（一次提交）
-        await self._save_token_to_database(
-            user_id=user_id,
-            jit=access_jti,
-            type=TokenType.access,
-            token=access_token,
-            expired_at=access_token_expired_at,
-        )
+        # 只保存 refresh token 到数据库
         await self._save_token_to_database(
             user_id=user_id,
             jit=refresh_jti,
-            type=TokenType.refresh,
             token=refresh_token,
             expired_at=refresh_token_expired_at,
         )
@@ -333,9 +247,7 @@ class AuthCrud:
         result = await self.db.execute(statement)
         return result.scalar_one_or_none()
 
-    async def create_code_crud(
-        self, email: str, type: CodeType, code: str
-    ) -> Code:
+    async def create_code_crud(self, email: str, type: CodeType, code: str) -> Code:
         """Create code for user by type.
         两种类型都会对未过期且未使用的验证码进行限流。
         """
@@ -347,8 +259,7 @@ class AuthCrud:
             if not user and type == CodeType.reset:
                 raise HTTPException(
                     status_code=404,
-                    detail=get_message(
-                        key="auth.common.userNotFound"),
+                    detail=get_message(key="auth.common.userNotFound"),
                 )
 
             # verified 流程在用户不存在时创建占位用户
@@ -361,16 +272,14 @@ class AuthCrud:
             if user.is_deleted:
                 raise HTTPException(
                     status_code=400,
-                    detail=get_message(
-                        key="auth.common.userDeleted"),
+                    detail=get_message(key="auth.common.userDeleted"),
                 )
 
             # verified: 已激活已验证的用户不应再次发送注册验证码
             if type == CodeType.verified and user.is_active and user.is_verified:
                 raise HTTPException(
                     status_code=409,
-                    detail=get_message(
-                        key="auth.common.userExists"),
+                    detail=get_message(key="auth.common.userExists"),
                 )
 
             # reset: 仅允许已激活且已验证的用户
@@ -378,16 +287,12 @@ class AuthCrud:
                 if not user.is_active:
                     raise HTTPException(
                         status_code=400,
-                        detail=get_message(
-                            key="auth.common.userNotActive"
-                        ),
+                        detail=get_message(key="auth.common.userNotActive"),
                     )
                 if not user.is_verified:
                     raise HTTPException(
                         status_code=400,
-                        detail=get_message(
-                            key="auth.common.userNotVerified"
-                        ),
+                        detail=get_message(key="auth.common.userNotVerified"),
                     )
 
             # 限流：若已有有效验证码，则拒绝重复发送
@@ -424,8 +329,7 @@ class AuthCrud:
             # 重新抛出HTTP异常
             raise
         except Exception as e:
-            self.logger.error(
-                f"Error creating verification code for {email}: {str(e)}")
+            self.logger.error(f"Error creating verification code for {email}: {str(e)}")
             await self.db.rollback()
             raise HTTPException(
                 status_code=500,
@@ -448,23 +352,20 @@ class AuthCrud:
             if not user:
                 raise HTTPException(
                     status_code=404,
-                    detail=get_message(
-                        key="auth.common.userNotFound"),
+                    detail=get_message(key="auth.common.userNotFound"),
                 )
             # 检查用户是否已删除
             elif user.is_deleted:
                 raise HTTPException(
                     status_code=400,
-                    detail=get_message(
-                        key="auth.common.userDeleted"),
+                    detail=get_message(key="auth.common.userDeleted"),
                 )
 
             # 检查用户是否已经激活和验证
             elif user.is_active and user.is_verified and not user.is_deleted:
                 raise HTTPException(
                     status_code=409,
-                    detail=get_message(
-                        key="auth.common.userExists"),
+                    detail=get_message(key="auth.common.userExists"),
                 )
 
             # 验证验证码
@@ -472,18 +373,14 @@ class AuthCrud:
             if not valid_code:
                 raise HTTPException(
                     status_code=400,
-                    detail=get_message(
-                        key="auth.common.invalidVerificationCode"
-                    ),
+                    detail=get_message(key="auth.common.invalidVerificationCode"),
                 )
 
             # 检查用户名是否已存在
             if await self._get_user_by_username(username):
                 raise HTTPException(
                     status_code=409,
-                    detail=get_message(
-                        key="auth.common.userNameAlreadyExists"
-                    ),
+                    detail=get_message(key="auth.common.userNameAlreadyExists"),
                 )
 
             # 创建默认头像
@@ -513,8 +410,7 @@ class AuthCrud:
             # 重新抛出HTTP异常
             raise
         except Exception as e:
-            self.logger.error(
-                f"Error creating user account for {email}: {str(e)}")
+            self.logger.error(f"Error creating user account for {email}: {str(e)}")
             await self.db.rollback()
             raise HTTPException(
                 status_code=500,
@@ -530,31 +426,27 @@ class AuthCrud:
         if not user:
             raise HTTPException(
                 status_code=404,
-                detail=get_message(
-                    key="auth.common.userNotFound"),
+                detail=get_message(key="auth.common.userNotFound"),
             )
 
         # 检查用户是否已删除
         elif user and user.is_deleted:
             raise HTTPException(
                 status_code=400,
-                detail=get_message(
-                    key="auth.common.userDeleted"),
+                detail=get_message(key="auth.common.userDeleted"),
             )
 
         elif user and not user.is_active and not user.is_verified:
             raise HTTPException(
                 status_code=400,
-                detail=get_message(
-                    key="auth.common.userNotVerified"),
+                detail=get_message(key="auth.common.userNotVerified"),
             )
 
         # 检验密码是否一样
         if security_manager.verify_password(new_password, user.password_hash):
             raise HTTPException(
                 status_code=400,
-                detail=get_message(
-                    key="auth.common.passwordSameAsOld"),
+                detail=get_message(key="auth.common.passwordSameAsOld"),
             )
 
         # 加密新密码
@@ -564,15 +456,13 @@ class AuthCrud:
         if not user.is_active:
             raise HTTPException(
                 status_code=400,
-                detail=get_message(
-                    key="auth.common.userNotActive"),
+                detail=get_message(key="auth.common.userNotActive"),
             )
         # 检查用户是否已验证
         if not user.is_verified:
             raise HTTPException(
                 status_code=400,
-                detail=get_message(
-                    key="auth.common.userNotVerified"),
+                detail=get_message(key="auth.common.userNotVerified"),
             )
 
         # 验证验证码
@@ -580,9 +470,7 @@ class AuthCrud:
         if not valid_code:
             raise HTTPException(
                 status_code=400,
-                detail=get_message(
-                    key="auth.common.invalidVerificationCode"
-                ),
+                detail=get_message(key="auth.common.invalidVerificationCode"),
             )
 
         # 更新密码
@@ -592,8 +480,7 @@ class AuthCrud:
             .values(password_hash=new_password_hash)
         )
         await self.db.execute(statement)
-        statement = update(Code).where(
-            Code.id == valid_code.id).values(is_used=True)
+        statement = update(Code).where(Code.id == valid_code.id).values(is_used=True)
         await self.db.execute(statement)
         await self.db.commit()
 
@@ -613,9 +500,7 @@ class AuthCrud:
                 if security_manager.verify_password(new_password, user.password_hash):
                     raise HTTPException(
                         status_code=409,
-                        detail=get_message(
-                            key="auth.common.passwordSameAsOld"
-                        ),
+                        detail=get_message(key="auth.common.passwordSameAsOld"),
                     )
 
             # hash password
@@ -644,15 +529,13 @@ class AuthCrud:
                 # 用户不存在
                 raise HTTPException(
                     status_code=404,
-                    detail=get_message(
-                        key="auth.common.userNotFound"),
+                    detail=get_message(key="auth.common.userNotFound"),
                 )
             # 3. 用户已被删除
             elif user.is_deleted:
                 raise HTTPException(
                     status_code=400,
-                    detail=get_message(
-                        key="auth.common.userDeleted"),
+                    detail=get_message(key="auth.common.userDeleted"),
                 )
 
             # 4. 验证用户是否是social account
@@ -667,18 +550,14 @@ class AuthCrud:
             if user.password_hash is None and user_social_account:
                 raise HTTPException(
                     status_code=400,
-                    detail=get_message(
-                        key="auth.accountLogin.socialAccountNotAllowed"
-                    ),
+                    detail=get_message(key="auth.accountLogin.socialAccountNotAllowed"),
                 )
 
             # 5. 验证密码
             if not security_manager.verify_password(password, user.password_hash):
                 raise HTTPException(
                     status_code=400,
-                    detail=get_message(
-                        key="auth.accountLogin.invalidCredentials"
-                    ),
+                    detail=get_message(key="auth.accountLogin.invalidCredentials"),
                 )
 
             # 6. 智能生成令牌
@@ -702,9 +581,9 @@ class AuthCrud:
                 ):
                     # 先发欢迎邮件（延迟10秒），完成后再更新客户端信息
                     task_flow = chain(
-                        greeting_email_task.s(user.email, get_current_language().value).set(
-                            countdown=10
-                        ),
+                        greeting_email_task.s(
+                            user.email, get_current_language().value
+                        ).set(countdown=10),
                         # 使用 si 确保不接收上一个任务的返回值
                         client_info_task.si(user.id, dict(request.headers)),
                     )
@@ -737,20 +616,41 @@ class AuthCrud:
                 detail=f"Login error for user {email}: {str(e)}",
             )
 
-    async def account_logout(self, user_id: int) -> bool:
-        """User account logout - 撤销用户所有token"""
+    async def account_logout(
+        self, user_id: int, access_token_jti: Optional[str] = None
+    ) -> bool:
+        """User account logout - 撤销用户所有 refresh token 并将 access token 加入黑名单
+
+        Args:
+            user_id: 用户 ID
+            access_token_jti: Access token 的 JTI（用于加入黑名单）
+        """
         # 获取用户信息
         user = await self.get_user_by_id(user_id)
         if user and user.is_active and user.is_verified and not user.is_deleted:
-            # 删除用户所有token
+            # 撤销用户所有 refresh token
             revoked = await self._revoke_user_tokens(user_id)
+
+            # 将 access token 加入黑名单（如果提供了 JTI）
+            if access_token_jti:
+                try:
+                    # 使用 Redis 存储黑名单，30 分钟后自动过期
+                    await redis_manager.set_async(
+                        f"blacklist:access_token:{access_token_jti}",
+                        "1",
+                        ex=1800,  # 30 分钟（access token 的有效期）
+                    )
+                    self.logger.info(
+                        f"Access token {access_token_jti} added to blacklist for user {user.email}"
+                    )
+                except Exception as e:
+                    self.logger.warning(f"Failed to add access token to blacklist: {e}")
+
             if revoked:
-                self.logger.info(
-                    f"User {user.email} tokens revoked successfully.")
+                self.logger.info(f"User {user.email} tokens revoked successfully.")
                 return True
             else:
-                self.logger.warning(
-                    f"No active tokens found for user {user.email}.")
+                self.logger.warning(f"No active tokens found for user {user.email}.")
                 return False
         else:
             self.logger.warning("User not found or ID mismatch.")
@@ -758,8 +658,14 @@ class AuthCrud:
 
     async def generate_access_token(
         self, user_id: int, email: str, jit: str
-    ) -> str:
-        """Generate access token for user"""
+    ) -> Dict[str, str]:
+        """Generate new access token and rotate refresh token for enhanced security
+
+        实现 Refresh Token Rotation：
+        - 每次刷新时生成新的 access token 和 refresh token
+        - 旧的 refresh token 立即失效
+        - 如果检测到旧 token 被重复使用，说明可能被盗用
+        """
         # 检查是否有真实的用户
         user = await self.get_user_by_id(user_id)
 
@@ -768,75 +674,77 @@ class AuthCrud:
             if user.email != email:
                 raise HTTPException(
                     status_code=401,
-                    detail=get_message(
-                        key="common.insufficientPermissions"
-                    ),
+                    detail=get_message(key="common.insufficientPermissions"),
                 )
 
             # 检查是否有有效的refresh token
             statement = (
-                select(Token)
+                select(RefreshToken)
                 .options(lazyload("*"))
                 .where(
-                    Token.user_id == user_id,
-                    Token.jit == jit,
-                    Token.type == TokenType.refresh,
-                    Token.is_active == True,
-                    Token.expired_at > func.utc_timestamp(),
+                    RefreshToken.user_id == user_id,
+                    RefreshToken.jit == jit,
+                    RefreshToken.is_active == True,
+                    RefreshToken.expired_at > func.utc_timestamp(),
                 )
             )
             result = await self.db.execute(statement)
-            refresh_token = result.scalar_one_or_none()
+            old_refresh_token = result.scalar_one_or_none()
 
-            if not refresh_token:
+            if not old_refresh_token:
                 raise HTTPException(
                     status_code=404,
                     detail=get_message(
                         key="auth.generateAccessToken.refreshTokenNotFound",
-
                     ),
                 )
 
-            # 生成新的access token
+            # 生成新的 token 对
             access_jti = str(uuid.uuid4())
+            refresh_jti = str(uuid.uuid4())
 
-            access_token_data = {
+            shared_payload = {
                 "user_id": user.id,
                 "email": user.email,
                 "username": user.username,
                 "role": user.role,
-                "jti": access_jti,
             }
 
-            access_token, access_token_expired_at = (
-                security_manager.create_access_token(access_token_data)
+            access_token_data = {**shared_payload, "jti": access_jti}
+            refresh_token_data = {**shared_payload, "jti": refresh_jti}
+
+            # 生成新的 access token（不存数据库）
+            access_token, _ = security_manager.create_access_token(access_token_data)
+
+            # 生成新的 refresh token（存数据库）
+            refresh_token, refresh_token_expired_at = (
+                security_manager.create_refresh_token(refresh_token_data)
             )
 
-            # 删除旧的access token
-            old_access_token_statement = delete(Token).where(
-                Token.user_id == user.id, Token.type == TokenType.access
-            )
-            await self.db.execute(old_access_token_statement)
+            # 撤销旧的 refresh token（Token Rotation）
+            old_refresh_token.is_active = False
+            self.db.add(old_refresh_token)
 
-            # 保存新的access token到数据库
+            # 保存新的 refresh token
             await self._save_token_to_database(
                 user_id=user.id,
-                jit=access_jti,
-                type=TokenType.access,
-                token=access_token,
-                expired_at=access_token_expired_at,
+                jit=refresh_jti,
+                token=refresh_token,
+                expired_at=refresh_token_expired_at,
             )
 
-            await self.db.commit()
-
             self.logger.info(
-                f"Generated new access token for user: {user.email}")
-            return access_token
+                f"Token rotation completed for user: {user.email} (old jti: {jit}, new jti: {refresh_jti})"
+            )
+
+            return {
+                "access_token": access_token,
+                "refresh_token": refresh_token,
+            }
         else:
             raise HTTPException(
                 status_code=401,
-                detail=get_message(
-                    key="common.insufficientPermissions"),
+                detail=get_message(key="common.insufficientPermissions"),
             )
 
     async def social_account_login(
@@ -886,12 +794,11 @@ class AuthCrud:
                     ):
                         # 先发欢迎邮件（延迟10秒），完成后再更新客户端信息
                         task_flow = chain(
-                            greeting_email_task.s(user.email, get_current_language().value).set(
-                                countdown=10
-                            ),
+                            greeting_email_task.s(
+                                user.email, get_current_language().value
+                            ).set(countdown=10),
                             # 使用 si 确保不接收上一个任务的返回值
-                            client_info_task.si(
-                                user.id, dict(request.headers)),
+                            client_info_task.si(user.id, dict(request.headers)),
                         )
                         task_flow.apply_async()
                         self.logger.info(
@@ -934,12 +841,11 @@ class AuthCrud:
                     ):
                         # 先发欢迎邮件（延迟10秒），完成后再更新客户端信息
                         task_flow = chain(
-                            greeting_email_task.s(user.email, get_current_language().value).set(
-                                countdown=10
-                            ),
+                            greeting_email_task.s(
+                                user.email, get_current_language().value
+                            ).set(countdown=10),
                             # 使用 si 确保不接收上一个任务的返回值
-                            client_info_task.si(
-                                user.id, dict(request.headers)),
+                            client_info_task.si(user.id, dict(request.headers)),
                         )
                         task_flow.apply_async()
                         self.logger.info(
@@ -1010,8 +916,9 @@ class AuthCrud:
             ):
                 # 先发欢迎邮件（延迟10秒），完成后再更新客户端信息
                 task_flow = chain(
-                    greeting_email_task.s(
-                        user.email, get_current_language().value).set(countdown=10),
+                    greeting_email_task.s(user.email, get_current_language().value).set(
+                        countdown=10
+                    ),
                     # 使用 si 确保不接收上一个任务的返回值
                     client_info_task.si(user.id, dict(request.headers)),
                 )

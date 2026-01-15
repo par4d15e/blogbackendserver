@@ -131,4 +131,11 @@ celery_app.conf.beat_schedule = {
             "expires": 1800,  # 任务过期时间：30分钟
         },
     },
+    "cleanup-expired-tokens-daily": {
+        "task": "cleanup_expired_tokens_task",
+        "schedule": crontab(hour=1, minute=0),  # 每天凌晨 1 点执行
+        "options": {
+            "expires": 1800,  # 任务过期时间：30分钟
+        },
+    },
 }

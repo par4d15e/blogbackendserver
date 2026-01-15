@@ -35,7 +35,7 @@ class UserService:
     ) -> Tuple[List[Dict[str, Any]], Dict[str, Any]]:
         """Get all users with traditional pagination"""
         items, pagination_metadata = await self.user_crud.get_user_lists(
-             page=page, size=size, role=role
+            page=page, size=size, role=role
         )
         return items, pagination_metadata
 
@@ -47,7 +47,6 @@ class UserService:
             user_id=user_id,
             role=role,
             current_user_id=current_user_id,
-            
         )
         return True
 
@@ -64,7 +63,6 @@ class UserService:
             is_active=is_active,
             current_user_id=current_user_id,
             role=role,
-            
         )
         return True
 

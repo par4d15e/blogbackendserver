@@ -68,10 +68,8 @@ class EmailTemplateLoader:
                 f"Template '{template_name}' not found in '{self.template_dir}'"
             )
         except Exception as e:
-            self.logger.error(
-                f"Error rendering template '{template_name}': {e}")
-            raise ValueError(
-                f"Failed to render template '{template_name}': {str(e)}")
+            self.logger.error(f"Error rendering template '{template_name}': {e}")
+            raise ValueError(f"Failed to render template '{template_name}': {str(e)}")
 
     def template_exists(self, template_name: str) -> bool:
         """Check if template exists."""
@@ -161,8 +159,7 @@ class SMTPEmailBackend(EmailBackend):
             )
 
             server.sendmail(
-                self.email_settings.EMAIL_HOST_USER, message["To"], message.as_string(
-                )
+                self.email_settings.EMAIL_HOST_USER, message["To"], message.as_string()
             )
             self.logger.info(f"Email sent successfully to {message['To']}")
 
@@ -482,7 +479,7 @@ class EmailService:
         }
 
         for i in range(0, len(recipients), batch_size):
-            batch = recipients[i: i + batch_size]
+            batch = recipients[i : i + batch_size]
             tasks = []
 
             for recipient in batch:

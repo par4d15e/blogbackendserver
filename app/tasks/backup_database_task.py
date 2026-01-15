@@ -86,9 +86,7 @@ def _dump_database(db_config: dict, output_file: Path) -> bool:
 
         # 执行 mysqldump
         with open(output_file, "wb") as f:
-            subprocess.run(
-                cmd, stdout=f, stderr=subprocess.PIPE, env=env, check=True
-            )
+            subprocess.run(cmd, stdout=f, stderr=subprocess.PIPE, env=env, check=True)
 
         # 检查文件大小
         file_size = output_file.stat().st_size

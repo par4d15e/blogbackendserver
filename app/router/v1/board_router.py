@@ -35,7 +35,6 @@ async def update_board_router(
         role=current_user.role,
         chinese_title=form_data.chinese_title,
         chinese_description=form_data.chinese_description,
-        
     )
     return SuccessResponse(
         message=get_message("board.updateBoard"),
@@ -55,12 +54,9 @@ async def create_board_comment_router(
         user_id=current_user.id,
         parent_id=form_data.parent_id,
         comment=form_data.comment,
-        
     )
     return SuccessResponse(
-        message=get_message(
-            "board.createBoardComment.createBoardCommentSuccess"
-        ),
+        message=get_message("board.createBoardComment.createBoardCommentSuccess"),
         data=result,
     )
 
@@ -93,7 +89,6 @@ async def update_board_comment_router(
         user_id=current_user.id,
         board_comment_id=form_data.board_comment_id,
         comment=form_data.comment,
-        
     )
     return SuccessResponse(
         message=get_message("board.updateBoardComment"),
@@ -113,7 +108,6 @@ async def delete_board_comment_router(
         user_id=current_user.id,
         role=current_user.role,
         board_comment_id=board_comment_id,
-        
     )
     return SuccessResponse(
         message=get_message("board.deleteBoardComment"),

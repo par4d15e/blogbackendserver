@@ -77,8 +77,7 @@ class InvoicePDFGenerator:
                 language_code = language
             else:
                 language_code = language.value
-            template_name = self._select_template_name(
-                "invoice", language_code)
+            template_name = self._select_template_name("invoice", language_code)
 
             # Get template
             template = self.env.get_template(f"{template_name}.html")

@@ -178,8 +178,7 @@ class BlogCrud:
         language = get_current_language()
         # 验证分页参数
         try:
-            page, size = offset_paginator.validate_pagination_params(
-                page, size)
+            page, size = offset_paginator.validate_pagination_params(page, size)
         except ValueError:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
@@ -255,8 +254,7 @@ class BlogCrud:
             now = datetime.now(timezone.utc)
             month_start = datetime(now.year, now.month, 1, tzinfo=timezone.utc)
             if now.month == 12:
-                next_month_start = datetime(
-                    now.year + 1, 1, 1, tzinfo=timezone.utc)
+                next_month_start = datetime(now.year + 1, 1, 1, tzinfo=timezone.utc)
             else:
                 next_month_start = datetime(
                     now.year, now.month + 1, 1, tzinfo=timezone.utc
@@ -375,8 +373,7 @@ class BlogCrud:
         language = get_current_language()
         # 验证分页参数
         try:
-            page, size = offset_paginator.validate_pagination_params(
-                page, size)
+            page, size = offset_paginator.validate_pagination_params(page, size)
         except ValueError:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
@@ -779,8 +776,7 @@ class BlogCrud:
         if not blog_tts:
             raise HTTPException(
                 status_code=404,
-                detail=get_message(
-                    "blog.getBlogTTS.blogTtsNotFound"),
+                detail=get_message("blog.getBlogTTS.blogTtsNotFound"),
             )
 
         # 根据语言选择对应的 TTS ID
@@ -997,8 +993,7 @@ class BlogCrud:
                 generate_content_audio_task.si(blog_id=blog.id),
             )
             task_chain.apply_async()
-            self.logger.info(
-                f"Task chain started successfully for blog ID {blog.id}")
+            self.logger.info(f"Task chain started successfully for blog ID {blog.id}")
         else:
             self.logger.info(
                 f"No content change detected for blog ID {blog.id}, skipping task chain"
@@ -1038,8 +1033,7 @@ class BlogCrud:
         if not blog_summary:
             raise HTTPException(
                 status_code=404,
-                detail=get_message(
-                    "blog.getBlogSummary.blogSummaryNotFound"),
+                detail=get_message("blog.getBlogSummary.blogSummaryNotFound"),
             )
 
         response = {
@@ -1104,9 +1098,7 @@ class BlogCrud:
         if not parent_comments:
             raise HTTPException(
                 status_code=404,
-                detail=get_message(
-                    "blog.getBlogCommentLists.commentNotFound"
-                ),
+                detail=get_message("blog.getBlogCommentLists.commentNotFound"),
             )
 
         # 获取所有父评论的子评论和孙评论，确保评论树完整（支持三级嵌套）
@@ -1200,9 +1192,7 @@ class BlogCrud:
             if not parent_comment:
                 raise HTTPException(
                     status_code=404,
-                    detail=get_message(
-                        "blog.getBlogCommentLists.commentNotFound"
-                    ),
+                    detail=get_message("blog.getBlogCommentLists.commentNotFound"),
                 )
 
         # 创建评论
@@ -1218,9 +1208,7 @@ class BlogCrud:
         await self.db.commit()
 
         # 改变博客评论数
-        await self._change_blog_comment_count(
-            blog_id=blog_id, comment_type="create"
-        )
+        await self._change_blog_comment_count(blog_id=blog_id, comment_type="create")
 
         # 更新缓存
         await redis_manager.delete_pattern_async(f"blog_comment_lists:{blog_id}:*")
@@ -1239,9 +1227,7 @@ class BlogCrud:
         if not comment_obj or comment_obj.user_id != user_id:
             raise HTTPException(
                 status_code=404,
-                detail=get_message(
-                    "blog.getBlogCommentLists.commentNotFound"
-                ),
+                detail=get_message("blog.getBlogCommentLists.commentNotFound"),
             )
 
         # 更新评论
@@ -1272,18 +1258,14 @@ class BlogCrud:
         if not comment_obj:
             raise HTTPException(
                 status_code=404,
-                detail=get_message(
-                    "blog.getBlogCommentLists.commentNotFound"
-                ),
+                detail=get_message("blog.getBlogCommentLists.commentNotFound"),
             )
 
         # 允许作者或管理员删除，其余情况返回404（与博客评论删除逻辑一致）
         if comment_obj.user_id != user_id and role != RoleType.admin:
             raise HTTPException(
                 status_code=404,
-                detail=get_message(
-                    "blog.getBlogCommentLists.commentNotFound"
-                ),
+                detail=get_message("blog.getBlogCommentLists.commentNotFound"),
             )
 
         # 软删除评论（设置is_deleted为True）
@@ -1364,9 +1346,7 @@ class BlogCrud:
 
             return True
 
-    async def like_blog_button(
-        self, blog_id: int, ip_address: str
-    ) -> bool:
+    async def like_blog_button(self, blog_id: int, ip_address: str) -> bool:
         cache_key = f"blog_like_button:{blog_id}:ip={ip_address}"
         cache_data = await redis_manager.get_async(cache_key)
         if cache_data:
@@ -1414,9 +1394,7 @@ class BlogCrud:
         if non_none_count != 1:
             raise HTTPException(
                 status_code=400,
-                detail=get_message(
-                    "blog.updateBlogStatus.invalidStatusUpdate"
-                ),
+                detail=get_message("blog.updateBlogStatus.invalidStatusUpdate"),
             )
 
         blog = await self.get_blog_by_id(blog_id=blog_id)
@@ -1449,9 +1427,7 @@ class BlogCrud:
 
         return True
 
-    async def get_blog_navigation(
-        self, blog_id: int
-    ) -> Optional[Dict]:
+    async def get_blog_navigation(self, blog_id: int) -> Optional[Dict]:
         """获取博客的上一篇和下一篇导航信息
 
         Args:
@@ -1557,8 +1533,7 @@ class BlogCrud:
         if not stats:
             raise HTTPException(
                 status_code=404,
-                detail=get_message(
-                    "blog.getBlogStats.blogStatsNotFound"),
+                detail=get_message("blog.getBlogStats.blogStatsNotFound"),
             )
 
         response = {
@@ -1583,19 +1558,17 @@ class BlogCrud:
             # Step 1: 删除所有子评论（replies）- 先删除有 parent_id 的评论
             await self.db.execute(
                 delete(Blog_Comment).where(
-                    Blog_Comment.blog_id == blog_id,
-                    Blog_Comment.parent_id.isnot(None)
+                    Blog_Comment.blog_id == blog_id, Blog_Comment.parent_id.isnot(None)
                 )
             )
-            
+
             # Step 2: 删除所有父评论（parent comments）- 删除 parent_id 为 NULL 的评论
             await self.db.execute(
                 delete(Blog_Comment).where(
-                    Blog_Comment.blog_id == blog_id,
-                    Blog_Comment.parent_id.is_(None)
+                    Blog_Comment.blog_id == blog_id, Blog_Comment.parent_id.is_(None)
                 )
             )
-            
+
             # Step 3: 删除博客（级联删除其他相关数据如 saved_blogs, blog_tags 等）
             await self.db.execute(delete(Blog).where(Blog.id == blog_id))
             await self.db.commit()
@@ -1637,8 +1610,7 @@ class BlogCrud:
         language = get_current_language()
         # 验证分页参数
         try:
-            page, size = offset_paginator.validate_pagination_params(
-                page, size)
+            page, size = offset_paginator.validate_pagination_params(page, size)
         except ValueError:
             raise HTTPException(
                 status_code=400,
@@ -1671,18 +1643,15 @@ class BlogCrud:
             page=page,
             size=size,
             order_by=[Saved_Blog.created_at.desc(), Saved_Blog.id.desc()],
-            
         )
 
         # 计算本月收藏的博客数量
         now = datetime.now(timezone.utc)
         month_start = datetime(now.year, now.month, 1, tzinfo=timezone.utc)
         if now.month == 12:
-            next_month_start = datetime(
-                now.year + 1, 1, 1, tzinfo=timezone.utc)
+            next_month_start = datetime(now.year + 1, 1, 1, tzinfo=timezone.utc)
         else:
-            next_month_start = datetime(
-                now.year, now.month + 1, 1, tzinfo=timezone.utc)
+            next_month_start = datetime(now.year, now.month + 1, 1, tzinfo=timezone.utc)
 
         count_this_month = await self.db.execute(
             select(func.count(Saved_Blog.id)).where(
@@ -1696,8 +1665,7 @@ class BlogCrud:
         # 格式化响应数据
         formatted_items: List[Dict[str, Any]] = []
         for saved_blog, blog in items:
-            self.logger.info(
-                f"Processing saved_blog: {saved_blog}, blog: {blog}")
+            self.logger.info(f"Processing saved_blog: {saved_blog}, blog: {blog}")
             formatted_items.append(
                 {
                     "cover_url": blog.cover.thumbnail_filepath_url

@@ -1,4 +1,4 @@
-from .auth_model import Code, Token, Social_Account
+from .auth_model import Code, RefreshToken, Social_Account
 from .blog_model import (
     Blog,
     Blog_Status,

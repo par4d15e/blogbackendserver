@@ -13,6 +13,7 @@ from fastapi import Request
 
 class Language(Enum):
     """支持的语言枚举"""
+
     ZH_CN = "zh"
     EN_US = "en"
 
@@ -64,19 +65,21 @@ class I18nManager:
         self._messages = {lang: _load_messages(lang) for lang in Language}
         self._default_language = Language.EN_US
 
-    def get_localized_message(self, key: str, language: Optional[Language] = None) -> str:
+    def get_localized_message(
+        self, key: str, language: Optional[Language] = None
+    ) -> str:
         """获取指定语言的消息"""
         lang = language or self._default_language
         messages = self._messages.get(lang, self._messages[self._default_language])
-        
+
         # 获取消息值
         keys = key.split(".") if key else []
         result = _get_nested(messages, keys) if keys else None
-        
+
         # 如果结果是字符串则返回，否则返回 fallback
         if isinstance(result, str):
             return result
-        
+
         # Fallback: common.internalError
         fallback = _get_nested(messages, ["common", "internalError"])
         return fallback if isinstance(fallback, str) else _FALLBACK_MESSAGE
@@ -105,14 +108,14 @@ def get_language(request: Request) -> Language:
     # X-Language header
     if lang := _detect_language(request.headers.get("X-Language")):
         return lang
-    
+
     # Accept-Language header
     accept = request.headers.get("Accept-Language") or ""
     for part in accept.split(","):
         tag = part.split(";")[0].strip()
         if lang := _detect_language(tag):
             return lang
-    
+
     return Language.EN_US
 
 

@@ -44,8 +44,7 @@ class AgentUtils:
         # 1. 将所有类型的空白字符（空格、制表符、不间断空格等）统一替换为标准空格
         # \s 匹配所有空白字符，包括空格、制表符、换行符等
         # 但保留换行符，只处理水平空白
-        text = re.sub(
-            r"[\t\u00A0\u1680\u2000-\u200B\u202F\u205F\u3000]+", " ", text)
+        text = re.sub(r"[\t\u00A0\u1680\u2000-\u200B\u202F\u205F\u3000]+", " ", text)
 
         # 2. 将多个连续的标准空格替换为单个空格
         text = re.sub(r" {2,}", " ", text)
@@ -107,8 +106,7 @@ class AgentUtils:
             )
 
             # 创建语音合成器（不需要音频输出配置，直接获取音频数据）
-            synthesizer = speechsdk.SpeechSynthesizer(
-                speech_config=speech_config)
+            synthesizer = speechsdk.SpeechSynthesizer(speech_config=speech_config)
 
             # 执行语音合成
             result = synthesizer.speak_text_async(text).get()
@@ -123,12 +121,10 @@ class AgentUtils:
                     f"Speech synthesis canceled: {cancellation_details.reason}"
                 )
             else:
-                raise Exception(
-                    f"Speech synthesis failed with reason: {result.reason}")
+                raise Exception(f"Speech synthesis failed with reason: {result.reason}")
 
         except Exception as exc:
-            raise HTTPException(
-                status_code=400, detail=f"TTS request failed: {exc}")
+            raise HTTPException(status_code=400, detail=f"TTS request failed: {exc}")
 
         # 处理音频数据
         try:
@@ -228,8 +224,7 @@ class AgentUtils:
             raise HTTPException(status_code=404, detail="Text not found")
 
         if not self._contains_chinese_strict(text):
-            raise HTTPException(
-                status_code=404, detail="No Chinese text found")
+            raise HTTPException(status_code=404, detail="No Chinese text found")
 
         try:
             # 构建优化的翻译提示词 使用中文翻译成英文
@@ -253,10 +248,13 @@ class AgentUtils:
             response = Generation.call(
                 model=self.translation_model,
                 api_key=self.api_key,
-                messages=cast(Any, [
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": text},
-                ]),
+                messages=cast(
+                    Any,
+                    [
+                        {"role": "system", "content": system_prompt},
+                        {"role": "user", "content": text},
+                    ],
+                ),
                 max_tokens=self.translation_max_tokens,
                 temperature=self.translation_temperature,
                 top_p=self.translation_top_p,
@@ -266,8 +264,7 @@ class AgentUtils:
             # 检查API响应状态
             if not hasattr(response, "status_code") or response.status_code != 200:
                 error_msg = (
-                    getattr(response, "message",
-                            "Unknown error") or "Unknown error"
+                    getattr(response, "message", "Unknown error") or "Unknown error"
                 )
                 raise HTTPException(
                     status_code=400,
@@ -351,10 +348,13 @@ class AgentUtils:
             response = Generation.call(
                 model=self.translation_model,
                 api_key=self.api_key,
-                messages=cast(Any, [
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": user_prompt},
-                ]),
+                messages=cast(
+                    Any,
+                    [
+                        {"role": "system", "content": system_prompt},
+                        {"role": "user", "content": user_prompt},
+                    ],
+                ),
                 max_tokens=self.translation_max_tokens * 2,  # 批量翻译需要更多tokens
                 temperature=self.translation_temperature,
                 top_p=self.translation_top_p,
@@ -364,8 +364,7 @@ class AgentUtils:
             # 检查API响应状态
             if not hasattr(response, "status_code") or response.status_code != 200:
                 error_msg = (
-                    getattr(response, "message",
-                            "Unknown error") or "Unknown error"
+                    getattr(response, "message", "Unknown error") or "Unknown error"
                 )
                 raise HTTPException(
                     status_code=400,
@@ -384,16 +383,14 @@ class AgentUtils:
                     translated_segments = translated_text.split(separator)
 
                     # 清理每个段落的首尾空白
-                    translated_segments = [seg.strip()
-                                           for seg in translated_segments]
+                    translated_segments = [seg.strip() for seg in translated_segments]
 
                     # 验证段落数量是否匹配
                     if len(translated_segments) != len(non_empty_segments):
                         self.logger.warning(
                             f"Segment count mismatch. Expected {len(non_empty_segments)}, got {len(translated_segments)}"
                         )
-                        self.logger.warning(
-                            f"Original segments: {non_empty_segments}")
+                        self.logger.warning(f"Original segments: {non_empty_segments}")
                         self.logger.warning(
                             f"Translated segments: {translated_segments}"
                         )
@@ -475,10 +472,13 @@ class AgentUtils:
             response = Generation.call(
                 model=self.translation_model,
                 api_key=self.api_key,
-                messages=cast(Any, [
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": user_prompt},
-                ]),
+                messages=cast(
+                    Any,
+                    [
+                        {"role": "system", "content": system_prompt},
+                        {"role": "user", "content": user_prompt},
+                    ],
+                ),
                 max_tokens=1000,
                 temperature=0.3,  # 较低的温度以获得更一致的结果
                 top_p=0.8,
@@ -488,8 +488,7 @@ class AgentUtils:
             # 检查API响应状态
             if not hasattr(response, "status_code") or response.status_code != 200:
                 error_msg = (
-                    getattr(response, "message",
-                            "Unknown error") or "Unknown error"
+                    getattr(response, "message", "Unknown error") or "Unknown error"
                 )
                 raise HTTPException(
                     status_code=400,
@@ -639,12 +638,10 @@ class AgentUtils:
             # 如果有content字段，递归处理子节点
             if "content" in node and isinstance(node["content"], list):
                 # 确定当前节点的块类型
-                current_block_type = self._get_block_type_from_path(
-                    current_path)
+                current_block_type = self._get_block_type_from_path(current_path)
                 for i, child in enumerate(node["content"]):
                     child_path = f"{current_path}.content[{i}]"
-                    extract_text_from_node(
-                        child, child_path, current_block_type)
+                    extract_text_from_node(child, child_path, current_block_type)
 
         # 从根节点开始提取文本
         if "content" in content and isinstance(content["content"], list):
@@ -744,8 +741,7 @@ class AgentUtils:
             翻译后的JSON字典，保持原有结构
         """
         if not content or not isinstance(content, dict):
-            self.logger.warning(
-                "Invalid content provided to large_content_translation")
+            self.logger.warning("Invalid content provided to large_content_translation")
             return content
 
         # 提取完整文本内容和媒体caption
@@ -758,8 +754,7 @@ class AgentUtils:
         media_captions = extracted_data.get("media_captions", [])
 
         if not text_parts and not media_captions:
-            self.logger.warning(
-                "No text content or media captions found to translate")
+            self.logger.warning("No text content or media captions found to translate")
             return content  # 如果没有内容需要翻译，直接返回原内容
 
         try:
@@ -784,8 +779,7 @@ class AgentUtils:
                 self.logger.info(
                     f"Starting batch translation: {len(text_parts)} segments, batch size: {BATCH_SIZE}"
                 )
-                self.logger.info(
-                    f"Average segment length: {avg_length:.0f} characters")
+                self.logger.info(f"Average segment length: {avg_length:.0f} characters")
 
                 # 分批处理
                 for batch_start in range(0, len(text_parts), BATCH_SIZE):
@@ -858,8 +852,7 @@ class AgentUtils:
                                     }
                                 )
                             except Exception as e2:
-                                self.logger.error(
-                                    f"Failed to translate segment: {e2}")
+                                self.logger.error(f"Failed to translate segment: {e2}")
                                 # 如果单个段落翻译也失败，保留原文
                                 translated_data["text_parts"].append(
                                     {
@@ -952,8 +945,7 @@ class AgentUtils:
                                     }
                                 )
                             except Exception as e2:
-                                self.logger.error(
-                                    f"Failed to translate caption: {e2}")
+                                self.logger.error(f"Failed to translate caption: {e2}")
                                 # 如果caption翻译失败，保留原文
                                 translated_data["media_captions"].append(
                                     {
@@ -971,8 +963,7 @@ class AgentUtils:
             if "text_parts" in translated_data:
                 for part in translated_data["text_parts"]:
                     if isinstance(part, dict) and "text" in part:
-                        part["text"] = self._normalize_english_spacing(
-                            part["text"])
+                        part["text"] = self._normalize_english_spacing(part["text"])
 
             # 标准化媒体caption
             if "media_captions" in translated_data:
@@ -1028,8 +1019,7 @@ class AgentUtils:
         for i, (orig_part, trans_part) in enumerate(zip(text_parts, translated_parts)):
             if orig_part["text"].strip() and trans_part["text"].strip():
                 # 先标准化翻译文本，确保内部只有单个空格
-                translated_text = self._normalize_english_spacing(
-                    trans_part["text"])
+                translated_text = self._normalize_english_spacing(trans_part["text"])
 
                 # 对于英文翻译，需要智能添加空格
                 # 检查是否需要前导空格
@@ -1079,14 +1069,12 @@ class AgentUtils:
         if "content" in result and isinstance(result["content"], list):
             for i, child in enumerate(result["content"]):
                 child_path = f"content[{i}]"
-                self._replace_text_nodes_by_path(
-                    child, path_to_translation, child_path)
+                self._replace_text_nodes_by_path(child, path_to_translation, child_path)
 
         if "content" in result and isinstance(result["content"], list):
             for i, child in enumerate(result["content"]):
                 child_path = f"content[{i}]"
-                self._replace_media_captions_by_path(
-                    child, path_to_caption, child_path)
+                self._replace_media_captions_by_path(child, path_to_caption, child_path)
 
         return result
 
@@ -1118,8 +1106,7 @@ class AgentUtils:
         if "content" in node and isinstance(node["content"], list):
             for i, child in enumerate(node["content"]):
                 child_path = f"{current_path}.content[{i}]"
-                self._replace_text_nodes_by_path(
-                    child, path_to_translation, child_path)
+                self._replace_text_nodes_by_path(child, path_to_translation, child_path)
 
     def _replace_media_captions_by_path(
         self, node: dict, path_to_caption: dict, current_path: str = ""
@@ -1146,8 +1133,7 @@ class AgentUtils:
         if "content" in node and isinstance(node["content"], list):
             for i, child in enumerate(node["content"]):
                 child_path = f"{current_path}.content[{i}]"
-                self._replace_media_captions_by_path(
-                    child, path_to_caption, child_path)
+                self._replace_media_captions_by_path(child, path_to_caption, child_path)
 
 
 agent_utils = AgentUtils()

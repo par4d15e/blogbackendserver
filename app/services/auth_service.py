@@ -3,7 +3,7 @@ from typing import Dict, Optional, Union
 from authlib.integrations.starlette_client import OAuth
 from fastapi.security import APIKeyCookie
 from fastapi.responses import RedirectResponse
-from fastapi import HTTPException, Depends, Response
+from fastapi import HTTPException, Depends, Response, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.crud.auth_crud import AuthCrud
 from app.models.auth_model import CodeType, SocialProvider
@@ -41,8 +41,7 @@ class AuthService:
 
     def random_username(self) -> str:
         """Generate a random username."""
-        username = "".join(random.choices(
-            "abcdefghijklmnopqrstuvwxyz0123456789", k=6))
+        username = "".join(random.choices("abcdefghijklmnopqrstuvwxyz0123456789", k=6))
         return username
 
     async def _social_account_login(
@@ -63,7 +62,6 @@ class AuthService:
             avatar_url=avatar_url,
             provider=provider,
             provider_user_id=provider_user_id,
-
         )
         access_token = tokens["access_token"]
         refresh_token = tokens["refresh_token"]
@@ -72,19 +70,16 @@ class AuthService:
             "refresh_token": refresh_token,
         }
 
-    async def send_auth_code_email(
-        self, email: str, type: CodeType
-    ) -> bool:
+    async def send_auth_code_email(self, email: str, type: CodeType) -> bool:
         # 生成验证码
         code = str(random.randint(100000, 999999))  # 生成6位随机验证码
 
         # 保存验证码
-        await self.auth_crud.create_code_crud(
-            email=email, type=type, code=code
-        )
+        await self.auth_crud.create_code_crud(email=email, type=type, code=code)
 
         # 获取用户ID（如果用户存在）
         from app.core.i18n.i18n import get_current_language
+
         current_language = get_current_language()
         if type == CodeType.verified:
             if current_language == Language.ZH_CN:
@@ -96,7 +91,6 @@ class AuthService:
                 recipient=email,
                 template="verification",
                 code=code,
-
             )
             self.logger.info(f"verification email has been sent to {email}")
         else:
@@ -109,7 +103,6 @@ class AuthService:
                 recipient=email,
                 template="resetcode",
                 code=code,
-
             )
             self.logger.info(f"password reset email has been sent to {email}")
 
@@ -136,7 +129,6 @@ class AuthService:
             password_hash=password_hash,
             code=code,
             type=CodeType.verified,
-
         )
 
         return True
@@ -198,11 +190,24 @@ class AuthService:
         return True
 
     async def account_logout(
-        self, response: Response, user_id: int
+        self, request: Request, response: Response, user_id: int
     ) -> bool:
-        """User account logout - Revoke all user tokens."""
+        """User account logout - Revoke all user tokens and blacklist access token."""
         try:
-            await self.auth_crud.account_logout(user_id=user_id)
+            # 获取 access token 的 JTI（用于加入黑名单）
+            access_token_cookie = APIKeyCookie(name="access_token", auto_error=False)
+            access_token = await access_token_cookie(request)
+            access_token_jti = None
+
+            if access_token:
+                token_data = self.security_manager.decode_token(access_token)
+                if token_data:
+                    access_token_jti = token_data.get("jti")
+
+            # 撤销所有 refresh token 并将 access token 加入黑名单
+            await self.auth_crud.account_logout(
+                user_id=user_id, access_token_jti=access_token_jti
+            )
 
             # 清理用户的cookies
             response.delete_cookie(
@@ -227,19 +232,19 @@ class AuthService:
     async def generate_access_token(
         self, request, response: Response
     ) -> Dict[str, str]:
-        """Generate access token for user"""
+        """Generate access token and rotate refresh token for user
+
+        实现 Token Rotation：返回新的 access token 和 refresh token
+        """
         # 获取refresh_token
-        refresh_cookie_token = APIKeyCookie(
-            name="refresh_token", auto_error=False)
+        refresh_cookie_token = APIKeyCookie(name="refresh_token", auto_error=False)
 
         refresh_token = await refresh_cookie_token(request)
 
         if not refresh_token:
             raise HTTPException(
                 status_code=404,
-                detail=get_message(
-                    "auth.generateAccessToken.refreshTokenNotFound"
-                ),
+                detail=get_message("auth.generateAccessToken.refreshTokenNotFound"),
             )
 
         # 解码refresh_token
@@ -260,30 +265,29 @@ class AuthService:
                 detail=get_message("common.insufficientPermissions"),
             )
 
-        # 生成新的access_token
-        access_token = await self.auth_crud.generate_access_token(
-            user_id=user_id,
-            email=email_id,
-            jit=jit,
-        )
-
-        if not access_token:
-            response.delete_cookie(
-                "refresh_token",
-                domain=settings.domain.COOKIE_DOMAIN,
-                path="/",
+        try:
+            # 生成新的 token 对（Token Rotation）
+            tokens = await self.auth_crud.generate_access_token(
+                user_id=user_id,
+                email=email_id,
+                jit=jit,
             )
-            raise HTTPException(
-                status_code=404,
-                detail=get_message(
-                    "auth.generateAccessToken.accessTokenNotFound"
-                ),
-            )
+            new_access_token = tokens["access_token"]
+            new_refresh_token = tokens["refresh_token"]
+        except HTTPException as e:
+            # 如果是 refresh token 无效或过期，删除 cookie 让客户端重新登录
+            if e.status_code == 404:  # refresh token not found
+                response.delete_cookie(
+                    "refresh_token",
+                    domain=settings.domain.COOKIE_DOMAIN,
+                    path="/",
+                )
+            raise
 
-        # 设置access token cookie
+        # 设置新的 access token cookie
         response.set_cookie(
             key="access_token",
-            value=access_token,
+            value=new_access_token,
             httponly=True,
             secure=True,
             samesite="lax",
@@ -292,8 +296,21 @@ class AuthService:
             max_age=settings.jwt.JWT_ACCESS_TOKEN_EXPIRATION,
         )
 
+        # 设置新的 refresh token cookie（Token Rotation）
+        response.set_cookie(
+            key="refresh_token",
+            value=new_refresh_token,
+            httponly=True,
+            secure=True,
+            samesite="lax",
+            path="/",
+            domain=settings.domain.COOKIE_DOMAIN,
+            max_age=settings.jwt.JWT_REFRESH_TOKEN_EXPIRATION,
+        )
+
         return {
-            "access_token": access_token,
+            "access_token": new_access_token,
+            "refresh_token": new_refresh_token,
         }
 
     async def check_auth_token(self, request) -> Dict[str, Union[str, bool]]:
@@ -308,8 +325,7 @@ class AuthService:
                 "refresh_token": False,
             }
         elif access_token and not refresh_token:
-            access_token_data = self.security_manager.decode_token(
-                access_token)
+            access_token_data = self.security_manager.decode_token(access_token)
             if not access_token_data:
                 return {
                     "access_token": False,
@@ -321,8 +337,7 @@ class AuthService:
                     "refresh_token": False,
                 }
         elif refresh_token and not access_token:
-            refresh_token_data = self.security_manager.decode_token(
-                refresh_token)
+            refresh_token_data = self.security_manager.decode_token(refresh_token)
             if not refresh_token_data:
                 return {
                     "access_token": False,
@@ -356,8 +371,7 @@ class AuthService:
         if not token:
             raise HTTPException(
                 status_code=404,
-                detail=get_message(
-                    "auth.githubCallback.githubTokenNotFound"),
+                detail=get_message("auth.githubCallback.githubTokenNotFound"),
             )
         user_info = await self.github.get("https://api.github.com/user", token=token)
         user_info = user_info.json()
@@ -382,9 +396,7 @@ class AuthService:
                 else:
                     raise HTTPException(
                         status_code=404,
-                        detail=get_message(
-                            "auth.githubCallback.githubEmailNotFound"
-                        ),
+                        detail=get_message("auth.githubCallback.githubEmailNotFound"),
                     )
 
         # 创建或更新社交账户
@@ -400,7 +412,6 @@ class AuthService:
             avatar_url=avatar_url,
             provider=SocialProvider.github,
             provider_user_id=str(user_info.get("id")),
-
         )
 
         access_token = tokens["access_token"]
@@ -461,8 +472,7 @@ class AuthService:
         if not tokens:
             raise HTTPException(
                 status_code=404,
-                detail=get_message(
-                    "auth.googleCallback.googleTokenNotFound"),
+                detail=get_message("auth.googleCallback.googleTokenNotFound"),
             )
         user_info = await self.google.get(
             "https://www.googleapis.com/userinfo/v2/me", token=tokens
@@ -473,8 +483,7 @@ class AuthService:
         if not email:
             raise HTTPException(
                 status_code=404,
-                detail=get_message(
-                    "auth.googleCallback.googleEmailNotFound"),
+                detail=get_message("auth.googleCallback.googleEmailNotFound"),
             )
         username = user_info.get("name").lower()
         if not username:
@@ -488,7 +497,6 @@ class AuthService:
             avatar_url=avatar_url,
             provider=SocialProvider.google,
             provider_user_id=str(user_info.get("id")),
-
         )
 
         access_token = tokens["access_token"]

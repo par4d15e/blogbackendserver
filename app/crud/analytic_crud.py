@@ -31,15 +31,13 @@ class AnalyticCrud:
             start = now - timedelta(days=now.weekday())
             start = start.replace(hour=0, minute=0, second=0, microsecond=0)
         elif period == "month":
-            start = now.replace(day=1, hour=0, minute=0,
-                                second=0, microsecond=0)
+            start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
         elif period == "year":
             start = now.replace(
                 month=1, day=1, hour=0, minute=0, second=0, microsecond=0
             )
         else:
-            start = now.replace(day=1, hour=0, minute=0,
-                                second=0, microsecond=0)
+            start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
 
         return start, now
 
@@ -162,8 +160,7 @@ class AnalyticCrud:
 
         # 最多浏览
         top_views = await self.db.execute(
-            select(Blog.slug, Section.slug,
-                   Blog.chinese_title, Blog_Stats.views)
+            select(Blog.slug, Section.slug, Blog.chinese_title, Blog_Stats.views)
             .join(Blog_Stats, Blog_Stats.blog_id == Blog.id)
             .join(Section, Section.id == Blog.section_id)
             .order_by(Blog_Stats.views.desc())
@@ -181,8 +178,7 @@ class AnalyticCrud:
 
         # 最多点赞
         top_likes = await self.db.execute(
-            select(Blog.slug, Section.slug,
-                   Blog.chinese_title, Blog_Stats.likes)
+            select(Blog.slug, Section.slug, Blog.chinese_title, Blog_Stats.likes)
             .join(Blog_Stats, Blog_Stats.blog_id == Blog.id)
             .join(Section, Section.id == Blog.section_id)
             .order_by(Blog_Stats.likes.desc())
@@ -200,8 +196,7 @@ class AnalyticCrud:
 
         # 最多评论
         top_comments = await self.db.execute(
-            select(Blog.slug, Section.slug,
-                   Blog.chinese_title, Blog_Stats.comments)
+            select(Blog.slug, Section.slug, Blog.chinese_title, Blog_Stats.comments)
             .join(Blog_Stats, Blog_Stats.blog_id == Blog.id)
             .join(Section, Section.id == Blog.section_id)
             .order_by(Blog_Stats.comments.desc())
@@ -219,8 +214,7 @@ class AnalyticCrud:
 
         # 最多收藏
         top_saves = await self.db.execute(
-            select(Blog.slug, Section.slug,
-                   Blog.chinese_title, Blog_Stats.saves)
+            select(Blog.slug, Section.slug, Blog.chinese_title, Blog_Stats.saves)
             .join(Blog_Stats, Blog_Stats.blog_id == Blog.id)
             .join(Section, Section.id == Blog.section_id)
             .order_by(Blog_Stats.saves.desc())

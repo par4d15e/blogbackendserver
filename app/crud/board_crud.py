@@ -59,8 +59,7 @@ class BoardCrud:
     async def _get_board_comment_by_id(
         self, board_comment_id: int
     ) -> Optional[Board_Comment]:
-        statement = select(Board_Comment).where(
-            Board_Comment.id == board_comment_id)
+        statement = select(Board_Comment).where(Board_Comment.id == board_comment_id)
         result = await self.db.execute(statement)
         return result.scalar_one_or_none()
 
@@ -81,8 +80,7 @@ class BoardCrud:
         if not board:
             raise HTTPException(
                 status_code=404,
-                detail=get_message(
-                    key="board.common.boardNotFound"),
+                detail=get_message(key="board.common.boardNotFound"),
             )
 
         response = {
@@ -111,8 +109,7 @@ class BoardCrud:
         if role != RoleType.admin:
             raise HTTPException(
                 status_code=403,
-                detail=get_message(
-                    key="common.insufficientPermissions"),
+                detail=get_message(key="common.insufficientPermissions"),
             )
 
         # check if board exists
@@ -120,8 +117,7 @@ class BoardCrud:
         if not board:
             raise HTTPException(
                 status_code=404,
-                detail=get_message(
-                    key="board.common.boardNotFound"),
+                detail=get_message(key="board.common.boardNotFound"),
             )
 
         # update board
@@ -165,8 +161,7 @@ class BoardCrud:
         if not board:
             raise HTTPException(
                 status_code=404,
-                detail=get_message(
-                    key="board.common.boardNotFound"),
+                detail=get_message(key="board.common.boardNotFound"),
             )
 
         # 插入board_comment
@@ -234,9 +229,7 @@ class BoardCrud:
         if not parent_comments:
             raise HTTPException(
                 status_code=404,
-                detail=get_message(
-                    "board.createBoardComment.commentNotFound"
-                ),
+                detail=get_message("board.createBoardComment.commentNotFound"),
             )
 
         # 获取所有父评论的子评论和孙评论，确保评论树完整（支持三级嵌套）
@@ -320,17 +313,14 @@ class BoardCrud:
         if not board_comment:
             raise HTTPException(
                 status_code=404,
-                detail=get_message(
-                    key="board.createBoardComment.boardCommentNotFound"
-                ),
+                detail=get_message(key="board.createBoardComment.boardCommentNotFound"),
             )
 
         # check if user is the owner of the board_comment
         if board_comment.user_id != user_id:
             raise HTTPException(
                 status_code=403,
-                detail=get_message(
-                    key="common.insufficientPermissions"),
+                detail=get_message(key="common.insufficientPermissions"),
             )
 
         # update board_comment
@@ -360,18 +350,14 @@ class BoardCrud:
         if not board_comment:
             raise HTTPException(
                 status_code=404,
-                detail=get_message(
-                    key="board.createBoardComment.boardCommentNotFound"
-                ),
+                detail=get_message(key="board.createBoardComment.boardCommentNotFound"),
             )
 
         # 允许作者或管理员删除，其余情况返回404（与博客评论删除逻辑一致）
         if board_comment.user_id != user_id and role != RoleType.admin:
             raise HTTPException(
                 status_code=404,
-                detail=get_message(
-                    key="board.createBoardComment.boardCommentNotFound"
-                ),
+                detail=get_message(key="board.createBoardComment.boardCommentNotFound"),
             )
 
         # delete board_comment

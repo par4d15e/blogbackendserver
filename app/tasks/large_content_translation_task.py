@@ -37,8 +37,7 @@ def large_content_translation_task(
         logger.info(
             f"Starting translation for content_id: {content_id}, type: {content_type}"
         )
-        logger.debug(
-            f"Original content: {json.dumps(content, ensure_ascii=False)}")
+        logger.debug(f"Original content: {json.dumps(content, ensure_ascii=False)}")
 
         try:
             translated_content = asyncio.run(
@@ -76,8 +75,7 @@ def large_content_translation_task(
             elif "timeout" in error_message.lower():
                 logger.error(f"Translation timeout: {error_message}")
             else:
-                logger.error(
-                    f"Translation failed with {error_type}: {error_message}")
+                logger.error(f"Translation failed with {error_type}: {error_message}")
 
             # 重新抛出异常，让任务重试或失败
             raise
@@ -109,11 +107,9 @@ def large_content_translation_task(
                 session.commit()
 
                 # 更新缓存
-                redis_manager.delete_pattern_sync(
-                    f"blog_details:{blog.slug}:*")
+                redis_manager.delete_pattern_sync(f"blog_details:{blog.slug}:*")
                 redis_manager.delete_pattern_sync(f"blog_tts:{content_id}")
-                redis_manager.delete_pattern_sync(
-                    f"blog_summary:{content_id}:*")
+                redis_manager.delete_pattern_sync(f"blog_summary:{content_id}:*")
                 logger.info(
                     f"Successfully translated blog content for blog ID: {content_id}"
                 )
@@ -136,11 +132,9 @@ def large_content_translation_task(
                 session.commit()
 
                 # 更新缓存
-                redis_manager.delete_pattern_sync(
-                    f"project_details:{project.slug}:*")
+                redis_manager.delete_pattern_sync(f"project_details:{project.slug}:*")
                 redis_manager.delete_pattern_sync(f"project_tts:{content_id}")
-                redis_manager.delete_pattern_sync(
-                    f"project_summary:{content_id}:*")
+                redis_manager.delete_pattern_sync(f"project_summary:{content_id}:*")
 
                 logger.info(
                     f"Successfully translated project content for project ID: {content_id}"
@@ -168,8 +162,7 @@ def large_content_translation_task(
                 )
                 return False
         else:
-            logger.error(
-                f"Error in large_content_translation_task: {error_message}")
+            logger.error(f"Error in large_content_translation_task: {error_message}")
             if self.request.retries < self.max_retries:
                 raise self.retry(exc=e, countdown=60)
             return False

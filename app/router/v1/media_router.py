@@ -44,7 +44,6 @@ async def get_media_lists_router(
         user_id=current_user.id,
         page=page,
         size=size,
-        
         media_type=media_type,
     )
     set_pagination_headers(response, pagination_metadata)
@@ -87,14 +86,12 @@ async def upload_router(
                     local_file_path=temp_paths[0],
                     user_id=current_user.id,
                     is_avatar=False,
-                    
                 )
             else:
                 result = await media_service.upload_multiple_media_to_s3(
                     local_file_paths=temp_paths,
                     user_id=current_user.id,
                     is_avatar=False,
-                    
                 )
 
             zh_message = (
@@ -161,7 +158,6 @@ async def download_router(
         # 调用服务层下载媒体文件
         local_file_path = await media_service.download_media_from_s3(
             media_id=media_id,
-            
         )
 
         # 获取文件名
@@ -214,7 +210,6 @@ async def delete_router(
         result = await media_service.delete_media_from_s3(
             media_ids=delete_request.media_ids,
             user_id=current_user.id,
-            
         )
 
         # 记录删除操作日志

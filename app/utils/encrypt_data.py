@@ -17,8 +17,7 @@ class AESJsonCipher:
         :param key: AES 密钥 (16/24/32 字节)
         """
         if len(key) not in (16, 24, 32):
-            raise ValueError(
-                "AES key must be either 16, 24, or 32 bytes long.")
+            raise ValueError("AES key must be either 16, 24, or 32 bytes long.")
         self.key = key
 
     def encrypt(self, data: Dict[str, Any]) -> str:

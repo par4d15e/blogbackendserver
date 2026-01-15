@@ -61,14 +61,12 @@ async def change_my_avatar_router(
             await media_service.delete_media_from_s3(
                 media_ids=old_avatar["media_id"],
                 user_id=current_user.id,
-                
             )
 
         result = await media_service.upload_single_media_to_s3(
             local_file_path=temp_path,
             user_id=current_user.id,
             is_avatar=True,
-            
         )
 
         # 删除缓存
@@ -131,7 +129,6 @@ async def enable_disable_user_router(
         is_active=form_data.is_active,
         current_user_id=current_user.id,
         role=current_user.role,
-        
     )
     return SuccessResponse(
         message=get_message("user.enableDisableUser.enableUserSuccess")
@@ -151,7 +148,6 @@ async def delete_user_router(
         user_id=user_id,
         role=current_user.role,
         current_user_id=current_user.id,
-        
     )
     return SuccessResponse(
         message=get_message("user.deleteUser"),

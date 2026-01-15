@@ -68,8 +68,7 @@ def generate_image_watermark(
                 "csv=p=0",
                 str(file_path),
             ]
-            res = subprocess.run(
-                cmd, check=True, capture_output=True, timeout=10)
+            res = subprocess.run(cmd, check=True, capture_output=True, timeout=10)
             out = res.stdout.decode().strip()
             if out:
                 w_h = out.split(",")
@@ -108,8 +107,7 @@ def generate_image_watermark(
                 "rgb24",
                 "-",
             ]
-            res = subprocess.run(
-                cmd, check=True, capture_output=True, timeout=10)
+            res = subprocess.run(cmd, check=True, capture_output=True, timeout=10)
             data = res.stdout
             if len(data) >= 3:
                 sr, sg, sb = data[0], data[1], data[2]
@@ -127,8 +125,7 @@ def generate_image_watermark(
 
         # 转义文本中的特殊字符
         escaped_text = (
-            input_text.replace("\\", "\\\\").replace(
-                ":", "\\:").replace("'", "\\'")
+            input_text.replace("\\", "\\\\").replace(":", "\\:").replace("'", "\\'")
         )
 
         # 简化 filter：直接在右上角添加水印文字
@@ -232,8 +229,7 @@ def generate_video_watermark(
                 "csv=p=0",
                 str(file_path),
             ]
-            res = subprocess.run(
-                cmd, check=True, capture_output=True, timeout=10)
+            res = subprocess.run(cmd, check=True, capture_output=True, timeout=10)
             out = res.stdout.decode().strip()
             if out:
                 w_h = out.split(",")
@@ -282,8 +278,7 @@ def generate_video_watermark(
                 "rgb24",
                 "-",
             ]
-            res = subprocess.run(
-                cmd, check=True, capture_output=True, timeout=10)
+            res = subprocess.run(cmd, check=True, capture_output=True, timeout=10)
             data = res.stdout
             if len(data) >= 3:
                 sr, sg, sb = data[0], data[1], data[2]
@@ -318,8 +313,7 @@ def generate_video_watermark(
         # 简化 filter：直接缩放并添加右上角水印，无需旋转和平铺
         # 转义文本中的特殊字符，避免 ffmpeg 命令解析错误
         escaped_text = (
-            input_text.replace("\\", "\\\\").replace(
-                ":", "\\:").replace("'", "\\'")
+            input_text.replace("\\", "\\\\").replace(":", "\\:").replace("'", "\\'")
         )
         filter_complex = (
             f"[0:v]{scale_expr},"
@@ -430,8 +424,7 @@ def generate_image_watermark_task(
         s3_keys = []
 
         for file_path in source_inputs:
-            watermark_file = local_output_dir / \
-                f"{file_path.stem}_watermark.webp"
+            watermark_file = local_output_dir / f"{file_path.stem}_watermark.webp"
             if watermark_file.exists():
                 watermark_paths.append(str(watermark_file))
                 # 生成S3键：使用调用方传入的S3前缀
@@ -532,8 +525,7 @@ def generate_video_watermark_task(
         s3_keys = []
 
         for file_path in source_inputs:
-            watermark_file = local_output_dir / \
-                f"{file_path.stem}_watermark.mp4"
+            watermark_file = local_output_dir / f"{file_path.stem}_watermark.mp4"
             if watermark_file.exists():
                 watermark_paths.append(str(watermark_file))
                 # 生成S3键：使用调用方传入的S3前缀

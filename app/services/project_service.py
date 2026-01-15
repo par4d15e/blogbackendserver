@@ -19,7 +19,7 @@ class ProjectService:
         published_only: bool = True,
     ) -> Tuple[List[Dict[str, Any]], Dict[str, Any]]:
         return await self.project_crud.get_project_lists(
-             page=page, size=size, published_only=published_only
+            page=page, size=size, published_only=published_only
         )
 
     async def create_project(
@@ -41,7 +41,6 @@ class ProjectService:
                 detail=get_message("common.insufficientPermissions"),
             )
         return await self.project_crud.create_project(
-            
             project_type=project_type,
             section_id=section_id,
             seo_id=seo_id,
@@ -72,7 +71,6 @@ class ProjectService:
                 detail=get_message("common.insufficientPermissions"),
             )
         return await self.project_crud.update_project(
-            
             project_slug=project_slug,
             project_type=project_type,
             seo_id=seo_id,
@@ -96,7 +94,7 @@ class ProjectService:
                 detail=get_message("common.insufficientPermissions"),
             )
         return await self.project_crud.publish_Or_Unpublish_project(
-             project_id=project_id, is_publish=is_publish
+            project_id=project_id, is_publish=is_publish
         )
 
     async def get_project_details(
@@ -106,30 +104,23 @@ class ProjectService:
         is_editor: Optional[bool] = False,
     ) -> Dict[str, Any]:
         return await self.project_crud.get_project_details(
-            
             project_slug=project_slug,
             user_id=user_id,
             is_editor=is_editor,
         )
 
-    async def get_project_details_seo(
-        self, project_slug: str
-    ) -> Dict[str, Any]:
+    async def get_project_details_seo(self, project_slug: str) -> Dict[str, Any]:
         return await self.project_crud.get_project_details_seo(
-             project_slug=project_slug
+            project_slug=project_slug
         )
 
-    async def delete_project(
-        self, project_id: int, role: RoleType
-    ) -> bool:
+    async def delete_project(self, project_id: int, role: RoleType) -> bool:
         if role != RoleType.admin:
             raise HTTPException(
                 status_code=403,
                 detail=get_message("common.insufficientPermissions"),
             )
-        return await self.project_crud.delete_project(
-             project_id=project_id
-        )
+        return await self.project_crud.delete_project(project_id=project_id)
 
 
 def get_project_service(

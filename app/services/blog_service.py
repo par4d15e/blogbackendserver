@@ -20,7 +20,6 @@ class BlogService:
         published_only: bool = True,
     ) -> tuple[list[dict], dict]:
         return await self.blog_crud.get_blog_lists(
-            
             section_id=section_id,
             page=page,
             size=size,
@@ -61,7 +60,6 @@ class BlogService:
         blog_tags: List[int] = [],
     ) -> Optional[str]:
         return await self.blog_crud.update_blog(
-            
             user_id=user_id,
             seo_id=seo_id,
             cover_id=cover_id,
@@ -78,7 +76,6 @@ class BlogService:
     ) -> Optional[Dict]:
         return await self.blog_crud.get_blog_details_seo(
             blog_slug=blog_slug,
-            
         )
 
     async def get_blog_details(
@@ -91,7 +88,6 @@ class BlogService:
         return await self.blog_crud.get_blog_details(
             request=request,
             blog_slug=blog_slug,
-            
             is_editor=is_editor,
             user_id=user_id,
         )
@@ -112,7 +108,6 @@ class BlogService:
     ) -> Optional[Dict]:
         return await self.blog_crud.get_blog_summary(
             blog_id=blog_id,
-            
         )
 
     async def get_blog_comment_lists(
@@ -125,7 +120,6 @@ class BlogService:
             blog_id=blog_id,
             limit=limit,
             cursor=cursor,
-            
         )
 
     async def create_blog_comment(
@@ -140,7 +134,6 @@ class BlogService:
             blog_id=blog_id,
             comment=comment,
             parent_id=parent_id,
-            
         )
 
     async def update_blog_comment(
@@ -153,7 +146,6 @@ class BlogService:
             user_id=user_id,
             comment_id=comment_id,
             comment=comment,
-            
         )
 
     async def delete_blog_comment(
@@ -166,7 +158,6 @@ class BlogService:
             user_id=user_id,
             role=role,
             comment_id=comment_id,
-            
         )
 
     async def save_blog_button(
@@ -177,7 +168,6 @@ class BlogService:
         return await self.blog_crud.save_blog_button(
             user_id=user_id,
             blog_id=blog_id,
-            
         )
 
     async def update_blog_status(
@@ -195,39 +185,29 @@ class BlogService:
             )
         return await self.blog_crud.update_blog_status(
             blog_id=blog_id,
-            
             is_published=is_published,
             is_archived=is_archived,
             is_featured=is_featured,
         )
 
-    async def get_blog_navigation(
-        self, blog_id: int
-    ) -> Optional[Dict]:
+    async def get_blog_navigation(self, blog_id: int) -> Optional[Dict]:
         return await self.blog_crud.get_blog_navigation(
             blog_id=blog_id,
-            
         )
 
     async def get_blog_stats(self, blog_id: int) -> Optional[Dict]:
         return await self.blog_crud.get_blog_stats(
             blog_id=blog_id,
-            
         )
 
-    async def like_blog_button(
-        self, request: Request, blog_id: int
-    ) -> bool:
+    async def like_blog_button(self, request: Request, blog_id: int) -> bool:
         ip_address = client_info_utils.get_client_ip(request)
         return await self.blog_crud.like_blog_button(
             blog_id=blog_id,
-            
             ip_address=ip_address,
         )
 
-    async def delete_blog(
-        self, blog_id: int, role: RoleType
-    ) -> bool:
+    async def delete_blog(self, blog_id: int, role: RoleType) -> bool:
         if role != RoleType.admin:
             raise HTTPException(
                 status_code=403,
@@ -235,7 +215,6 @@ class BlogService:
             )
         return await self.blog_crud.delete_blog(
             blog_id=blog_id,
-            
         )
 
     async def get_saved_blog_lists(
@@ -267,7 +246,6 @@ class BlogService:
         """
         return await self.blog_crud.get_blog_lists_by_tag_slug(
             tag_slug=tag_slug,
-            
             page=page,
             size=size,
         )
@@ -288,7 +266,6 @@ class BlogService:
             包含归档博客列表和分页信息的字典
         """
         return await self.blog_crud.get_archived_blog_lists(
-            
             cursor=cursor,
             limit=limit,
         )

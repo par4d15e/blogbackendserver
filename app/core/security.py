@@ -51,17 +51,13 @@ class PasswordValidator:
 
     def _check_uppercase(self, password: str):
         if not re.search(self.PASSWORD_PATTERNS["uppercase"], password):
-            self.logger.warning(
-                "Password validation failed: no uppercase letter.")
-            raise ValueError(
-                "Password must contain at least one uppercase letter.")
+            self.logger.warning("Password validation failed: no uppercase letter.")
+            raise ValueError("Password must contain at least one uppercase letter.")
 
     def _check_lowercase(self, password: str):
         if not re.search(self.PASSWORD_PATTERNS["lowercase"], password):
-            self.logger.warning(
-                "Password validation failed: no lowercase letter.")
-            raise ValueError(
-                "Password must contain at least one lowercase letter.")
+            self.logger.warning("Password validation failed: no lowercase letter.")
+            raise ValueError("Password must contain at least one lowercase letter.")
 
     def _check_digit(self, password: str):
         if not re.search(self.PASSWORD_PATTERNS["digit"], password):
@@ -70,10 +66,8 @@ class PasswordValidator:
 
     def _check_special_char(self, password: str):
         if not re.search(self.PASSWORD_PATTERNS["special"], password):
-            self.logger.warning(
-                "Password validation failed: no special character.")
-            raise ValueError(
-                "Password must contain at least one special character.")
+            self.logger.warning("Password validation failed: no special character.")
+            raise ValueError("Password must contain at least one special character.")
 
 
 class PasswordHasher:
@@ -151,8 +145,7 @@ class JWTManager:
         self, data: Dict, expires_in_seconds: int, token_type: str
     ) -> Tuple[str, datetime]:
         """Internal method for token creation"""
-        exp_time = datetime.now(timezone.utc) + \
-            timedelta(seconds=expires_in_seconds)
+        exp_time = datetime.now(timezone.utc) + timedelta(seconds=expires_in_seconds)
         # 转换为UTC时间戳
         payload = {
             **data,
@@ -162,8 +155,7 @@ class JWTManager:
             "token_type": token_type,
         }
 
-        encoded_jwt = jwt.encode(
-            payload, self.secret_key, algorithm=self.algorithm)
+        encoded_jwt = jwt.encode(payload, self.secret_key, algorithm=self.algorithm)
 
         self.logger.info(
             f"{token_type} token created for user: {data.get('user_id')} "

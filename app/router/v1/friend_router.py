@@ -36,7 +36,6 @@ async def update_friend(
         friend_id=form_data.friend_id,
         chinese_title=form_data.chinese_title,
         chinese_description=form_data.chinese_description,
-        
     )
     return SuccessResponse(
         message=get_message("friend.updateFriend"),
@@ -94,7 +93,6 @@ async def create_single_friend(
         site_url=form_data.site_url,
         chinese_title=form_data.chinese_title,
         chinese_description=form_data.chinese_description,
-        
     )
     return SuccessResponse(
         message=get_message("friend.createSingleFriend"),
@@ -129,7 +127,6 @@ async def update_friend_list_type(
         friend_list_id=form_data.friend_list_id,
         type=form_data.type,
         role=current_user.role,
-        
     )
     return SuccessResponse(
         message="朋友列表类型更新成功",

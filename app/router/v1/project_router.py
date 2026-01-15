@@ -25,7 +25,7 @@ async def get_project_lists_router(
     project_service: ProjectService = Depends(get_project_service),
 ):
     items, pagination_metadata = await project_service.get_project_lists(
-         page=page, size=size, published_only=published_only
+        page=page, size=size, published_only=published_only
     )
     set_pagination_headers(response, pagination_metadata)
     return SuccessResponse(
@@ -41,7 +41,6 @@ async def create_project_router(
     project_service: ProjectService = Depends(get_project_service),
 ):
     result = await project_service.create_project(
-        
         project_type=request.project_type,
         section_id=request.section_id,
         seo_id=request.seo_id,
@@ -66,7 +65,6 @@ async def update_project_router(
     project_service: ProjectService = Depends(get_project_service),
 ):
     result = await project_service.update_project(
-        
         project_slug=request.project_slug,
         project_type=request.project_type,
         seo_id=request.seo_id,
@@ -91,7 +89,6 @@ async def publish_or_unpublish_project_router(
     project_service: ProjectService = Depends(get_project_service),
 ):
     result = await project_service.publish_Or_Unpublish_project(
-        
         project_id=request.project_id,
         is_publish=request.is_publish,
         role=current_user.role,
@@ -116,7 +113,6 @@ async def get_project_details_router(
     project_service: ProjectService = Depends(get_project_service),
 ):
     result = await project_service.get_project_details(
-        
         project_slug=project_slug,
         user_id=user_id,
         is_editor=is_editor,
@@ -132,9 +128,7 @@ async def get_project_details_seo_router(
     project_slug: str,
     project_service: ProjectService = Depends(get_project_service),
 ):
-    result = await project_service.get_project_details_seo(
-         project_slug=project_slug
-    )
+    result = await project_service.get_project_details_seo(project_slug=project_slug)
     return SuccessResponse(
         message=get_message("project.getProjectDetailsSeo"),
         data=result,
@@ -148,7 +142,7 @@ async def delete_project_router(
     project_service: ProjectService = Depends(get_project_service),
 ):
     result = await project_service.delete_project(
-         project_id=project_id, role=current_user.role
+        project_id=project_id, role=current_user.role
     )
     return SuccessResponse(
         message=get_message("project.deleteProject"),

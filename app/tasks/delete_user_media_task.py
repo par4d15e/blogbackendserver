@@ -111,8 +111,7 @@ def delete_user_media_task(self, user_id: int) -> None:
                     try:
 
                         def progress_callback(deleted_count, total_files, _):
-                            logger.info(
-                                f"S3删除进度: {deleted_count}/{total_files}")
+                            logger.info(f"S3删除进度: {deleted_count}/{total_files}")
 
                         deletion_results = s3_bucket.delete_files(
                             s3_keys=s3_keys_to_delete,
@@ -157,7 +156,8 @@ def delete_user_media_task(self, user_id: int) -> None:
             try:
                 with mysql_manager.get_sync_db() as session:
                     delete_statement = delete(User).where(
-                        cast(ColumnElement[bool], User.id == user_id))
+                        cast(ColumnElement[bool], User.id == user_id)
+                    )
                     deleted_rows = session.execute(delete_statement)
                     session.commit()
                     logger.info(

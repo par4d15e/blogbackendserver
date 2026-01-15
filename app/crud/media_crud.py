@@ -208,9 +208,7 @@ class MediaCrud:
 
         return True
 
-    async def delete_media_from_s3(
-        self, media_id: int, user_id: int
-    ):
+    async def delete_media_from_s3(self, media_id: int, user_id: int):
         """
         删除媒体文件记录
         简化参数，只使用media_id和user_id

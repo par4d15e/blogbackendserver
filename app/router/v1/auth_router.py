@@ -85,7 +85,6 @@ async def create_user_account_router(
         username=form_data.username,
         password=form_data.password,
         code=form_data.code,
-        
     )
 
     return SuccessResponse(
@@ -105,7 +104,6 @@ async def reset_user_password_router(
         email=form_data.email,
         new_password=form_data.password,
         code=form_data.code,
-        
     )
 
     return SuccessResponse(
@@ -125,7 +123,6 @@ async def reset_logged_in_user_password_router(
     result = await auth_service.reset_logged_in_user_password(
         user_email=current_user.email,
         new_password=form_data.password,
-        
     )
 
     return SuccessResponse(
@@ -147,7 +144,6 @@ async def account_login_router(
         email=form_data.email,
         password=form_data.password,
         response=response,
-        
     )
     return SuccessResponse(
         message=get_message("auth.accountLogin.accountLoginSuccess"),
@@ -162,9 +158,7 @@ async def generate_access_token_router(
     response: Response,
     auth_service: AuthService = Depends(get_auth_service),
 ):
-    result = await auth_service.generate_access_token(
-        request, response
-    )
+    result = await auth_service.generate_access_token(request, response)
     return SuccessResponse(
         message=get_message("auth.generateAccessToken.generateAccessTokenSuccess"),
         data=result,
@@ -226,7 +220,7 @@ async def account_logout_router(
     auth_service: AuthService = Depends(get_auth_service),
 ):
     result = await auth_service.account_logout(
-        response=response, user_id=current_user.id
+        request=request, response=response, user_id=current_user.id
     )
 
     return SuccessResponse(

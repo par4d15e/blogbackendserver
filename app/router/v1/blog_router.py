@@ -29,7 +29,6 @@ async def get_blog_lists(
     published_only: bool = Query(True, description="是否只返回已发布博客"),
 ):
     items, pagination_metadata = await blog_service.get_blog_lists(
-        
         section_id=section_id,
         page=page,
         size=size,
@@ -60,9 +59,7 @@ async def create_blog(
         blog_tags=form_data.blog_tags,
     )
 
-    return SuccessResponse(
-        message=get_message("blog.createBlog"), data=result
-    )
+    return SuccessResponse(message=get_message("blog.createBlog"), data=result)
 
 
 @router.patch("/admin/update-blog", response_model=SuccessResponse)
@@ -72,7 +69,6 @@ async def update_blog(
     blog_service: BlogService = Depends(get_blog_service),
 ):
     result = await blog_service.update_blog(
-        
         user_id=current_user.id,
         blog_slug=form_data.blog_slug,
         seo_id=form_data.seo_id,
@@ -83,9 +79,7 @@ async def update_blog(
         blog_tags=form_data.blog_tags,
     )
 
-    return SuccessResponse(
-        message=get_message("blog.updateBlog"), data=result
-    )
+    return SuccessResponse(message=get_message("blog.updateBlog"), data=result)
 
 
 @router.get("/get-blog-details-seo/{blog_slug}", response_model=SuccessResponse)
@@ -95,11 +89,8 @@ async def get_blog_details_seo(
 ):
     result = await blog_service.get_blog_details_seo(
         blog_slug=blog_slug,
-        
     )
-    return SuccessResponse(
-        message=get_message("blog.getBlogDetailsSeo"), data=result
-    )
+    return SuccessResponse(message=get_message("blog.getBlogDetailsSeo"), data=result)
 
 
 @router.get("/get-blog-details/{blog_slug}", response_model=SuccessResponse)
@@ -113,13 +104,10 @@ async def get_blog_details(
     result = await blog_service.get_blog_details(
         request=request,
         blog_slug=blog_slug,
-        
         is_editor=is_editor,
         user_id=user_id,
     )
-    return SuccessResponse(
-        message=get_message("blog.getBlogDetails"), data=result
-    )
+    return SuccessResponse(message=get_message("blog.getBlogDetails"), data=result)
 
 
 @router.get("/get-blog-tts/{blog_id}", response_model=SuccessResponse)
@@ -129,7 +117,6 @@ async def get_blog_tts(
 ):
     result = await blog_service.get_blog_tts(
         blog_id=blog_id,
-        
     )
     return SuccessResponse(
         message=get_message("blog.getBlogTTS.getBlogTTSSuccess"), data=result
@@ -143,7 +130,6 @@ async def get_blog_summary(
 ):
     result = await blog_service.get_blog_summary(
         blog_id=blog_id,
-        
     )
     return SuccessResponse(
         message=get_message("blog.getBlogSummary.getBlogSummarySuccess"),
@@ -162,7 +148,6 @@ async def get_blog_comment_lists(
         blog_id=blog_id,
         limit=limit,
         cursor=cursor,
-        
     )
     return SuccessResponse(
         message=get_message("blog.getBlogCommentLists.getBlogCommentListsSuccess"),
@@ -181,11 +166,8 @@ async def create_blog_comment(
         blog_id=form_data.blog_id,
         comment=form_data.comment,
         parent_id=form_data.parent_id,
-        
     )
-    return SuccessResponse(
-        message=get_message("blog.createBlogComment"), data=result
-    )
+    return SuccessResponse(message=get_message("blog.createBlogComment"), data=result)
 
 
 @router.patch("/update-blog-comment", response_model=SuccessResponse)
@@ -198,11 +180,8 @@ async def update_blog_comment(
         user_id=current_user.id,
         comment_id=form_data.comment_id,
         comment=form_data.comment,
-        
     )
-    return SuccessResponse(
-        message=get_message("blog.updateBlogComment"), data=result
-    )
+    return SuccessResponse(message=get_message("blog.updateBlogComment"), data=result)
 
 
 @router.delete("/delete-blog-comment/{comment_id}", response_model=SuccessResponse)
@@ -215,11 +194,8 @@ async def delete_blog_comment(
         user_id=current_user.id,
         role=current_user.role,
         comment_id=comment_id,
-        
     )
-    return SuccessResponse(
-        message=get_message("blog.deleteBlogComment"), data=result
-    )
+    return SuccessResponse(message=get_message("blog.deleteBlogComment"), data=result)
 
 
 @router.post("/save-blog-button", response_model=SuccessResponse)
@@ -231,7 +207,6 @@ async def save_blog_button(
     result = await blog_service.save_blog_button(
         user_id=current_user.id,
         blog_id=form_data.blog_id,
-        
     )
 
     if result:
@@ -255,7 +230,6 @@ async def like_blog_button(
     result = await blog_service.like_blog_button(
         request=request,
         blog_id=form_data.blog_id,
-        
     )
 
     if result:
@@ -278,13 +252,12 @@ async def update_blog_status(
 ):
     result = await blog_service.update_blog_status(
         blog_id=form_data.blog_id,
-        
         is_published=form_data.is_published,
         is_archived=form_data.is_archived,
         is_featured=form_data.is_featured,
         role=current_user.role,
     )
-    
+
     # 根据实际更新的字段返回对应消息
     if form_data.is_published is True:
         message_key = "blog.updateBlogStatus.blogPublishedSuccess"
@@ -298,7 +271,7 @@ async def update_blog_status(
         message_key = "blog.updateBlogStatus.blogFeaturedSuccess"
     else:
         message_key = "blog.updateBlogStatus.blogUnfeaturedSuccess"
-    
+
     return SuccessResponse(
         message=get_message(message_key),
         data=result,
@@ -312,11 +285,8 @@ async def get_blog_navigation(
 ):
     result = await blog_service.get_blog_navigation(
         blog_id=blog_id,
-        
     )
-    return SuccessResponse(
-        message=get_message("blog.getBlogNavigation"), data=result
-    )
+    return SuccessResponse(message=get_message("blog.getBlogNavigation"), data=result)
 
 
 @router.get("/get-blog-stats/{blog_id}", response_model=SuccessResponse)
@@ -326,7 +296,6 @@ async def get_blog_stats(
 ):
     result = await blog_service.get_blog_stats(
         blog_id=blog_id,
-        
     )
     return SuccessResponse(
         message=get_message("blog.getBlogStats.getBlogStatsSuccess"),
@@ -342,7 +311,6 @@ async def delete_blog(
 ):
     result = await blog_service.delete_blog(
         blog_id=blog_id,
-        
         role=current_user.role,
     )
     return SuccessResponse(
@@ -359,13 +327,10 @@ async def get_saved_blog_lists(
 ):
     result = await blog_service.get_saved_blog_lists(
         user_id=user_id,
-        
         page=page,
         size=size,
     )
-    return SuccessResponse(
-        message=get_message("blog.getSavedBlogLists"), data=result
-    )
+    return SuccessResponse(message=get_message("blog.getSavedBlogLists"), data=result)
 
 
 @router.get("/get-recent-popular-blog", response_model=SuccessResponse)
@@ -390,7 +355,6 @@ async def get_blog_lists_by_tag_slug(
     """根据标签slug获取博客列表 - 使用传统分页方式"""
     items, pagination_metadata = await blog_service.get_blog_lists_by_tag_slug(
         tag_slug=tag_slug,
-        
         page=page,
         size=size,
     )
@@ -413,7 +377,6 @@ async def get_archived_blog_lists(
 ):
     """获取归档的博客列表 - 使用 cursor pagination"""
     result = await blog_service.get_archived_blog_lists(
-        
         cursor=cursor,
         limit=limit,
     )

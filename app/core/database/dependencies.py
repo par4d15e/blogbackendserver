@@ -8,7 +8,7 @@ from app.core.database.mysql import mysql_manager
 from app.core.database.redis import redis_manager
 from app.core.security import security_manager
 from app.crud.auth_crud import get_auth_crud
-from app.models.auth_model import Token, TokenType
+from app.models.auth_model import RefreshToken
 from app.core.logger import logger_manager
 from app.core.config.settings import settings
 
@@ -53,65 +53,66 @@ class Dependencies:
                 detail="Unauthorized access",
             )
 
-        # 首先尝试使用access_token
-        if access_token:
-            try:
-                self.logger.info("Attempting to decode access token")
-                token_data = security_manager.decode_token(access_token)
-                if token_data:
-                    self.logger.info(
-                        f"Token decoded successfully, user_id: {token_data.get('user_id')}"
-                    )
-                    user_id = token_data.get("user_id")
+        # 使用 JWT 验证 access_token（不查询数据库）
+        try:
+            self.logger.info("Attempting to decode access token")
+            token_data = security_manager.decode_token(access_token)
+            if token_data:
+                self.logger.info(
+                    f"Token decoded successfully, user_id: {token_data.get('user_id')}"
+                )
+                user_id = token_data.get("user_id")
+                jti = token_data.get("jti")
 
-                    if user_id:
-                        self.logger.info(
-                            f"Validating token in database for user_id: {user_id}"
+                if user_id and jti:
+                    # 检查 token 是否在黑名单中（已登出）
+                    try:
+                        is_blacklisted = await redis_manager.exists_async(
+                            f"blacklist:access_token:{jti}"
                         )
-                        # 验证access token在数据库中的有效性
-                        valid_access_token = await db.execute(
-                            select(Token).where(
-                                Token.user_id == user_id,
-                                Token.type == TokenType.access,
-                                Token.is_active,
-                                Token.expired_at > func.utc_timestamp(),
-                            )
-                        )
-                        valid_token = valid_access_token.scalar_one_or_none()
-
-                        if valid_token:
-                            self.logger.info(
-                                f"Valid token found in database: {valid_token.id}"
-                            )
-                            # 从数据库中获取用户信息
-                            user = await self.auth_crud.get_user_by_id(user_id)
-                            if (
-                                user
-                                and user.is_active
-                                and user.is_verified
-                                and not user.is_deleted
-                            ):
-                                self.logger.info(
-                                    f"User authenticated via access token: {user.email}"
-                                )
-                                return user
-                            else:
-                                self.logger.warning(
-                                    f"User validation failed - active: {user.is_active if user else 'N/A'}, verified: {user.is_verified if user else 'N/A'}, deleted: {user.is_deleted if user else 'N/A'}"
-                                )
-                        else:
+                        if is_blacklisted:
                             self.logger.warning(
-                                f"No valid token found in database for user_id: {user_id}"
+                                f"Access token {jti} is blacklisted (user logged out)"
                             )
-                    else:
-                        self.logger.warning("No user_id found in decoded token")
-                else:
-                    self.logger.warning("Token decode returned None")
-            except Exception as e:
-                self.logger.warning(f"Access token validation failed: {str(e)}")
+                            raise HTTPException(
+                                status_code=401,
+                                detail="Token has been revoked",
+                            )
+                    except HTTPException:
+                        raise
+                    except Exception as e:
+                        self.logger.warning(
+                            f"Failed to check token blacklist: {e}, allowing request"
+                        )
+                        # 如果 Redis 不可用，允许请求通过（降级策略）
 
-        # 如果所有token都无效，抛出未授权错误
-        self.logger.warning("All token validation attempts failed")
+                    # 从数据库中获取用户信息
+                    user = await self.auth_crud.get_user_by_id(user_id)
+                    if (
+                        user
+                        and user.is_active
+                        and user.is_verified
+                        and not user.is_deleted
+                    ):
+                        self.logger.info(
+                            f"User authenticated via access token: {user.email}"
+                        )
+                        return user
+                    else:
+                        self.logger.warning(
+                            f"User validation failed - active: {user.is_active if user else 'N/A'}, verified: {user.is_verified if user else 'N/A'}, deleted: {user.is_deleted if user else 'N/A'}"
+                        )
+                else:
+                    self.logger.warning("No user_id or jti found in decoded token")
+            else:
+                self.logger.warning("Token decode returned None")
+        except HTTPException:
+            raise
+        except Exception as e:
+            self.logger.warning(f"Access token validation failed: {str(e)}")
+
+        # 如果token验证失败，抛出未授权错误
+        self.logger.warning("Token validation failed")
         raise HTTPException(
             status_code=401,
             detail="Unauthorized access",

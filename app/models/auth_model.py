@@ -12,12 +12,6 @@ from sqlmodel import (
 )
 
 
-# 定义令牌类型的枚举类型
-class TokenType(IntEnum):
-    access = 1
-    refresh = 2
-
-
 class CodeType(IntEnum):
     verified = 1
     reset = 2
@@ -28,63 +22,42 @@ class SocialProvider(IntEnum):
     github = 2
 
 
-class Token(SQLModel, table=True):
-    """用户令牌表 - 存储用户的访问令牌和刷新令牌"""
+class RefreshToken(SQLModel, table=True):
+    """用户刷新令牌表 - 仅存储 refresh token"""
 
-    __tablename__ = "tokens"
+    __tablename__ = "refresh_tokens"
 
     __table_args__ = (
         # 单列索引
-        Index("idx_tokens_user_id", "user_id"),
-        Index("idx_tokens_type", "type"),
-        Index("idx_tokens_is_active", "is_active"),
-        Index("idx_tokens_jit", "jit"),
-        Index("idx_tokens_expired_at", "expired_at"),
+        Index("idx_refresh_tokens_user_id", "user_id"),
+        Index("idx_refresh_tokens_is_active", "is_active"),
+        Index("idx_refresh_tokens_jit", "jit"),
+        Index("idx_refresh_tokens_expired_at", "expired_at"),
         # 复合索引 - 用于高效查询
         Index(
-            "idx_tokens_get_user_tokens", "user_id", "expired_at", "is_active"
+            "idx_refresh_tokens_get_user_tokens", "user_id", "expired_at", "is_active"
         ),  # auth_crud.py: _get_user_tokens
         Index(
-            "idx_tokens_revoke_user_tokens", "user_id", "is_active"
+            "idx_refresh_tokens_revoke_user_tokens", "user_id", "is_active"
         ),  # auth_crud.py: _revoke_user_tokens
         Index(
-            "idx_tokens_cleanup_tokens_by_expired", "user_id", "expired_at"
-        ),  # auth_crud.py: _cleanup_tokens
-        Index(
-            "idx_tokens_cleanup_tokens_by_active", "user_id", "is_active"
-        ),  # auth_crud.py: _cleanup_tokens
-        Index(
-            "idx_tokens_cleanup_tokens_by_expired_active",
-            "user_id",
-            "expired_at",
-            "is_active",
-        ),  # auth_crud.py: _cleanup_tokens
-        Index(
-            "idx_tokens_generate_access_token",
+            "idx_refresh_tokens_generate_access_token",
             "user_id",
             "jit",
-            "type",
             "is_active",
             "expired_at",
         ),  # auth_crud.py: generate_access_token
-        # auth_crud.py: generate_access_token - old access token deletion
-        Index("idx_tokens_delete_old_token_by_user_id_type", "user_id", "type"),
-        Index(
-            "idx_tokens_get_current_user", "user_id", "type", "is_active", "expired_at"
-        ),  # dependencies.py: get_current_user
         # 排序索引
-        Index("idx_tokens_created_at_desc", desc("created_at")),
-        Index("idx_tokens_expired_at_desc", desc("expired_at")),
+        Index("idx_refresh_tokens_created_at_desc", desc("created_at")),
+        Index("idx_refresh_tokens_expired_at_desc", desc("expired_at")),
     )
 
     id: Optional[int] = Field(default=None, primary_key=True)
     user_id: int = Field(
-        sa_column=Column(ForeignKey(
-            "users.id", ondelete="CASCADE"), nullable=False)
+        sa_column=Column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     )
-    jit: str = Field(nullable=False, max_length=64, unique=True)  # 优化长度
-    type: TokenType = Field(nullable=False)
-    token: str = Field(nullable=False, max_length=1024)  # 移除unique约束
+    jit: str = Field(nullable=False, max_length=64, unique=True)
+    token: str = Field(nullable=False, max_length=1024)
     is_active: bool = Field(default=True, nullable=True)
     created_at: datetime = Field(
         nullable=False,
@@ -97,7 +70,7 @@ class Token(SQLModel, table=True):
     )
 
     def __repr__(self):
-        return f"<Token(id={self.id}, user_id={self.user_id}, type={self.type.name}, is_active={self.is_active})>"
+        return f"<RefreshToken(id={self.id}, user_id={self.user_id}, is_active={self.is_active})>"
 
 
 class Code(SQLModel, table=True):
@@ -129,8 +102,7 @@ class Code(SQLModel, table=True):
 
     id: Optional[int] = Field(default=None, primary_key=True)
     user_id: int = Field(
-        sa_column=Column(ForeignKey(
-            "users.id", ondelete="CASCADE"), nullable=False)
+        sa_column=Column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     )
     type: CodeType = Field(nullable=False)
     code: str = Field(nullable=False, max_length=10, unique=True)  # 优化长度
@@ -170,8 +142,7 @@ class Social_Account(SQLModel, table=True):
 
     id: Optional[int] = Field(default=None, primary_key=True)
     user_id: int = Field(
-        sa_column=Column(ForeignKey(
-            "users.id", ondelete="CASCADE"), nullable=False)
+        sa_column=Column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     )
     provider: SocialProvider = Field(nullable=False)
     provider_user_id: str = Field(

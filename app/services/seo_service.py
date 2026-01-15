@@ -33,7 +33,6 @@ class SeoService:
             chinese_title=chinese_title,
             chinese_description=chinese_description,
             chinese_keywords=chinese_keywords,
-            
         )
 
     async def update_seo(
@@ -50,7 +49,6 @@ class SeoService:
             chinese_title=chinese_title,
             chinese_description=chinese_description,
             chinese_keywords=chinese_keywords,
-            
         )
 
     async def delete_seo(
@@ -58,9 +56,7 @@ class SeoService:
         seo_id: int,
         role: RoleType,
     ) -> bool:
-        return await self.seo_crud.delete_seo(
-            seo_id=seo_id, role=role
-        )
+        return await self.seo_crud.delete_seo(seo_id=seo_id, role=role)
 
 
 def get_seo_service(seo_crud: SeoCrud = Depends(get_seo_crud)) -> SeoService:

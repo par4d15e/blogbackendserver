@@ -63,8 +63,7 @@ def notification_task(
             ).set_text_content(message)
 
             mime_message = email_message.build()
-            loop.run_until_complete(
-                email_service.backend.send_email(mime_message))
+            loop.run_until_complete(email_service.backend.send_email(mime_message))
 
     except Exception as e:
         logger.error(f"Notification task failed: {e}")

@@ -360,8 +360,7 @@ def check_table_empty(table_name: str, db) -> tuple[bool, int]:
         count = result.scalar()
         return (count == 0, count)
     except Exception as e:
-        logger.warning(
-            f"Table '{table_name}' does not exist or error checking: {e}")
+        logger.warning(f"Table '{table_name}' does not exist or error checking: {e}")
         return (True, -1)  # 表不存在视为空，但不插入数据
 
 
@@ -475,12 +474,10 @@ async def insert_initial_data():
             inserted_tables.append("users")
             logger.info("✅ Inserted User data")
         elif count == -1:
-            logger.warning(
-                "⏭️  Table 'users' does not exist, skipping User data")
+            logger.warning("⏭️  Table 'users' does not exist, skipping User data")
             skipped_tables.append("users (table not found)")
         else:
-            logger.info(
-                f"⏭️  Table 'users' has {count} records, skipping User data")
+            logger.info(f"⏭️  Table 'users' has {count} records, skipping User data")
             skipped_tables.append(f"users ({count} records)")
 
         # 插入 Media 数据
@@ -493,12 +490,10 @@ async def insert_initial_data():
             inserted_tables.append("media")
             logger.info("✅ Inserted Media data")
         elif count == -1:
-            logger.warning(
-                "⏭️  Table 'media' does not exist, skipping Media data")
+            logger.warning("⏭️  Table 'media' does not exist, skipping Media data")
             skipped_tables.append("media (table not found)")
         else:
-            logger.info(
-                f"⏭️  Table 'media' has {count} records, skipping Media data")
+            logger.info(f"⏭️  Table 'media' has {count} records, skipping Media data")
             skipped_tables.append(f"media ({count} records)")
 
         # 插入 SEO 数据
@@ -514,8 +509,7 @@ async def insert_initial_data():
             logger.warning("⏭️  Table 'seo' does not exist, skipping SEO data")
             skipped_tables.append("seo (table not found)")
         else:
-            logger.info(
-                f"⏭️  Table 'seo' has {count} records, skipping SEO data")
+            logger.info(f"⏭️  Table 'seo' has {count} records, skipping SEO data")
             skipped_tables.append(f"seo ({count} records)")
 
         # 插入 Tax 数据
@@ -526,12 +520,10 @@ async def insert_initial_data():
             inserted_tables.append("taxes")
             logger.info("✅ Inserted Tax data")
         elif count == -1:
-            logger.warning(
-                "⏭️  Table 'taxes' does not exist, skipping Tax data")
+            logger.warning("⏭️  Table 'taxes' does not exist, skipping Tax data")
             skipped_tables.append("taxes (table not found)")
         else:
-            logger.info(
-                f"⏭️  Table 'taxes' has {count} records, skipping Tax data")
+            logger.info(f"⏭️  Table 'taxes' has {count} records, skipping Tax data")
             skipped_tables.append(f"taxes ({count} records)")
 
         # 插入 Section 数据
@@ -544,8 +536,7 @@ async def insert_initial_data():
             inserted_tables.append("sections")
             logger.info("✅ Inserted Section data")
         elif count == -1:
-            logger.warning(
-                "⏭️  Table 'sections' does not exist, skipping Section data")
+            logger.warning("⏭️  Table 'sections' does not exist, skipping Section data")
             skipped_tables.append("sections (table not found)")
         else:
             logger.info(
@@ -563,12 +554,10 @@ async def insert_initial_data():
             inserted_tables.append("boards")
             logger.info("✅ Inserted Board data")
         elif count == -1:
-            logger.warning(
-                "⏭️  Table 'boards' does not exist, skipping Board data")
+            logger.warning("⏭️  Table 'boards' does not exist, skipping Board data")
             skipped_tables.append("boards (table not found)")
         else:
-            logger.info(
-                f"⏭️  Table 'boards' has {count} records, skipping Board data")
+            logger.info(f"⏭️  Table 'boards' has {count} records, skipping Board data")
             skipped_tables.append(f"boards ({count} records)")
 
         # 插入 Friend 数据
@@ -581,12 +570,10 @@ async def insert_initial_data():
             inserted_tables.append("friends")
             logger.info("✅ Inserted Friend data")
         elif count == -1:
-            logger.warning(
-                "⏭️  Table 'friends' does not exist, skipping Friend data")
+            logger.warning("⏭️  Table 'friends' does not exist, skipping Friend data")
             skipped_tables.append("friends (table not found)")
         else:
-            logger.info(
-                f"⏭️  Table 'friends' has {count} records, skipping Friend data")
+            logger.info(f"⏭️  Table 'friends' has {count} records, skipping Friend data")
             skipped_tables.append(f"friends ({count} records)")
 
         # 插入 Subscriber 数据
@@ -618,12 +605,10 @@ async def insert_initial_data():
             inserted_tables.append("tags")
             logger.info("✅ Inserted Tag data")
         elif count == -1:
-            logger.warning(
-                "⏭️  Table 'tags' does not exist, skipping Tag data")
+            logger.warning("⏭️  Table 'tags' does not exist, skipping Tag data")
             skipped_tables.append("tags (table not found)")
         else:
-            logger.info(
-                f"⏭️  Table 'tags' has {count} records, skipping Tag data")
+            logger.info(f"⏭️  Table 'tags' has {count} records, skipping Tag data")
             skipped_tables.append(f"tags ({count} records)")
 
         # 总结

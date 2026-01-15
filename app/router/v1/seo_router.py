@@ -44,7 +44,6 @@ async def create_seo_router(
         chinese_title=form_data.chinese_title,
         chinese_description=form_data.chinese_description,
         chinese_keywords=form_data.chinese_keywords,
-        
     )
     return SuccessResponse(
         message=get_message("seo.createSeo.createSeoSuccess"),
@@ -64,7 +63,6 @@ async def update_seo_router(
         chinese_title=form_data.chinese_title,
         chinese_description=form_data.chinese_description,
         chinese_keywords=form_data.chinese_keywords,
-        
     )
     return SuccessResponse(
         message=get_message("seo.updateSeo.updateSeoSuccess"),
@@ -81,7 +79,6 @@ async def delete_seo_router(
     result = await seo_service.delete_seo(
         seo_id=seo_id,
         role=current_user.role,
-        
     )
     return SuccessResponse(
         message=get_message("seo.deleteSeo"),

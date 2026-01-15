@@ -23,7 +23,6 @@ class BoardService:
             role=role,
             chinese_title=chinese_title,
             chinese_description=chinese_description,
-            
         )
 
     async def create_board_comment(
@@ -38,7 +37,6 @@ class BoardService:
             user_id=user_id,
             parent_id=parent_id,
             comment=comment,
-            
         )
 
     async def get_board_comment_lists(
@@ -61,7 +59,6 @@ class BoardService:
             user_id=user_id,
             board_comment_id=board_comment_id,
             comment=comment,
-            
         )
 
     async def delete_board_comment(
@@ -73,7 +70,6 @@ class BoardService:
         return await self.board_crud.delete_board_comment(
             user_id=user_id,
             board_comment_id=board_comment_id,
-            
             role=role,
         )
 

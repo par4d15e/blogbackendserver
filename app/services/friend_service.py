@@ -29,7 +29,6 @@ class FriendService:
             friend_id=friend_id,
             chinese_title=chinese_title,
             chinese_description=chinese_description,
-            
         )
 
     async def get_friend_list(
@@ -74,7 +73,6 @@ class FriendService:
             site_url=site_url,
             chinese_title=chinese_title,
             chinese_description=chinese_description,
-            
         )
 
     async def delete_single_friend(

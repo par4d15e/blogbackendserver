@@ -22,7 +22,6 @@ async def get_tag_lists_router(
     """获取标签列表 - 使用传统分页方式"""
 
     items, pagination_metadata = await tag_service.get_tag_lists(
-        
         page=page,
         size=size,
         published_only=published_only,
@@ -46,7 +45,6 @@ async def create_tag_router(
     result = await tag_service.create_tag(
         role=current_user.role,
         chinese_title=form_data.chinese_title,
-        
     )
     return SuccessResponse(
         message=get_message("tag.createTag.createTagSuccess"),
@@ -64,7 +62,6 @@ async def update_tag_router(
         tag_id=form_data.tag_id,
         role=current_user.role,
         chinese_title=form_data.chinese_title,
-        
     )
     return SuccessResponse(
         message=get_message("tag.updateTag"),
@@ -81,7 +78,6 @@ async def delete_tag_router(
     result = await tag_service.delete_tag(
         tag_id=tag_id,
         role=current_user.role,
-        
     )
     return SuccessResponse(
         message=get_message("tag.deleteTag"),

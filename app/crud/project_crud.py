@@ -87,8 +87,7 @@ class ProjectCrud:
 
     async def _get_project_by_chinese_title(self, chinese_title: str) -> bool:
         statement = select(
-            exists(select(Project.id)).where(
-                Project.chinese_title == chinese_title)
+            exists(select(Project.id)).where(Project.chinese_title == chinese_title)
         )
         result = await self.db.execute(statement)
         return bool(result.scalar_one())
@@ -111,8 +110,7 @@ class ProjectCrud:
         language = get_current_language()
         # Validate pagination parameters
         try:
-            page, size = offset_paginator.validate_pagination_params(
-                page, size)
+            page, size = offset_paginator.validate_pagination_params(page, size)
         except ValueError:
             raise HTTPException(
                 status_code=400,
@@ -137,15 +135,13 @@ class ProjectCrud:
             order_by=[Project.created_at.desc(), Project.id.desc()],
             filters=filters,
             join_options=[joinedload(Project.cover)],
-            
         )
         # 计算本月的项目数量
         if published_only is False:
             now = datetime.now(timezone.utc)
             month_start = datetime(now.year, now.month, 1, tzinfo=timezone.utc)
             if now.month == 12:
-                next_month_start = datetime(
-                    now.year + 1, 1, 1, tzinfo=timezone.utc)
+                next_month_start = datetime(now.year + 1, 1, 1, tzinfo=timezone.utc)
             else:
                 next_month_start = datetime(
                     now.year, now.month + 1, 1, tzinfo=timezone.utc
@@ -234,9 +230,7 @@ class ProjectCrud:
         if await self._get_project_by_chinese_title(chinese_title):
             raise HTTPException(
                 status_code=400,
-                detail=get_message(
-                    key="project.common.projectAlreadyExists"
-                ),
+                detail=get_message(key="project.common.projectAlreadyExists"),
             )
 
         english_title = await agent_utils.translate(text=chinese_title)
@@ -247,8 +241,7 @@ class ProjectCrud:
 
         import json
 
-        content_str = json.dumps(
-            chinese_content, sort_keys=True, ensure_ascii=False)
+        content_str = json.dumps(chinese_content, sort_keys=True, ensure_ascii=False)
         content_hash = hashlib.sha256(content_str.encode()).hexdigest()
 
         result = await self.db.execute(
@@ -322,8 +315,7 @@ class ProjectCrud:
         if not existing_project:
             raise HTTPException(
                 status_code=404,
-                detail=get_message(
-                    key="project.common.projectNotFound"),
+                detail=get_message(key="project.common.projectNotFound"),
             )
 
         if chinese_title and chinese_title != existing_project.chinese_title:
@@ -347,8 +339,7 @@ class ProjectCrud:
         # 计算content_hash
         import json
 
-        content_str = json.dumps(
-            chinese_content, sort_keys=True, ensure_ascii=False)
+        content_str = json.dumps(chinese_content, sort_keys=True, ensure_ascii=False)
         content_hash = hashlib.sha256(content_str.encode()).hexdigest()
 
         # update project
@@ -430,8 +421,7 @@ class ProjectCrud:
         if not project:
             raise HTTPException(
                 status_code=404,
-                detail=get_message(
-                    key="project.common.projectNotFound"),
+                detail=get_message(key="project.common.projectNotFound"),
             )
 
         await self.db.execute(
@@ -465,8 +455,7 @@ class ProjectCrud:
         if not project:
             raise HTTPException(
                 status_code=404,
-                detail=get_message(
-                    key="project.common.projectNotFound"),
+                detail=get_message(key="project.common.projectNotFound"),
             )
 
         payment_status = None
@@ -523,7 +512,8 @@ class ProjectCrud:
                 if project.project_attachments
                 else None,
                 "attachment_url": project.project_attachments.attachment.original_filepath_url
-                if project.project_attachments and project.project_attachments.attachment
+                if project.project_attachments
+                and project.project_attachments.attachment
                 else None,
             }
         else:
@@ -568,9 +558,7 @@ class ProjectCrud:
 
         return response
 
-    async def get_project_details_seo(
-        self, project_slug: str
-    ) -> Dict[str, Any]:
+    async def get_project_details_seo(self, project_slug: str) -> Dict[str, Any]:
         language = get_current_language()
         cache_key = f"project_seo:lang={language}:project_slug={project_slug}"
         cache_result = await redis_manager.get_async(cache_key)
@@ -581,15 +569,13 @@ class ProjectCrud:
         if not project:
             raise HTTPException(
                 status_code=404,
-                detail=get_message(
-                    key="project.common.projectNotFound"),
+                detail=get_message(key="project.common.projectNotFound"),
             )
 
         if not project.seo:
             raise HTTPException(
                 status_code=404,
-                detail=get_message(
-                    key="seo.common.seoNotFound"),
+                detail=get_message(key="seo.common.seoNotFound"),
             )
 
         response = {
@@ -617,32 +603,29 @@ class ProjectCrud:
         if not project:
             raise HTTPException(
                 status_code=404,
-                detail=get_message(
-                    key="project.common.projectNotFound"),
+                detail=get_message(key="project.common.projectNotFound"),
             )
 
         # Check if project has any payment records
         payment_record_exists = await self.db.execute(
-            select(exists(select(Payment_Record.id)).where(
-                Payment_Record.project_id == project_id
-            ))
+            select(
+                exists(select(Payment_Record.id)).where(
+                    Payment_Record.project_id == project_id
+                )
+            )
         )
         has_payment_records = payment_record_exists.scalar_one()
 
         if has_payment_records:
             raise HTTPException(
                 status_code=400,
-                detail=get_message(
-                    key="project.common.projectHasPaymentRecords"
-                ),
+                detail=get_message(key="project.common.projectHasPaymentRecords"),
             )
 
         if project.project_monetization and project.project_monetization.price > 0:
             raise HTTPException(
                 status_code=400,
-                detail=get_message(
-                    key="project.common.projectHasMonetization"
-                ),
+                detail=get_message(key="project.common.projectHasMonetization"),
             )
 
         await self.db.execute(delete(Project).where(Project.id == project_id))

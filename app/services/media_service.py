@@ -512,7 +512,6 @@ class MediaService:
                     type=mt,
                     is_avatar=is_avatar,
                     file_name=original_filename,
-                    
                     original_filepath_url=original_url,
                     thumbnail_filepath_url=thumbnail_url,
                     watermark_filepath_url=watermark_url,
@@ -562,7 +561,6 @@ class MediaService:
             user_id=user_id,
             page=page,
             size=size,
-            
             media_type=media_type,
         )
 
@@ -709,7 +707,6 @@ class MediaService:
                     await self.media_crud.delete_media_from_s3(
                         media_id=media.id,
                         user_id=user_id,
-                        
                     )
                     db_delete_results.append(True)
                 except Exception as e:

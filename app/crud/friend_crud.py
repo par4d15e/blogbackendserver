@@ -45,8 +45,7 @@ class FriendCrud:
 
     async def _get_friend_list_by_id(self, friend_list_id: int) -> bool:
         statement = select(
-            exists(select(Friend_List.id)).where(
-                Friend_List.id == friend_list_id)
+            exists(select(Friend_List.id)).where(Friend_List.id == friend_list_id)
         )
         result = await self.db.execute(statement)
         return bool(result.scalar_one())
@@ -69,8 +68,7 @@ class FriendCrud:
         if not friend:
             raise HTTPException(
                 status_code=404,
-                detail=get_message(
-                    key="friend.common.friendNotFound"),
+                detail=get_message(key="friend.common.friendNotFound"),
             )
 
         response = {
@@ -102,16 +100,14 @@ class FriendCrud:
         if not friend:
             raise HTTPException(
                 status_code=404,
-                detail=get_message(
-                    key="friend.common.friendNotFound"),
+                detail=get_message(key="friend.common.friendNotFound"),
             )
 
         # 检查创建用户的身份
         if role != RoleType.admin:
             raise HTTPException(
                 status_code=403,
-                detail=get_message(
-                    key="common.insufficientPermissions"),
+                detail=get_message(key="common.insufficientPermissions"),
             )
 
         # 更新友链
@@ -204,8 +200,7 @@ class FriendCrud:
         if not friend_lists:
             raise HTTPException(
                 status_code=404,
-                detail=get_message(
-                    key="friend.common.friendNotFound"),
+                detail=get_message(key="friend.common.friendNotFound"),
             )
 
         # 构建响应数据
@@ -274,11 +269,9 @@ class FriendCrud:
         now = datetime.now(timezone.utc)
         month_start = datetime(now.year, now.month, 1, tzinfo=timezone.utc)
         if now.month == 12:
-            next_month_start = datetime(
-                now.year + 1, 1, 1, tzinfo=timezone.utc)
+            next_month_start = datetime(now.year + 1, 1, 1, tzinfo=timezone.utc)
         else:
-            next_month_start = datetime(
-                now.year, now.month + 1, 1, tzinfo=timezone.utc)
+            next_month_start = datetime(now.year, now.month + 1, 1, tzinfo=timezone.utc)
 
         count_this_month = await self.db.execute(
             select(func.count(Friend_List.id)).where(
@@ -301,13 +294,11 @@ class FriendCrud:
     ) -> bool:
         # 检查是否有friend
         friend = await self._get_friend_by_id(friend_id)
-        self.logger.info(
-            f"friend found: {friend.chinese_title if friend else None}")
+        self.logger.info(f"friend found: {friend.chinese_title if friend else None}")
         if not friend:
             raise HTTPException(
                 status_code=404,
-                detail=get_message(
-                    key="friend.common.friendNotFound"),
+                detail=get_message(key="friend.common.friendNotFound"),
             )
         # 翻译
         if chinese_title:
@@ -369,19 +360,16 @@ class FriendCrud:
         if role != RoleType.admin:
             raise HTTPException(
                 status_code=403,
-                detail=get_message(
-                    key="common.insufficientPermissions"),
+                detail=get_message(key="common.insufficientPermissions"),
             )
 
         # 检查友链是否存在
         friend = await self._get_friend_list_by_id(friend_list_id)
         if not friend:
-            self.logger.error(
-                f"Single friend list not found: {friend_list_id}")
+            self.logger.error(f"Single friend list not found: {friend_list_id}")
             raise HTTPException(
                 status_code=404,
-                detail=get_message(
-                    key="friend.common.friendNotFound"),
+                detail=get_message(key="friend.common.friendNotFound"),
             )
 
         # 删除友链
@@ -406,8 +394,7 @@ class FriendCrud:
         if role != RoleType.admin:
             raise HTTPException(
                 status_code=403,
-                detail=get_message(
-                    key="common.insufficientPermissions"),
+                detail=get_message(key="common.insufficientPermissions"),
             )
 
         # 检查友链是否存在
@@ -415,8 +402,7 @@ class FriendCrud:
         if not friend:
             raise HTTPException(
                 status_code=404,
-                detail=get_message(
-                    key="friend.common.friendNotFound"),
+                detail=get_message(key="friend.common.friendNotFound"),
             )
 
         # 更新友链类型

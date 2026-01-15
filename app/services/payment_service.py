@@ -45,7 +45,6 @@ class PaymentService:
                 tax_rate=tax_rate,
                 tax_amount=tax_amount,
                 final_amount=final_amount,
-                
             )
 
             self.logger.info(
@@ -247,8 +246,7 @@ class PaymentService:
                 send_invoice_email_task.delay(
                     user_email=metadata["user_email"],
                     user_name=metadata["user_name"],
-                    project_section_name=metadata.get(
-                        "project_section_name", ""),
+                    project_section_name=metadata.get("project_section_name", ""),
                     project_name=metadata["project_name"],
                     project_price=metadata["project_price"],
                     tax_amount=metadata["tax_amount"],
@@ -294,8 +292,7 @@ class PaymentService:
             raise HTTPException(status_code=400, detail="Invalid signature")
         except Exception as e:
             self.logger.error(f"Stripe webhook event parsing failed: {str(e)}")
-            raise HTTPException(
-                status_code=400, detail="Invalid webhook event")
+            raise HTTPException(status_code=400, detail="Invalid webhook event")
 
         event_handlers = {
             "payment_intent.succeeded": lambda: self._process_payment_event(
@@ -326,8 +323,7 @@ class PaymentService:
             if payment_intent.status != "succeeded":
                 raise HTTPException(
                     status_code=400,
-                    detail=get_message(
-                        "payment.common.paymentFailed"),
+                    detail=get_message("payment.common.paymentFailed"),
                 )
 
             # 提取元数据
@@ -337,9 +333,7 @@ class PaymentService:
             if not self._validate_metadata(metadata):
                 raise HTTPException(
                     status_code=400,
-                    detail=get_message(
-                        "payment.paymentSuccess.invalidMetadata"
-                    ),
+                    detail=get_message("payment.paymentSuccess.invalidMetadata"),
                 )
 
             # 获取支付类型
@@ -383,15 +377,13 @@ class PaymentService:
             self.logger.error(f"Stripe API 错误: {str(e)}")
             raise HTTPException(
                 status_code=400,
-                detail=get_message(
-                    "payment.paymentSuccess.stripeError"),
+                detail=get_message("payment.paymentSuccess.stripeError"),
             )
         except Exception as e:
             self.logger.error(f"获取支付详情时发生错误: {str(e)}")
             raise HTTPException(
                 status_code=500,
-                detail=get_message(
-                    "payment.paymentSuccess.internalError"),
+                detail=get_message("payment.paymentSuccess.internalError"),
             )
 
     async def get_payment_record(
@@ -403,7 +395,6 @@ class PaymentService:
     ) -> Tuple[List[Dict[str, Any]], Dict[str, Any]]:
         if role == RoleType.user:
             return await self.payment_crud.get_payment_record(
-                
                 page=page,
                 size=size,
                 user_id=user_id,
@@ -411,7 +402,6 @@ class PaymentService:
             )
         else:
             return await self.payment_crud.get_payment_record(
-                
                 page=page,
                 size=size,
                 role=role,

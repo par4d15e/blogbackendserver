@@ -55,7 +55,6 @@ async def update_section_router(
         chinese_title=form_data.chinese_title,
         chinese_description=form_data.chinese_description,
         role=current_user.role,
-        
         is_active=form_data.is_active,
     )
     return SuccessResponse(
