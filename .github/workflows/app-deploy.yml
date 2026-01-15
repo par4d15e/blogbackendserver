@@ -109,7 +109,12 @@ jobs:
             [ -f "$DEPLOY_TMP/script/initial_data.py" ] && sudo cp "$DEPLOY_TMP/script/initial_data.py" "$DEPLOY_DIR/"
 
             # Deploy alembic files
-            [ -d "$DEPLOY_TMP/alembic" ] && sudo cp -r "$DEPLOY_TMP/alembic"/* "$DEPLOY_DIR/alembic/" 2>/dev/null || true
+            if [ -d "$DEPLOY_TMP/alembic" ]; then
+              sudo cp -r "$DEPLOY_TMP/alembic"/* "$DEPLOY_DIR/alembic/" || { echo "❌ Failed to copy alembic files"; exit 1; }
+              echo "✅ Alembic files deployed"
+            else
+              echo "⚠️  No alembic directory found"
+            fi
 
             # Set permissions
             sudo chmod 600 "$DEPLOY_DIR/secret/.env.production"
@@ -151,9 +156,12 @@ jobs:
               sleep 2
             done
 
-            # Check if first deployment (no migrations)
+            # Verify migration files exist
             MIGRATION_FILES=$(ls -1 "$DEPLOY_DIR/alembic/versions"/*.py 2>/dev/null | grep -v __init__ | wc -l || echo "0")
+            echo "Found $MIGRATION_FILES migration file(s)"
+            
             if [ "$MIGRATION_FILES" -eq "0" ]; then
+              echo "⚠️  No migration files found, generating initial migration"
               sudo docker exec server /server/.venv/bin/alembic revision --autogenerate -m "Initial migration" || { echo "❌ Failed to generate migration"; exit 1; }
             fi
 
