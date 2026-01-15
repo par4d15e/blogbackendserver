@@ -106,9 +106,6 @@ def save_audio_to_media_db(
         session.commit()
         session.refresh(media)
 
-        # 清理缓存
-        redis_manager.delete_pattern_sync("blog_tts:*")
-
         logger.info(f"Successfully saved audio to database: {file_url}")
         return media
 
@@ -142,6 +139,48 @@ def generate_content_audio_task(self, blog_id: int) -> bool:
             english_content = blog.english_content
             if not chinese_content and not english_content:
                 logger.warning(f"No content found for blog ID: {blog_id}")
+                # 清理可能存在的旧 TTS 记录
+                blog_tts_result = session.execute(
+                    select(Blog_TTS).where(Blog_TTS.blog_id == blog_id)
+                ).first()
+                if blog_tts_result:
+                    blog_tts = blog_tts_result[0]
+                    # 删除关联的音频文件
+                    if blog_tts.chinese_tts_id or blog_tts.english_tts_id:
+                        try:
+                            with create_s3_bucket() as s3_bucket:
+                                s3_keys_to_delete = []
+                                if blog_tts.chinese_tts_id:
+                                    chinese_media_result = session.execute(
+                                        select(Media).where(Media.id == blog_tts.chinese_tts_id)
+                                    ).first()
+                                    if chinese_media_result:
+                                        chinese_media = chinese_media_result[0]
+                                        s3_key = s3_bucket.extract_s3_key(chinese_media.original_filepath_url)
+                                        if s3_key:
+                                            s3_keys_to_delete.append(s3_key)
+                                        session.delete(chinese_media)
+                                
+                                if blog_tts.english_tts_id:
+                                    english_media_result = session.execute(
+                                        select(Media).where(Media.id == blog_tts.english_tts_id)
+                                    ).first()
+                                    if english_media_result:
+                                        english_media = english_media_result[0]
+                                        s3_key = s3_bucket.extract_s3_key(english_media.original_filepath_url)
+                                        if s3_key:
+                                            s3_keys_to_delete.append(s3_key)
+                                        session.delete(english_media)
+                                
+                                if s3_keys_to_delete:
+                                    s3_bucket.delete_files(s3_keys_to_delete)
+                                    logger.info(f"Deleted {len(s3_keys_to_delete)} old TTS files from S3")
+                        except Exception as e:
+                            logger.error(f"Failed to delete old TTS files: {e}")
+                    
+                    session.delete(blog_tts)
+                    session.commit()
+                    logger.info(f"Deleted old Blog_TTS record for blog ID: {blog_id}")
                 return False
 
             # 初始化音频变量
@@ -150,10 +189,14 @@ def generate_content_audio_task(self, blog_id: int) -> bool:
 
             if chinese_content:
                 # 从JSON内容中提取文本
-                extracted_data = agent_utils.extract_full_text_from_content(
-                    chinese_content
-                )
-                chinese_text = extracted_data.get("full_text", "").strip()
+                try:
+                    extracted_data = agent_utils.extract_full_text_from_content(
+                        chinese_content
+                    )
+                    chinese_text = extracted_data.get("full_text", "").strip()
+                except Exception as e:
+                    logger.error(f"Failed to extract Chinese text for blog ID {blog_id}: {e}")
+                    chinese_text = ""
 
                 if chinese_text:
                     audio_path = None
@@ -184,10 +227,14 @@ def generate_content_audio_task(self, blog_id: int) -> bool:
 
             if english_content:
                 # 从JSON内容中提取文本
-                extracted_data = agent_utils.extract_full_text_from_content(
-                    english_content
-                )
-                english_text = extracted_data.get("full_text", "").strip()
+                try:
+                    extracted_data = agent_utils.extract_full_text_from_content(
+                        english_content
+                    )
+                    english_text = extracted_data.get("full_text", "").strip()
+                except Exception as e:
+                    logger.error(f"Failed to extract English text for blog ID {blog_id}: {e}")
+                    english_text = ""
 
                 if english_text:
                     audio_path = None
@@ -302,12 +349,13 @@ def generate_content_audio_task(self, blog_id: int) -> bool:
                     )
                     session.add(blog_tts)
                     session.commit()
-
-                    # 清理缓存
-                    redis_manager.delete_pattern_sync("blog_tts:*")
                     logger.info(
                         f"Successfully created new Blog_TTS record for blog ID: {blog_id}"
                     )
+
+                # 统一清理当前博客的 TTS 缓存
+                redis_manager.delete_pattern_sync(f"blog_tts:{blog_id}:*")
+                logger.info(f"Cleared TTS cache for blog ID: {blog_id}")
 
             logger.info(f"Successfully generated content audio for blog ID: {blog_id}")
             return True

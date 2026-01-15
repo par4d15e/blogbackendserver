@@ -61,7 +61,7 @@ class BlogCrud:
         statement = (
             select(Blog)
             .options(
-                joinedload(Blog.cover),
+                selectinload(Blog.cover),
                 selectinload(Blog.blog_tags).selectinload(Blog_Tag.tag),
             )
             .where(Blog.slug == slug)
@@ -213,12 +213,13 @@ class BlogCrud:
             return cached_items, pagination_metadata
 
         # 未命中缓存：构建 JOIN 查询与计数查询
+        # 优化：使用 selectinload 替代 joinedload，减少 JOIN 数量
         if published_only is True:
             base_stmt = (
                 select(Blog)
                 .join(Blog_Status, Blog_Status.blog_id == Blog.id)
                 .options(
-                    joinedload(Blog.cover),
+                    selectinload(Blog.cover),
                     selectinload(Blog.blog_tags).selectinload(Blog_Tag.tag),
                 )
                 .where(
@@ -230,7 +231,7 @@ class BlogCrud:
             base_stmt = (
                 select(Blog)
                 .options(
-                    joinedload(Blog.cover),
+                    selectinload(Blog.cover),
                     selectinload(Blog.blog_tags).selectinload(Blog_Tag.tag),
                 )
                 .where(Blog.section_id == section_id)
@@ -405,12 +406,13 @@ class BlogCrud:
             return cached_items, pagination_metadata
 
         # 未命中缓存：构建 JOIN 查询与计数查询
+        # 优化：使用 selectinload 替代 joinedload
         base_stmt = (
             select(Blog)
             .join(Blog_Tag, Blog_Tag.blog_id == Blog.id)
             .join(Blog_Status, Blog_Status.blog_id == Blog.id)
             .options(
-                joinedload(Blog.section),
+                selectinload(Blog.section),
             )
             .where(
                 Blog_Tag.tag_id == tag.id,
@@ -488,11 +490,12 @@ class BlogCrud:
             return json.loads(cache_data)
 
         # 构建查询：获取已归档的博客
+        # 优化：使用 selectinload 替代 joinedload
         base_stmt = (
             select(Blog)
             .join(Blog_Status, Blog_Status.blog_id == Blog.id)
             .options(
-                joinedload(Blog.section),
+                selectinload(Blog.section),
             )
             .where(Blog_Status.is_archived == True)
         )
@@ -1001,7 +1004,7 @@ class BlogCrud:
 
         # 更新缓存
         await redis_manager.delete_pattern_async("blog_lists:*")
-        await redis_manager.delete_async(f"blog_tts:{blog.id}")
+        # TTS 任务完成后会自己清理缓存，这里不需要提前清理
         await redis_manager.delete_pattern_async(
             f"blog_details:{blog.slug}:lang={language}:*"
         )
@@ -1706,12 +1709,13 @@ class BlogCrud:
 
         # 查询博客统计数据，计算总热度（views + likes + comments + saves）
         # 只获取已发布的博客
+        # 优化：使用 selectinload 替代 joinedload
         statement = (
             select(Blog, Blog_Stats)
             .join(Blog_Stats, Blog_Stats.blog_id == Blog.id)
             .join(Blog_Status, Blog_Status.blog_id == Blog.id)
             .options(
-                joinedload(Blog.cover),
+                selectinload(Blog.cover),
                 selectinload(Blog.blog_tags).selectinload(Blog_Tag.tag),
             )
             .where(Blog_Status.is_published == True)
