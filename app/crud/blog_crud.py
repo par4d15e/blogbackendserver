@@ -902,6 +902,8 @@ class BlogCrud:
 
         # 更新缓存
         await redis_manager.delete_pattern_async(f"blog_lists:{section_id}:*")
+        # 清除热门博客缓存（新博客可能影响排名）
+        await redis_manager.delete_pattern_async("get_recent_populor_blog:*")
 
         return slug
 
@@ -1583,6 +1585,8 @@ class BlogCrud:
                 await redis_manager.delete_pattern_async("blog_details_seo:*")
                 # 清理导航缓存
                 await redis_manager.delete_pattern_async("blog_navigation:*")
+                # 清除热门博客缓存（删除的可能是热门博客）
+                await redis_manager.delete_pattern_async("get_recent_populor_blog:*")
             except Exception as cache_error:
                 # 记录缓存清理错误，但不影响删除结果
                 self.logger.warning(
