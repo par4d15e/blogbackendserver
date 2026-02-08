@@ -146,6 +146,7 @@ class AuthService:
                 subject=subject,
                 recipient=email,
                 template="verification",
+                language=current_language,
                 code=code,
             )
             self.logger.info(f"verification email has been sent to {email}")
@@ -158,6 +159,7 @@ class AuthService:
                 subject=subject,
                 recipient=email,
                 template="resetcode",
+                language=current_language,
                 code=code,
             )
             self.logger.info(f"password reset email has been sent to {email}")
